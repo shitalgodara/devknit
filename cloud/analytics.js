@@ -127,25 +127,26 @@ exports.newMessageSent = function(request, response){
   query.lessThan("createdAt",today);
   query.limit(1000);
   query.find({
-  success: function(results) {
-  	console.log(results.length);
-  	var data = new Array(30);
-  	for(var i = 0; i < results.length; i++){
-  		var objDate = results[i].createdAt;
-  		var nextday = new Date(fourweekbefore.getTime() + 86400000);
-  		var prevday = fourweekbefore;
-  		for(var j = 0; j < 30; j++){
-  			if((objDate < nextday) && (objDate > prevday)){
-  				if(typeof data[j] == 'undefined')
-  					data[j] = 1;
-  				else
-  					data[j]++;
-  				break;
-  				var prevday = nextday;
-  				var nextday = new Date(nextday.getTime() + 86400000);
-  			}
-  		}
-      response.success(data)
+    success: function(results) {
+    	console.log(results.length);
+    	var data = new Array(30);
+    	for(var i = 0; i < results.length; i++){
+    		var objDate = results[i].createdAt;
+    		var nextday = new Date(fourweekbefore.getTime() + 86400000);
+    		var prevday = fourweekbefore;
+    		for(var j = 0; j < 30; j++){
+    			if((objDate < nextday) && (objDate > prevday)){
+    				if(typeof data[j] == 'undefined')
+    					data[j] = 1;
+    				else
+    					data[j]++;
+    				break;
+    				var prevday = nextday;
+    				var nextday = new Date(nextday.getTime() + 86400000);
+    			}
+    		}
+      }
+      response.success(data);
     },
     error: function(error) {
       response.error(error.message+error.code);

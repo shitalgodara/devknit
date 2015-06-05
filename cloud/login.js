@@ -63,7 +63,6 @@ Function to verify OTP
         Model: String // Model No. of mobile 
         OS: String // iOS, Android or any other
         name: String
-        sex: String
         role: String // Parent or Teacher
   Output =>
     JSON object{ 
@@ -141,7 +140,6 @@ exports.verifyCode = function(request, response) {
             user.set("name", request.params.name);
             user.set("phone", number);
             user.set("role", request.params.role);
-            user.set("sex", request.params.sex);
             user.signUp(null,{
               success: function(user) {
                 console.log("signed up");
