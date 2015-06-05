@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "_default": {
+            "link": "development_knit"
+        }, 
+        "development_knit": {
+            "applicationId": "tTqAhR73SE4NWFhulYX4IjQSDH2TkuTblujAbvOK", 
+            "masterKey": "BxqvO6w71W8j4m36Rhy9lcTWqAoJ3e08Co8xoGz4"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.3.4"
+    }
+}

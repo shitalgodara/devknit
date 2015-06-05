@@ -1,0 +1,228 @@
+/*
+function to genrate OTP
+input  number{string}(10 digit phone no) 
+output bool true  or error
+process gen random code save entry in new table and send code via sms
+*/
+exports.genCode = function(request, response) {
+    var number = request.params.number;
+var code = Math.floor(Math.random() * 9000+1000);
+    var Temp = Parse.Object.extend("Temp");
+                            var temp = new Temp();
+                            temp.save({
+                                phoneNumber: number,
+                                code: code
+                            }, {
+                                success: function(temp) {
+
+                    Parse.Cloud.httpRequest({
+                        url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        params: {method: 'sendMessage',send_to: number,msg: "Your requested verification code is "+code,                         msg_type: 'Text',
+                            userid: '2000133095',auth_scheme: 'plain',password: 'wdq6tyUzP',v: '1.0',format: 'text'
+                        },
+                        success: function(httpResponse) {
+                            console.log(httpResponse.text);
+                            response.success(true);
+                        },
+                        error: function(httpResponse) {
+                            console.error('Request failed with response code ' + httpResponse.status);
+                            response.error(httpResponse.text);
+                        }
+                    });
+},
+ error: function(temp, error) {
+                           errormessage="Error: " + error.code + " " + error.message;
+response.error(errormessage);
+                                }
+                            });
+}
+
+                   
+/*
+function to verify OTP
+input  number {string}(10 digit phone no)and code{Number} in case of login in for mobile ,for old login input is email and password
+case of signup extra details like model{string},os,name,sex and role all {string}
+output json object with flag {bool} true if successfully signed in else false and "sessionToken" containing session Token of user signed in
+process check entry in new table with time constrain
+*/
+exports.verifyCode = function(request, response) {
+var email=request.params.email;
+if(typeof email !='undefined'){
+var password =request.params.password;
+ Parse.User.logIn(email,password ,{
+  success: function(user) {
+console.log('loggedIn');
+var flag=true;
+var result={"flag":flag,"sessionToken":user._sessionToken};
+response.success(result);
+  },
+  error: function(user, error) {
+
+console.log('failed loginp');
+ errormessage="Error: " + error.code + " " + error.message;
+console.log(errormessage);
+response.error("USER_DOESNOT_EXISTS");
+  }
+});
+
+}
+else{
+    var number = request.params.number;
+var code = request.params.code;
+var d =new Date();
+var e=new Date(d.getTime()-300000);
+    var Temp = Parse.Object.extend("Temp");
+    var query = new Parse.Query(Temp); 
+query.equalTo("code",code);
+query.equalTo("phoneNumber",number);
+query.greaterThan("createdAt",e);
+    query.find({
+        success: function(results) {
+if(results.length>0){
+   console.log("found");
+var user = new Parse.User();
+var name = request.params.name;
+if(typeof name =='undefined'){
+console.log("login");
+ Parse.User.logIn(number,number+"qwerty12345" ,{
+  success: function(user) {
+console.log('loggedIn');
+var flag=true;
+var result={"flag":flag,"sessionToken":user._sessionToken};
+response.success(result);
+  },
+  error: function(user, error) {
+
+console.log('failed loginp');
+ errormessage="Error: " + error.code + " " + error.message;
+console.log(errormessage);
+response.error("USER_DOESNOT_EXISTS");
+  }
+});
+
+}
+else{
+var user = new Parse.User();
+console.log("signup");
+user.set("username", number);
+user.set("password", number+"qwerty12345");
+user.set("MODEL",request.params.model );
+user.set("OS",request.params.os);
+user.set("name", request.params.name);
+user.set("phone", number);
+
+user.set("role", request.params.role);
+
+user.set("sex", request.params.sex);
+ console.log(6);
+user.signUp(null,{
+  success: function(user) {
+console.log("siggndd up");
+var flag=true;
+var result={"flag":flag,"sessionToken":user._sessionToken};
+response.success(result);
+  },
+  error: function(user, error) {
+console.log('failed signup');
+ errormessage="Error: " + error.code + " " + error.message;
+response.error("USER_ALREADY_EXISTS");
+  }
+});
+}
+}
+else{
+console.log("not found");
+var flag=false;
+var result={"flag":flag,"sessionToken":""};
+response.success(result);
+}
+},
+ error: function(temp, error) {
+                           errormessage="Error: " + error.code + " " + error.message;
+response.error(error);
+                                }
+                            });
+                   } 
+}
+/*
+function to save installatin id in cloud
+input installationId and deviceType all in string format
+output objectid of installation id created
+procedure simple save query on installation table
+*/
+exports.appInstallation = function(request, response) {
+var username = request.user.get("username");
+var installationId = request.params.installationId;
+var deviceType = request.params.deviceType;
+var deviceToken = request.params.deviceToken;
+var clarray1 = request.user.get("joined_groups");
+var clarray=[];
+var i;
+if(typeof clarray1 !='undefined'){
+  for ( i = 0; i < clarray1.length; i++) {
+clarray[i]=clarray1[i][0];
+}
+}
+var Inst = Parse.Object.extend("_Installation");
+var inst = new Inst();
+inst.set("username",username);
+inst.set("installationId",installationId);
+inst.set("deviceType",deviceType);
+inst.set("deviceToken",deviceToken);
+console.log(clarray);
+inst.set("channels",clarray);
+ inst.save(null, {
+    success: function(result) {
+      response.success(result.id);
+    },
+    error: function(result,error) {
+console.error(error.message);
+console.error(error.code);
+response.error(error.message+error.code);
+    }
+  });
+}
+
+/*
+function to save installatin id in cloud
+input installationObjectId {string}
+output bool ture
+procedure simple destroy query on installation table
+*/
+exports.appLogout = function(request, response) {
+var id = request.params.installationObjectId;
+var query = new Parse.Query(Parse.Installation);
+
+Parse.Cloud.useMasterKey();
+query.get(id, {
+  success: function(result) {
+result.destroy({
+  success: function(result) {
+    var flag=true;
+response.success(flag);
+  },
+  error: function(result, error) {
+   var errormessage ="Error in::"+"installation::"+ "destroy::" + error.code + "::" + error.message+"::";
+// Notify( eplatform , emodal , eusr , "giving Classes details" , echannel , errormessage);
+response.error(errormessage);
+  }
+});
+
+  },
+  error: function(model, error) {
+    if (error.code === Parse.Error.OBJECT_NOT_FOUND) { 
+var flag=true;
+response.success(flag);
+    }
+else{
+var errormessage ="Error in::"+"installation::"+ "get::" + error.code + "::" + error.message+"::";
+ //Notify( eplatform , emodal , eusr , "giving Classes details" , echannel , errormessage);
+response.error(errormessage);
+}
+  }
+});
+
+}
