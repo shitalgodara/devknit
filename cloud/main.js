@@ -350,11 +350,6 @@ Parse.Cloud.define("getSchoolName", function(request, response) {
 Parse.Cloud.define("findClass", function(request, response) {
     rest.findClass(request, response);
 });
-
-
-Parse.Cloud.define("inviteUsers", function(request, response) {
-    rest.inviteUsers(request, response);
-});
 /*----------------------------------------------------  INBOX.JS   -----------------------------------------------------*/ 
 // increment like count
 Parse.Cloud.define("likeCountIncrement", function(request, response) {
@@ -399,6 +394,10 @@ Parse.Cloud.define("getOutboxMessages", function(request, response) {
 //invite teacher from parent side
 Parse.Cloud.define("inviteTeacher", function(request, response) {
     inbox.inviteTeacher(request, response);
+});
+
+Parse.Cloud.define("inviteUsers", function(request, response) {
+    rest.inviteUsers(request, response);
 });
 /*----------------------------------------------------  TEMP.JS   -----------------------------------------------------*/
 Parse.Cloud.define("cloudpic", function(request, response) {
