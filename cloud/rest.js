@@ -3,23 +3,23 @@ var Mandrill = require('mandrill');
 
 /*
 Function to output list of school names
-    Input =>
+  Input =>
     Nothing
   Output =>
     List of school names
 */
 exports.schoollist = function(request, response) {
-    var FAQs = Parse.Object.extend("SCHOOLS");
-    var query = new Parse.Query("SCHOOLS");
-    query.select("school_name");
-    query.find({
-        success: function(results) {
-            response.success(results);
-        },
-        error: function(error) {
-            response.error("Error: " + error.code + " " + error.message);
-        }
-    });
+  var FAQs = Parse.Object.extend("SCHOOLS");
+  var query = new Parse.Query("SCHOOLS");
+  query.select("school_name");
+  query.find({
+    success: function(results) {
+      response.success(results);
+    },
+    error: function(error) {
+      response.error("Error: " + error.code + " " + error.message);
+    }
+  });
 }
 
 /*
@@ -32,17 +32,17 @@ Function to give school name corresponding to school id
     Simple query on schools table
 */
 exports.getSchoolName = function(request, response) {
-    var school = request.params.schoolId;
-    var SCHOOLS = Parse.Object.extend("SCHOOLS");
-    var query = new Parse.Query(SCHOOLS); 
-    query.get(school, {
-        success: function(result){
-            response.success(result.get('school_name'));
+  var school = request.params.schoolId;
+  var SCHOOLS = Parse.Object.extend("SCHOOLS");
+  var query = new Parse.Query(SCHOOLS); 
+  query.get(school, {
+    success: function(result){
+      response.success(result.get('school_name'));
     },
     error: function(temp, error){
       response.error("Error: " + error.code + " " + error.message);
-        }
-    });
+    }
+  });
 } 
 
 /*
@@ -93,13 +93,13 @@ Function to return FAQs
     Simple query on FAQ
 */
 exports.faq = function(request, response){
-    var role = request.user.get("role");
-    var date = request.params.date;
-    var FAQs = Parse.Object.extend("FAQs");
-    var query = new Parse.Query("FAQs");
-    if (role == "parent"){
-        query.equalTo("role", "Parent");
-    }
+  var role = request.user.get("role");
+  var date = request.params.date;
+  var FAQs = Parse.Object.extend("FAQs");
+  var query = new Parse.Query("FAQs");
+  if (role == "parent"){
+      query.equalTo("role", "Parent");
+  }
   query.select("question", "answer");
   query.greaterThan("updatedAt", date);
     query.find({
@@ -122,7 +122,7 @@ Function to submit feedback
     Simple save query on feedback table
 */
 exports.feedback = function(request, response) {
-    var feed = request.params.feed;
+  var feed = request.params.feed;
   var Feedbacks = Parse.Object.extend("Feedbacks");
   var feedbacks = new Feedbacks();
     feedbacks.set("content", feed);
@@ -148,23 +148,34 @@ Function to find class
     Simple find query on codegroup
 */
 exports.findClass = function(request, response){
-    var classcode = request.params.code;
-    var Codegroup = Parse.Object.extend("Codegroup");
-    var query = new Parse.Query("Codegroup");
-    query.equalTo("code", classcode);
-    query.find({
-        success: function(results){
-            response.success(results);
-        },
-        error: function(error){
-          response.error("Error: " + error.code + " " + error.message);    
-        }
-    });
+  var classcode = request.params.code;
+  var Codegroup = Parse.Object.extend("Codegroup");
+  var query = new Parse.Query("Codegroup");
+  query.equalTo("code", classcode);
+  query.find({
+    success: function(results){
+      response.success(results);
+    },
+    error: function(error){
+      response.error("Error: " + error.code + " " + error.message);    
+    }
+  });
 }
 
+/*
+Function to send sms
+  Input =>
+    msg: String
+    phone: String // number of the recipient
+  Output =>
+    response: Parse.Promise
+  Procedure =>
+    Sending a HTTPRequest to smsgupshup API
+*/
 function smsText(requestObj, response){
   var msg = requestObj.msg;
   var phone = requestObj.phone;
+  var response = new Parse.Promise();
   Parse.Cloud.httpRequest({
     url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
     headers: {
@@ -178,24 +189,40 @@ function smsText(requestObj, response){
       userid: '2000133095',
       auth_scheme: 'plain',
       password: 'wdq6tyUzP',
-      v: '1.0',
+      v: '1.1',
       format: 'text'
-    },
-    success: function(httpResponse) {
-      console.log(httpResponse.text);
-      response.success();
-    },
-    error: function(httpResponse) {
-      console.error("Request failed with response code " + httpResponse.status);
-      response.error(httpResponse.text);
     }
+  }).then(function(httpResponse){
+    var status = httpResponse.text.substr(0,3);
+    if(status == "err")
+      console.error("Failed to send message to " + phone);
+    response.resolve();
+  },
+  function(httpResponse){
+    console.error("Request failed with response code " + httpResponse.status);
+    response.reject(httpResponse.text);
   });
+  return response;
 }
 
+/*
+Function to send mail 
+  Input =>
+    text: String
+    email: String // emailId of the recipient
+    name: String // name of the recipient
+  Output =>
+    response: Parse.Promise
+  Procedure =>
+    Calling sendEmail function of Mandrill to send mail 
+*/
 function mailText(requestObj, response){
   var text = requestObj.text;
+  var email = requestObj.email;
+  var name = requestObj.name;
   var recipient = requestObj.recipient;
   Mandrill.initialize('GrD1JI_5pNZ6MGUCNBYqUw');
+  var response = new Parse.Promise();
   Mandrill.sendEmail({
     message: {
       from_email: "shubham@trumplab.com",
@@ -204,21 +231,22 @@ function mailText(requestObj, response){
       text: text,
       to: [
         {
-          email: recipient.emailId,
-          name: recipient.name 
+          email: email,
+          name: name 
         }
       ]
     },
     async: true
   },{
     success: function(httpResponse){
-      console.log(httpResponse.status);
+      response.resolve();
     },
     error: function(httpResponse){
       console.error("Request failed with response code " + httpResponse.status);
-      response.error(httpResponse.text);
+      response.reject(httpResponse.text);
     }
   });
+  return response;
 } 
 
 /*
@@ -227,15 +255,20 @@ Function to invite users
     classCode: String
     type: Number 
     mode: String // phone or email
-    data: JSON object{
-      name: String
+    data: 2D Array
       <Phone Mode>
-        phone: String // Phone Mode
-      <Email Mode>
-        emailId: String
-    } 
+        Array of [
+          name:String,   
+          phone: String
+        ]
+      <Email Mode>  
+        Array of [
+          name:String,   
+          email: String
+        ]
+      ]
   Output =>
-    flag: Bool
+    flag: Bool // true in case of a success
   Procedure =>  
     Calling mailText and smsText function according to mode input 
   TODO =>
@@ -247,39 +280,33 @@ exports.inviteUsers = function(request, response){
   var recipients = request.params.data;
   var mode = request.params.mode;
   var text = "Hello I have recently started using a great communication tool, Knit Messaging, and I will be using it to send out reminders and announcements. To join my classroom you can use my classcode " + classCode + ".";
-  if(mode == 'phone'){
-    var flag = true;
-    _.each(recipients, function(recipient){
-      smsText({
-        "phone": recipient.phone, 
+  if(mode == "phone"){
+    var promises = _.map(recipients, function(recipient){
+      return smsText({
+        "phone": recipient[1], 
         "msg": text
-      },{
-        success: function(){
-        },
-        error: function(error){
-          flag = false;
-          response.error(error);
-        }
       });
-    })
-    if(flag)
-      response.success(flag);
+    });
+    Parse.Promise.when(promises).then(function(){
+      response.success(true);
+    },
+    function(error){
+      response.error(error);
+    });  
   }
-  else if(mode == 'email'){
-    _.each(recipients, function(recipient){
-      mailText({
-        "recipient": recipient, 
+  else if(mode == "email"){
+    var promises = _.map(recipients, function(recipient){
+      return mailText({
+        "email": recipient[1],
+        "name": recipient[0], 
         "text": text
-      },{
-        success: function(){
-        },
-        error: function(error){
-          flag = false;
-          response.error(flag);
-        }
       });
-    })  
-    if(flag)
-      response.success(flag);
+    });
+    Parse.Promise.when(promises).then(function(){
+      response.success(true);
+    },
+    function(error){
+      response.error(error);
+    });  
   }
 }
