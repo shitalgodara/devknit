@@ -60,7 +60,14 @@ exports.createClass = function(request, response){
   name = name.toUpperCase();
   if(name[0] >= 0) // In case first character of name is number
     name = 'Y' + name.substr(1);
-
+  if(name.length != 3){
+    if(name.length == 2)
+      name = "Z" + name;
+    if(name.length == 1)
+      name = "ZY" + name;
+    if(name.length == 0)
+      name = "ZZZ";
+  }
   var num = Math.floor(Math.random() * 10000);
   num = num.toString();
   if(num.length == 3)
@@ -69,6 +76,8 @@ exports.createClass = function(request, response){
     num = "00" + num;
   else if(num.length == 1)
     num = "000" + num;
+  else if(num.length == 5)
+    num = num.substr(0,4);
 
   name = name + num;
   var classcode = name;

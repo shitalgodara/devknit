@@ -1,10 +1,14 @@
 /* 
- Increment like count of given message
- @param objectId of message
- @return updated like count of given message
- @how  query on groupDetails table using objectId, retrieve & increment current like count, save updated count back to server and return this count to user. 
-  */
-exports.likeCountIncrement = function(request, response) {
+Function to incremet like count of given message
+  Input =>
+    objectId: String // objectId of message
+  Output => 
+    like_count: Number // like counts of given message
+  Procedure =>
+    * Query on groupDetails table using objectId to retrieve & increment current like_count
+    * Finally save updated count back to server and return this count to user. 
+*/
+exports.likeCountIncrement = function(request, response){
   var objectid = request.params.objectId;
   var query = new Parse.Query("GroupDetails");
   query.get(objectid, {
@@ -12,7 +16,6 @@ exports.likeCountIncrement = function(request, response) {
       var likesCount = object.get("like_count");
       object.increment("like_count");
       object.save();
- 
       if (typeof likesCount != 'undefined')
         response.success(likesCount + 1);
       else
@@ -25,29 +28,32 @@ exports.likeCountIncrement = function(request, response) {
   });
 }
  
- 
 /* 
- Decrement like count of given message
- @param objectId of message
- @return updated like count of given message
- @how  query on groupDetails table using objectId, retrieve & decrement current like count, save updated count back to server and return this count to user. 
-  */
- 
-exports.likeCountDecrement = function(request, response) {
+Function to decrement like count of given message
+  Input =>
+    objectId: String // objectId of message
+  Output => 
+    like_count: Number // like counts of given message
+  Procedure =>
+    * Query on groupDetails table using objectId to retrieve & decrement current like_count
+    * Finally save updated count back to server and return this count to user. 
+*/
+exports.likeCountDecrement = function(request, response){
   var objectid = request.params.objectId;
   var query = new Parse.Query("GroupDetails");
   query.get(objectid, {
     success: function(object) {
       var likesCount = object.get("like_count");
- 
-      if (typeof likesCount != 'undefined') {
+      if (typeof likesCount != 'undefined'){
         if (likesCount > 0) {
           object.increment("like_count", -1);
           object.save();
           response.success(likesCount - 1);
-        } else
+        } 
+        else
           response.success(0);
-      } else
+      } 
+      else
         response.success(0);
     },
     error: function(object, error) {
@@ -57,14 +63,17 @@ exports.likeCountDecrement = function(request, response) {
   });
 }
  
- 
 /* 
- Increment confused count of given message
- @param objectId of message
- @return updated confused count of given message
- @how  query on groupDetails table using objectId, retrieve & increment current confused count, save updated count back to server and return this count to user. 
-  */
-exports.confusedCountIncrement = function(request, response) {
+Function to incremet confused count of given message
+  Input =>
+    objectId: String // objectId of message
+  Output => 
+    confused_count: Number // confused counts of given message
+  Procedure =>
+    * Query on groupDetails table using objectId to retrieve & increment current confused_count
+    * Finally save updated count back to server and return this count to user. 
+*/
+exports.confusedCountIncrement = function(request, response){
   var objectid = request.params.objectId;
   var query = new Parse.Query("GroupDetails");
   query.get(objectid, {
@@ -72,12 +81,10 @@ exports.confusedCountIncrement = function(request, response) {
       var confusedCount = object.get("confused_count");
       object.increment("confused_count");
       object.save();
- 
       if (typeof confusedCount != 'undefined')
         response.success(confusedCount + 1);
       else
         response.success(1);
- 
     },
     error: function(object, error) {
       console.error(error.code);
@@ -86,31 +93,33 @@ exports.confusedCountIncrement = function(request, response) {
   });
 }
  
- 
 /* 
- Decrement confused count of given message
- @param objectId of message
- @return updated confused count of given message
- @how  query on groupDetails table using objectId, retrieve & decrement current confused count, save updated count back to server and return this count to user. 
-  */
- 
-exports.confusedCountDecrement = function(request, response) {
+Function to decrement confused count of given message
+  Input =>
+    objectId: String // objectId of message
+  Output => 
+    confused_count: Number // confused counts of given message
+  Procedure =>
+    * Query on groupDetails table using objectId to retrieve & decrement current confused_count
+    * Finally save updated count back to server and return this count to user. 
+*/
+exports.confusedCountDecrement = function(request, response){
   var objectid = request.params.objectId;
   var query = new Parse.Query("GroupDetails");
   query.get(objectid, {
     success: function(object) {
       var confusedCount = object.get("confused_count");
- 
-      if (typeof confusedCount != 'undefined') {
+      if (typeof confusedCount != 'undefined'){
         if (confusedCount > 0) {
           object.increment("confused_count", -1);
           object.save();
           response.success(confusedCount - 1);
-        } else
+        } 
+        else
           response.success(0);
-      } else
+      } 
+      else
         response.success(0);
- 
     },
     error: function(object, error) {
       console.error(error.code);
