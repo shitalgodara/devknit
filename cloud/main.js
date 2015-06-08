@@ -421,6 +421,10 @@ Parse.Cloud.define("verifyCode", function(request, response) {
     login.verifyCode(request, response);
 });
 
+Parse.Cloud.define("verifyCod", function(request, response) {
+    login.verifyCod(request, response);
+});
+
 Parse.Cloud.define("appInstallation", function(request, response) {
     login.appInstallation(request, response);
 });

@@ -69,7 +69,7 @@ Function to verify OTP
       flag: Bool // True if successfully signed in else false 
       sessionToken: String // session Token of user signed in
   Description =>
-    Process check entry in new table with time constrain
+    Process check entry in new table with time constraint
 */
 exports.verifyCode = function(request, response) {
   var email = request.params.email;
@@ -172,6 +172,118 @@ exports.verifyCode = function(request, response) {
         errormessage = "Error: " + error.code + " " + error.message;
         response.error(error);
       }
+    });
+  } 
+}
+
+function generateRevocableSessionToken(sessionToken){
+  return Parse.Cloud.httpRequest({
+    method: "POST",
+    url: "https://api.parse.com/1/upgradeToRevocableSession",
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+      'X-Parse-Application-Id': 'tTqAhR73SE4NWFhulYX4IjQSDH2TkuTblujAbvOK',
+      'X-Parse-REST-API-Key': 'Rlfgv99tWRrpJDr484IkewPiQA7k2DRBQCzWjcC1', 
+      'X-Parse-Session-Token': sessionToken
+    }
+  });
+}
+
+/*
+Function to verify OTP by generating revocable session tokens
+  Input => 
+    < Mobile Login Users >
+      number: String // 10 digit phone no
+      code: Number
+    < Email Login Users >
+      email: String
+      password: String
+      In case of signup extra parameters mentioned below are required too  
+        Model: String // Model No. of mobile 
+        OS: String // iOS, Android or any other
+        name: String
+        role: String // Parent or Teacher
+  Output =>
+    JSON object{ 
+      flag: Bool // True if successfully signed in else false 
+      sessionToken: String // session Token of user signed in
+  Description =>
+    Process check entry in new table with time constraint
+*/
+exports.verifyCod = function(request, response) {
+  var email = request.params.email;
+  if(typeof email != 'undefined'){
+    var password = request.params.password;
+    Parse.User.logIn(email, password).then(function(user){
+      console.log("Login successful !!");
+      return generateRevocableSessionToken(user.getSessionToken());
+    }).then(function(httpResponse){
+        var flag = true;
+        var result = {
+          "flag": flag,
+          "sessionToken": JSON.parse(httpResponse.text).sessionToken
+        };
+        response.success(result);
+    }, function(error){
+      console.log(error);
+      response.error(error);
+    });
+  }
+  else{
+    var number = request.params.number;
+    var code = request.params.code;
+    var d = new Date();
+    var e = new Date(d.getTime() - 300000);
+    var Temp = Parse.Object.extend("Temp");
+    var query = new Parse.Query(Temp); 
+    query.equalTo("code", code);
+    query.equalTo("phoneNumber", number);
+    query.greaterThan("createdAt", e);
+    query.find().then(function(results){
+      if(results.length > 0){
+        console.log("Found !!");
+        var user = new Parse.User();
+        var name = request.params.name;
+        if(typeof name == 'undefined'){
+          return Parse.User.logIn(number, number + "qwerty12345").then(function(user){
+            console.log("Login successful !!");
+            return generateRevocableSessionToken(user.getSessionToken());
+          });
+        }
+        else{
+          user.set("username", number);
+          user.set("password", number + "qwerty12345");
+          user.set("MODEL", request.params.model);
+          user.set("OS", request.params.os);
+          user.set("name", request.params.name);
+          user.set("phone", number);
+          user.set("role", request.params.role);
+          return user.signUp(null).then(function(user){
+            console.log("SignUp successful !!");
+            return generateRevocableSessionToken(user.getSessionToken());
+          });
+        }
+      }
+      else{
+        console.log("Not Found !!");
+        var promise = Parse.Promise.as("");
+        return promise;
+      }
+    }).then(function(httpResponse){
+        var flag = false;
+        var sessionToken = "";
+        if(httpResponse != ""){
+          flag = true;
+          sessionToken = JSON.parse(httpResponse.text).sessionToken
+        }
+        var result = {
+          "flag": flag,
+          "sessionToken": sessionToken
+        };
+        response.success(result);
+    }, function(httpResponse){
+      console.log(httpResponse.text);
+      response.error(httpResponse.text);
     });
   } 
 }
