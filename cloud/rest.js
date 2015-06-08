@@ -279,7 +279,39 @@ exports.inviteUsers = function(request, response){
   var type = request.params.type;
   var recipients = request.params.data;
   var mode = request.params.mode;
-  var text = "Hello I have recently started using a great communication tool, Knit Messaging, and I will be using it to send out reminders and announcements. To join my classroom you can use my classcode " + classCode + ".";
+  var name = request.user.get("name");
+  var text = "";
+  var links = [{ "phone": "http://goo.gl/CKLVD4", "email": "http://goo.gl/jDrU5x" },
+               { "phone": "http://goo.gl/jDrU5x", "email": "http://goo.gl/fbneyS" },
+               { "phone": "http://goo.gl/tNRmsb", "email": "http://goo.gl/qP3dcV" },
+               { "phone": "http://goo.gl/bekkLs", "email": "http://goo.gl/xiXMpq" }];
+  switch(type){
+    case 1:
+      text = "Dear teacher, I found an awesome app, 'Knit Messaging', for teachers to communicate with parents and students. You can download the app from " + links[0][mode] + " -- " + name;
+      break;
+    case 2:
+      var groups = request.user.get("Created_groups");
+      var groupDetails = _.filter(groups, function(group){
+        return group[0] === classCode;
+      })[0];
+      var className = groupDetails[1];
+      text = "Hi! I have recently started using 'Knit Messaging' app to send updates for my " + className + " class. Download the app from " + links[1][mode] + " and use code " + classCode + " to join my class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080 -- " + name;
+      break;
+    case 3:
+      var teacherName = request.params.teacherName;
+      var groups = request.user.get("joined_groups");
+      var groupDetails = _.filter(groups, function(group){
+        return group[0] === classCode;
+      })[0];
+      var className = groupDetails[1];
+      text = "Hi! I just joined " + className + " class of " + teacherName + " on 'Knit Messaging' app. Download the app from " + links[2][mode] + " and use " + classCode + " to join this class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080 -- " + name;
+      break;
+    case 4:
+      text = "Yo! I just started using 'Knit Messaging' app. Its an awesome app for teachers, parents and students to connect with each other. Download the app from " + links[3][mode] + " -- " + name;
+      break;
+    default:
+      break;
+  }
   if(mode == "phone"){
     var promises = _.map(recipients, function(recipient){
       return smsText({
