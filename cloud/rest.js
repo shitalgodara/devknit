@@ -282,12 +282,12 @@ exports.inviteUsers = function(request, response){
   var name = request.user.get("name");
   var text = "";
   var links = [{ "phone": "http://goo.gl/CKLVD4", "email": "http://goo.gl/jDrU5x" },
-               { "phone": "http://goo.gl/jDrU5x", "email": "http://goo.gl/fbneyS" },
+               { "phone": "http://goo.gl/bnJtyu", "email": "http://goo.gl/fbneyS" },
                { "phone": "http://goo.gl/tNRmsb", "email": "http://goo.gl/qP3dcV" },
                { "phone": "http://goo.gl/bekkLs", "email": "http://goo.gl/xiXMpq" }];
   switch(type){
     case 1:
-      text = "Dear teacher, I found an awesome app, 'Knit Messaging', for teachers to communicate with parents and students. You can download the app from " + links[0][mode] + " -- " + name;
+      text = "Dear teacher, I found an awesome app, 'Knit Messaging', for teachers to communicate with parents and students. You can download the app from " + links[0][mode] + "\n-- " + name;
       break;
     case 2:
       var groups = request.user.get("Created_groups");
@@ -295,7 +295,7 @@ exports.inviteUsers = function(request, response){
         return group[0] === classCode;
       })[0];
       var className = groupDetails[1];
-      text = "Hi! I have recently started using 'Knit Messaging' app to send updates for my " + className + " class. Download the app from " + links[1][mode] + " and use code " + classCode + " to join my class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080 -- " + name;
+      text = "Hi! I have recently started using 'Knit Messaging' app to send updates for my " + className + " class. Download the app from " + links[1][mode] + " and use code " + classCode + " to join my class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080\n-- " + name;
       break;
     case 3:
       var teacherName = request.params.teacherName;
@@ -304,10 +304,10 @@ exports.inviteUsers = function(request, response){
         return group[0] === classCode;
       })[0];
       var className = groupDetails[1];
-      text = "Hi! I just joined " + className + " class of " + teacherName + " on 'Knit Messaging' app. Download the app from " + links[2][mode] + " and use " + classCode + " to join this class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080 -- " + name;
+      text = "Hi! I just joined " + className + " class of " + teacherName + " on 'Knit Messaging' app. Download the app from " + links[2][mode] + " and use " + classCode + " to join this class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080\n-- " + name;
       break;
     case 4:
-      text = "Yo! I just started using 'Knit Messaging' app. Its an awesome app for teachers, parents and students to connect with each other. Download the app from " + links[3][mode] + " -- " + name;
+      text = "Yo! I just started using 'Knit Messaging' app. Its an awesome app for teachers, parents and students to connect with each other. Download the app from " + links[3][mode] + "\n-- " + name;
       break;
     default:
       break;
