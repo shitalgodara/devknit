@@ -314,8 +314,10 @@ exports.inviteUsers = function(request, response){
   }
   if(mode == "phone"){
     var promises = _.map(recipients, function(recipient){
+      var phone = recipient[1];
+      phone = phone.replace(/\s+/g, '');
       return smsText({
-        "phone": recipient[1], 
+        "phone": phone, 
         "msg": text
       });
     });
@@ -328,9 +330,12 @@ exports.inviteUsers = function(request, response){
   }
   else if(mode == "email"){
     var promises = _.map(recipients, function(recipient){
+      var name = recipient[0].trim();
+      var email = recipient[1];
+      email = email.replace(/\s+/g, '');
       return mailText({
-        "email": recipient[1],
-        "name": recipient[0], 
+        "email": email,
+        "name": name, 
         "text": text
       });
     });
