@@ -4,10 +4,10 @@ Function to genrate OTP
     number: String // 10 digit phone no
   Output => 
     result: Bool // Success or error
-  Description =>
+  Procedure =>
     Process generates random code, save entry in new table and send code via sms
 */
-exports.genCode = function(request, response) {
+exports.genCode = function(request, response){
   var number = request.params.number;
   var code = Math.floor(Math.random() * 9000 + 1000);
   var Temp = Parse.Object.extend("Temp");
@@ -16,7 +16,7 @@ exports.genCode = function(request, response) {
     phoneNumber: number,
     code: code
   }, {
-    success: function(temp) {
+    success: function(temp){
       Parse.Cloud.httpRequest({
         url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
         headers: {
@@ -30,12 +30,16 @@ exports.genCode = function(request, response) {
           userid: '2000133095',
           auth_scheme: 'plain',
           password: 'wdq6tyUzP',
-          v: '1.0',
+          v: '1.1',
           format: 'text'
         },
-        success: function(httpResponse) {
-          console.log(httpResponse.text);
-          response.success(true);
+        success: function(httpResponse){
+          var text = httpResponse.text;
+          console.log(text);
+          if(text.substr(0,3) == 'err')
+            response.success(false);
+          else
+            response.success(true);
         },
         error: function(httpResponse) {
           console.error('Request failed with response code ' + httpResponse.status);
@@ -318,7 +322,6 @@ exports.appInstallation = function(request, response) {
   var username = request.user.get("username");
   var installationId = request.params.installationId;
   var deviceType = request.params.deviceType;
-  var deviceToken = request.params.deviceToken;
   var clarray1 = request.user.get("joined_groups");
   var clarray = [];
   var i;
@@ -327,22 +330,26 @@ exports.appInstallation = function(request, response) {
       clarray[i] = clarray1[i][0];  // Retreiving class codes of the joined groups 
     }
   }
-  var Inst = Parse.Object.extend("_Installation");
-  var inst = new Inst();
-  inst.set("username",username);
-  inst.set("installationId",installationId);
-  inst.set("deviceType",deviceType);
-  inst.set("deviceToken",deviceToken);
-  inst.set("channels",clarray);
-  console.log(clarray);
-  inst.save(null, {
-    success: function(result) {
-      response.success(result.id);
-    },
-    error: function(result,error) {
-      console.error(error.code + error.message);
-      response.error(error.message+error.code);
+  var query = new Parse.Query(Parse.Installation);
+  query.equalTo("installationId", installationId);
+  query.find().then(function(results){
+    if(results.length > 0){
+      inst = results[0];
     }
+    else{
+      var Inst = Parse.Object.extend("_Installation");
+      var inst = new Inst();
+    }
+    inst.set("username", username);
+    inst.set("installationId", installationId);
+    inst.set("deviceType", deviceType);
+    inst.set("channels", clarray);
+    return inst.save(null);
+  }).then(function(result){
+    response.success(result.id);
+  }, function(error){
+    console.log(error.message);
+    response.error(error);
   });
 }
 
@@ -353,37 +360,18 @@ Function to logout from the app
   Output =>
     flag: Bool // true in case of success
   Description =>
-    Procedure simple destroy query on installation table
+    Procedure simple clear entry of channels on installation table
 */
 exports.appLogout = function(request, response) {
   var id = request.params.installationObjectId;
-  var query = new Parse.Query(Parse.Installation);
-
   Parse.Cloud.useMasterKey();
-  query.get(id, {
-    success: function(result) {
-      result.destroy({
-        success: function(result) {
-          var flag = true;
-          response.success(flag);
-        },
-        error: function(result, error) {
-          var errormessage =  "Error in::" + "installation::" + "destroy::" + error.code + "::" + error.message + "::";
-          // Notify( eplatform , emodal , eusr , "giving Classes details" , echannel , errormessage);
-          response.error(errormessage);
-        }
-      });
-    },
-    error: function(model, error) {
-      if (error.code === Parse.Error.OBJECT_NOT_FOUND) { 
-        var flag=true;
-        response.success(flag);
-      }
-      else{
-        var errormessage ="Error in::"+"installation::"+ "get::" + error.code + "::" + error.message+"::";
-        //Notify( eplatform , emodal , eusr , "giving Classes details" , echannel , errormessage);
-        response.error(errormessage);
-      }
-    }
+  var query = new Parse.Query(Parse.Installation);
+  query.get(id).then(function(obj){
+    obj.set("channels", []);
+    return obj.save(null);
+  }).then(function(result){
+    response.success(true);
+  }, function(error){
+    response.error(error);
   });
 }

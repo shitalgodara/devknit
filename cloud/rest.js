@@ -225,7 +225,7 @@ function mailText(requestObj, response){
   var response = new Parse.Promise();
   Mandrill.sendEmail({
     message: {
-      from_email: "shubham@trumplab.com",
+      from_email: "knit@trumplab.com",
       from_name: "Knit",
       subject: "Invitation to join Knit",
       text: text,
