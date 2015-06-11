@@ -345,7 +345,7 @@ exports.giveClassesDetails = function(request, response){
   var clarray1 = request.user.get("joined_groups");
   var clarray2 = request.user.get("Created_groups");
   if((typeof clarray1 == 'undefined') && (typeof clarray2 == 'undefined'))
-    resonse.success([]);
+    response.success([]);
   else{
     var clarray =[];
     var i;
