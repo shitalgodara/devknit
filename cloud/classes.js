@@ -57,6 +57,7 @@ exports.createClass = function(request, response){
   else
     name = name[0];
   name = name.substr(0,3);
+  name = name.replace(/\W/g, ''); // removing non-alphanumeric characters
   name = name.toUpperCase();
   if(name[0] >= 0) // In case first character of name is number
     name = 'Y' + name.substr(1);
