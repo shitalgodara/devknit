@@ -172,7 +172,7 @@ Function to send sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-function smsText(requestObj, response){
+function smsText(requestObj){
   var msg = requestObj.msg;
   var phone = requestObj.phone;
   var response = new Parse.Promise();
@@ -216,7 +216,7 @@ Function to send mail
   Procedure =>
     Calling sendEmail function of Mandrill to send mail 
 */
-function mailText(requestObj, response){
+function mailText(requestObj){
   var text = requestObj.text;
   var email = requestObj.email;
   var name = requestObj.name;

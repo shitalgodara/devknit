@@ -309,7 +309,12 @@ exports.statusOfAllUsers = function(request, response){
     }
   });
 }
-
+/*
+input array of numbers who have created account
+output user parse objects with input username,phone,name,created_groups
+function to get how many signedup of tried user ,sms,call db
+a simple query on user table
+*/
 exports.KnitDiagram = function(request, response){
   var today = new Date();
   var h = new HashTable();
@@ -433,7 +438,7 @@ exports.KnitDiagram = function(request, response){
     }
   });
 }
-
+//getretened email id
 exports.getEmailId = function(request, response){
   var today = new Date();
   var h = new HashTable();

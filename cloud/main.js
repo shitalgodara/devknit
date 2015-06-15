@@ -238,7 +238,11 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
       status.error(error);
     });
 });
-
+/*----------------------------------------------------  CLOUD fUCNTIONs   -----------------------------------------------------*/
+Parse.Cloud.define("getServerTime", function(request, response) {
+//#*#console.log(new Date());
+  response.success(new Date());
+});
 /*----------------------------------------------------  PHONEMESSAGE.JS   -----------------------------------------------------*/  
 Parse.Cloud.define("messagecc", function(request, response){
     phonemessage.messagecc(request, response);
