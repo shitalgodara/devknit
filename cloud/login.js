@@ -247,7 +247,7 @@ exports.verifyCod = function(request, response) {
       if(error.code == 101)
         response.error("USER_DOESNOT_EXISTS");
       else
-        response.error(error);
+        response.error(error.code + ": " + error.message);
     });
   }
   else{
@@ -269,8 +269,12 @@ exports.verifyCod = function(request, response) {
           return Parse.User.logIn(number, number + "qwerty12345").then(function(user){
             console.log("Login successful !!");
             return generateRevocableSessionToken(user.getSessionToken());
-          }, function(user, error){
-            var promise = Parse.Promise.error("USER_DOESNOT_EXISTS");
+          }, function(error){
+            var promise;
+            if(error.code == 101)
+                promise = Parse.Promise.error("USER_DOESNOT_EXISTS");
+              else
+                promise = Parse.Promise.error(error.code + ": " + error.message);
             return promise;
           });
         }
@@ -283,8 +287,12 @@ exports.verifyCod = function(request, response) {
           return user.signUp(null).then(function(user){
             console.log("SignUp successful !!");
             return generateRevocableSessionToken(user.getSessionToken());
-          }, function(user, error){
-            var promise = Parse.Promise.error("USER_ALREADY_EXISTS");
+          }, function(error){
+            var promise;
+            if(error.code == 202)
+                promise = Parse.Promise.error("USER_ALREADY_EXISTS");
+              else
+                promise = Parse.Promise.error(error.code + ": " + error.message);
             return promise;
           });
         }
@@ -308,7 +316,7 @@ exports.verifyCod = function(request, response) {
         response.success(result);
     }, function(error){
       console.log(error);
-      response.error(error);
+      response.error(error.code + ": " + error.message);
     });
   } 
 }
