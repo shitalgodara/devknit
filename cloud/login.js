@@ -41,15 +41,14 @@ exports.genCode = function(request, response){
           else
             response.success(true);
         },
-        error: function(httpResponse) {
+        error: function(httpResponse){
           console.error('Request failed with response code ' + httpResponse.status);
           response.error(httpResponse.text);
         }
       });
     },
-    error: function(temp, error) {
-      errormessage="Error: " + error.code + " " + error.message;
-      response.error(errormessage);
+    error: function(temp, error){
+      response.error(error.code + ": " + error.message);
     }
   }); 
 }
@@ -102,7 +101,7 @@ exports.verifyCode = function(request, response) {
         if(error.code == 101)
           response.error("USER_DOESNOT_EXISTS");
         else
-          response.error(error);
+          response.error(error.code + ": " + error.message);
       }
     });
   }
@@ -135,7 +134,10 @@ exports.verifyCode = function(request, response) {
               },
               error: function(user, error){
                 console.log('Login failed !!');
-                response.error("USER_DOESNOT_EXISTS");
+                if(error.code == 101)
+                  response.error("USER_DOESNOT_EXISTS");
+                else
+                  response.error(error.code + ": " + error.message);
               }
             });
           }
@@ -158,7 +160,10 @@ exports.verifyCode = function(request, response) {
               },
               error: function(user, error){
                 console.log('SignUp failed !!');
-                response.error("USER_ALREADY_EXISTS");
+                if(error.code == 202)
+                  response.error("USER_ALREADY_EXISTS");
+                else
+                  response.error(error.code + ": " + error.message);
               }
             });
           }
@@ -175,7 +180,7 @@ exports.verifyCode = function(request, response) {
       },
       error: function(temp, error){
         console.log(error);
-        response.error(error);
+        response.error(error.code + ": " + error.message);
       }
     });
   } 

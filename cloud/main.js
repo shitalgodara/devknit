@@ -153,13 +153,39 @@ Parse.Cloud.afterSave("wrong", function(request){
 });
     
 /*---------------------------------------------JOBS----------------------*/
+
+/*
+Job to send like notifications
+  Input => 
+    Nothing
+  Output =>
+    Notitfication to the users
+  Schedule =>
+    8:00 am IST <=> 2:30 am UTC     
+    12:00 pm IST <=> 6:30 am UTC
+    4:00 pm IST <=> 10:30 am UTC
+    8:00 pm IST <=> 2:30 pm UTC
+*/
 Parse.Cloud.job("sendLikeNotifications", function(request, status){ 
-  var intervals = 4; 
-  var intervalTime = (86400000/ intervals);
+  var intervalTime = 14400000;
   var date = new Date();
   var currentTime = date.getTime();
-  var dateLowerBound = new Date(currentTime - intervals * intervalTime);
-  var dateUpperBound = new Date(currentTime - (intervals - 1) * intervalTime);
+  var currentHours = date.getHours();
+  var dateLowerBound = new Date(currentTime - 6 * intervalTime);
+  var dateUpperBound;
+  switch(currentHours){
+    case 2:
+    case 6:
+    case 10: 
+      dateUpperBound = new Date(currentTime - 5 * intervalTime);
+      break;
+    case 14:
+      dateUpperBound = new Date(currentTime - 3 * intervalTime);
+      break;
+    default:
+      status.success("Not sending any like notifications at this time");
+      break;
+  }
   var query1 = new Parse.Query("GroupDetails");
   query1.greaterThanOrEqualTo("createdAt", dateLowerBound);
   query1.lessThan("createdAt", dateUpperBound);
@@ -171,7 +197,15 @@ Parse.Cloud.job("sendLikeNotifications", function(request, status){
       Parse.Cloud.useMasterKey();
       var query2 = new Parse.Query(Parse.Installation);
       var username = result.get("senderId");
-      var msg = result.get("like_count") + " people like your post";
+      var post = result.get('title');
+      if(post.length > 15){
+        post = post.substr(0,12);
+        post = post + "...";
+      }
+      if(post.length > 0){
+        post = ' "' + post + '"';
+      } 
+      var msg = result.get("like_count") + " people like your post" + post;
       console.log(username + ": " + msg);
       query2.equalTo("username", username); 
       promise = promise.then(function(){
@@ -183,7 +217,8 @@ Parse.Cloud.job("sendLikeNotifications", function(request, status){
             badge: "Increment",
             groupName: result.get("name"),
             type: "TRANSITION",
-            action: "OUTBOX"
+            action: "LIKE",
+            id: result.id
           }
         });
       });
@@ -196,13 +231,38 @@ Parse.Cloud.job("sendLikeNotifications", function(request, status){
   });
 });
 
+/*
+Job to send confused notifications
+  Input => 
+    Nothing
+  Output =>
+    Notitfication to the users
+  Schedule =>
+    8:20 am IST <=> 2:50 am UTC     
+    12:20 pm IST <=> 6:50 am UTC
+    4:20 pm IST <=> 10:50 am UTC
+    8:20 pm IST <=> 2:50 pm UTC
+*/
 Parse.Cloud.job("sendConfusedNotifications", function(request, status){ 
-  var intervals = 4; 
-  var intervalTime = (86400000/ intervals);
+  var intervalTime = 14400000;
   var date = new Date();
   var currentTime = date.getTime();
-  var dateLowerBound = new Date(currentTime - intervals * intervalTime);
-  var dateUpperBound = new Date(currentTime - (intervals - 1) * intervalTime);
+  var currentHours = date.getHours();
+  var dateLowerBound = new Date(currentTime - 6 * intervalTime);
+  var dateUpperBound;
+  switch(currentHours){
+    case 2:
+    case 6:
+    case 10: 
+      dateUpperBound = new Date(currentTime - 5 * intervalTime);
+      break;
+    case 14:
+      dateUpperBound = new Date(currentTime - 3 * intervalTime);
+      break;
+    default:
+      status.success("Not sending any confused notifications at this time");
+      break;
+  }
   var query1 = new Parse.Query("GroupDetails");
   query1.greaterThanOrEqualTo("createdAt", dateLowerBound);
   query1.lessThan("createdAt", dateUpperBound);
@@ -214,7 +274,15 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
         Parse.Cloud.useMasterKey();
         var query2 = new Parse.Query(Parse.Installation);
         var username = result.get("senderId");
-        var msg = result.get("confused_count") + " people seems to be confused by your post";
+        var post = result.get('title');
+        if(post.length > 15){
+          post = post.substr(0,12);
+          post = post + "...";
+        }
+        if(post.length > 0){
+          post = ' "' + post + '"';
+        } 
+        var msg = result.get("confused_count") + " people seems to be confused by your post" + post;
         console.log(username + ": " + msg);
         query2.equalTo("username", username); 
         promise = promise.then(function(){
@@ -226,7 +294,8 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
               badge: "Increment",
               groupName: result.get("name"),
               type: "TRANSITION",
-              action: "OUTBOX"
+              action: "CONFUSE",
+              id: result.id
             }
           });
         });

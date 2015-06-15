@@ -130,6 +130,7 @@ exports.sendPhotoTextMessage = function(request, response){
   var parsefile = request.params.parsefile;
   var filename = request.params.filename;
   var message = request.params.message;
+  var msg;
   var GroupDetails = Parse.Object.extend("GroupDetails");
   var groupdetails = new GroupDetails();
   groupdetails.save({
@@ -143,14 +144,14 @@ exports.sendPhotoTextMessage = function(request, response){
   }, {
     success: function(obj){
       if (message == "") 
-        messsage = "You have received an Image";
+        msg = "You have received an Image";
       else
-        messsage = message;
+        msg = message;
       Parse.Push.send({
         channels: [clcode],
         data: {
-          msg: messsage,
-			    alert:messsage,
+          msg: msg,
+			    alert: msg,
           badge: "Increment",
           groupName: classname,
 			    type: "NORMAL",
@@ -163,10 +164,9 @@ exports.sendPhotoTextMessage = function(request, response){
             createdAt: groupdetails.createdAt
           };
           var c = clcode;
-          var msg = messsage;
           var username = name;
           msg = classname + ": " + msg;
-          msg = msg + ", Your Teacher " + username + " has sent you an attachment,we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
+          msg = msg + ", Your Teacher " + username + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
           msg = msg + " you can view image at ";
           var url = obj.get('attachment').url();
           Parse.Cloud.httpRequest({
