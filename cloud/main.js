@@ -197,7 +197,15 @@ Parse.Cloud.job("sendLikeNotifications", function(request, status){
       Parse.Cloud.useMasterKey();
       var query2 = new Parse.Query(Parse.Installation);
       var username = result.get("senderId");
-      var msg = result.get("like_count") + " people like your post";
+      var post = result.get('title');
+      if(post.length > 15){
+        post = post.substr(0,12);
+        post = post + "...";
+      }
+      if(post.length > 0){
+        post = ' "' + post + '"';
+      } 
+      var msg = result.get("like_count") + " people like your post" + post;
       console.log(username + ": " + msg);
       query2.equalTo("username", username); 
       promise = promise.then(function(){
@@ -266,7 +274,15 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
         Parse.Cloud.useMasterKey();
         var query2 = new Parse.Query(Parse.Installation);
         var username = result.get("senderId");
-        var msg = result.get("confused_count") + " people seems to be confused by your post";
+        var post = result.get('title');
+        if(post.length > 15){
+          post = post.substr(0,12);
+          post = post + "...";
+        }
+        if(post.length > 0){
+          post = ' "' + post + '"';
+        } 
+        var msg = result.get("confused_count") + " people seems to be confused by your post" + post;
         console.log(username + ": " + msg);
         query2.equalTo("username", username); 
         promise = promise.then(function(){
