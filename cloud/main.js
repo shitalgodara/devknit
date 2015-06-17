@@ -66,7 +66,6 @@ Parse.Cloud.afterSave("Messageneeders", function(request){
         error: function(error){
         }
       });
-    alert(num);
   }
 });
     
@@ -119,7 +118,6 @@ Parse.Cloud.afterSave("wrong", function(request){
             }
           },
           error: function(error){
-            alert(error.code);
           }
     });
   } 
