@@ -1,5 +1,6 @@
 var _ = require('underscore.js');
 var Mandrill = require('mandrill');
+var run = require('cloud/run.js');
 
 /*
 Function to output list of school names
@@ -163,93 +164,6 @@ exports.findClass = function(request, response){
 }
 
 /*
-Function to send sms
-  Input =>
-    msg: String
-    phone: String // number of the recipient
-  Output =>
-    response: Parse.Promise
-  Procedure =>
-    Sending a HTTPRequest to smsgupshup API
-*/
-function smsText(requestObj){
-  var msg = requestObj.msg;
-  var phone = requestObj.phone;
-  var response = new Parse.Promise();
-  Parse.Cloud.httpRequest({
-    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    params: {
-      method: 'sendMessage',
-      send_to: phone,
-      msg: msg,
-      msg_type: 'Text',
-      userid: '2000133095',
-      auth_scheme: 'plain',
-      password: 'wdq6tyUzP',
-      v: '1.1',
-      format: 'text'
-    }
-  }).then(function(httpResponse){
-    var status = httpResponse.text.substr(0,3);
-    if(status == "err")
-      console.error("Failed to send message to " + phone);
-    response.resolve();
-  },
-  function(httpResponse){
-    console.error("Request failed with response code " + httpResponse.status);
-    response.reject(httpResponse.text);
-  });
-  return response;
-}
-
-/*
-Function to send mail 
-  Input =>
-    text: String
-    email: String // emailId of the recipient
-    name: String // name of the recipient
-  Output =>
-    response: Parse.Promise
-  Procedure =>
-    Calling sendEmail function of Mandrill to send mail 
-*/
-function mailText(requestObj){
-  var text = requestObj.text;
-  var email = requestObj.email;
-  var name = requestObj.name;
-  var recipient = requestObj.recipient;
-  Mandrill.initialize('GrD1JI_5pNZ6MGUCNBYqUw');
-  var response = new Parse.Promise();
-  Mandrill.sendEmail({
-    message: {
-      from_email: "knit@trumplab.com",
-      from_name: "Knit",
-      subject: "Invitation to join Knit",
-      text: text,
-      to: [
-        {
-          email: email,
-          name: name 
-        }
-      ]
-    },
-    async: true
-  },{
-    success: function(httpResponse){
-      response.resolve();
-    },
-    error: function(httpResponse){
-      console.error("Request failed with response code " + httpResponse.status);
-      response.reject(httpResponse.text);
-    }
-  });
-  return response;
-} 
-
-/*
 Function to invite users
   Input =>
     classCode: String
@@ -280,43 +194,40 @@ exports.inviteUsers = function(request, response){
   var recipients = request.params.data;
   var mode = request.params.mode;
   var name = request.user.get("name");
-  var text = "";
-  var links = [{ "phone": "http://goo.gl/CKLVD4", "email": "http://goo.gl/jDrU5x" },
-               { "phone": "http://goo.gl/bnJtyu", "email": "http://goo.gl/fbneyS" },
-               { "phone": "http://goo.gl/tNRmsb", "email": "http://goo.gl/qP3dcV" },
-               { "phone": "http://goo.gl/bekkLs", "email": "http://goo.gl/xiXMpq" }];
-  switch(type){
-    case 1:
-      text = "Dear teacher, I found an awesome app, 'Knit Messaging', for teachers to communicate with parents and students. You can download the app from " + links[0][mode] + "\n-- " + name;
-      break;
-    case 2:
-      var groups = request.user.get("Created_groups");
-      var groupDetails = _.filter(groups, function(group){
-        return group[0] === classCode;
-      })[0];
-      var className = groupDetails[1];
-      text = "Hi! I have recently started using 'Knit Messaging' app to send updates for my " + className + " class. Download the app from " + links[1][mode] + " and use code " + classCode + " to join my class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080\n-- " + name;
-      break;
-    case 3:
-      var teacherName = request.params.teacherName;
-      var groups = request.user.get("joined_groups");
-      var groupDetails = _.filter(groups, function(group){
-        return group[0] === classCode;
-      })[0];
-      var className = groupDetails[1];
-      text = "Hi! I just joined " + className + " class of " + teacherName + " on 'Knit Messaging' app. Download the app from " + links[2][mode] + " and use " + classCode + " to join this class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080\n-- " + name;
-      break;
-    case 4:
-      text = "Yo! I just started using 'Knit Messaging' app. Its an awesome app for teachers, parents and students to connect with each other. Download the app from " + links[3][mode] + "\n-- " + name;
-      break;
-    default:
-      break;
-  }
   if(mode == "phone"){
+    var text = "";
+    switch(type){
+      case 1:
+        text = "Dear teacher, I found an awesome app, 'Knit Messaging', for teachers to communicate with parents and students. You can download the app from http://goo.gl/CKLVD4\n-- " + name;
+        break;
+      case 2:
+        var groups = request.user.get("Created_groups");
+        var groupDetails = _.filter(groups, function(group){
+          return group[0] === classCode;
+        })[0];
+        var className = groupDetails[1];
+        text = "Hi! I have recently started using 'Knit Messaging' app to send updates for my " + className + " class. Download the app from http://goo.gl/bnJtyu and use code " + classCode + " to join my class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080\n-- " + name;
+        break;
+      case 3:
+        var teacherName = request.params.teacherName;
+        var groups = request.user.get("joined_groups");
+        var groupDetails = _.filter(groups, function(group){
+          return group[0] === classCode;
+        })[0];
+        var className = groupDetails[1];
+        text = "Hi! I just joined " + className + " class of " + teacherName + " on 'Knit Messaging' app. Download the app from http://goo.gl/tNRmsb and use " + classCode + " to join this class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080\n-- " + name;
+        break;
+      case 4:
+        text = "Yo! I just started using 'Knit Messaging' app. Its an awesome app for teachers, parents and students to connect with each other. Download the app from http://goo.gl/bekkLs\n-- " + name;
+        break;
+      default:
+        response.success(true);
+        break;
+    }
     var promises = _.map(recipients, function(recipient){
       var phone = recipient[1];
       phone = phone.replace(/\s+/g, '');
-      return smsText({
+      return run.smsText({
         "phone": phone, 
         "msg": text
       });
@@ -329,14 +240,106 @@ exports.inviteUsers = function(request, response){
     });  
   }
   else if(mode == "email"){
+    var template_name;
+    var template_content;
+    switch(type){
+      case 1:
+        template_name = "p2t";
+        template_content = [
+          {
+            name: "link",
+            content: "<a href='http://goo.gl/jDrU5x' style='text-decoration: none'>download the app</a>" 
+          },
+          {
+            name: "name",
+            content: name
+          }
+        ];  
+        break;
+      case 2:
+        var groups = request.user.get("Created_groups");
+        var groupDetails = _.filter(groups, function(group){
+          return group[0] === classCode;
+        })[0];
+        var className = groupDetails[1];
+        template_name = "t2p";
+        template_content = [
+          {
+            name: "link",
+            content: "<a href='http://goo.gl/fbneyS' style='text-decoration: none'>Download the app</a>" 
+          },
+          {
+            name: "classCode",
+            content: classCode
+          },
+          {
+            name: "className",
+            content: className
+          },
+          {
+            name: "name",
+            content: name
+          }
+        ];
+        break;
+      case 3:
+        var teacherName = request.params.teacherName;
+        var groups = request.user.get("joined_groups");
+        var groupDetails = _.filter(groups, function(group){
+          return group[0] === classCode;
+        })[0];
+        var className = groupDetails[1];
+        template_name = "p2p";
+        template_content = [
+          {
+            name: "link",
+            content: "<a href='http://goo.gl/qP3dcV' style='text-decoration: none'>Download the app</a>" 
+          },
+          {
+            name: "classCode",
+            content: classCode
+          },
+          {
+            name: "className",
+            content: className
+          },
+          {
+            name: "teacherName",
+            content: teacherName
+          },
+          {
+            name: "name",
+            content: name
+          }
+        ];
+        break;
+      case 4:
+        template_name = "spread-the-word";
+        template_content = [
+          {
+            name: "link",
+            content: "<a href='http://goo.gl/xiXMpq' style='text-decoration: none'>download the app</a>" 
+          },
+          {
+            name: "name",
+            content: name
+          }
+        ];
+        break;
+      default:
+        response.success(true);
+        break;
+    }
     var promises = _.map(recipients, function(recipient){
       var name = recipient[0].trim();
       var email = recipient[1];
       email = email.replace(/\s+/g, '');
-      return mailText({
+      return run.mailTemplate({
         "email": email,
-        "name": name, 
-        "text": text
+        "name": name,       
+        "subject": "Invitation to join Knit",
+        "template_name": template_name,
+        "template_content": template_content
       });
     });
     Parse.Promise.when(promises).then(function(){

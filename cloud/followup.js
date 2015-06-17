@@ -309,11 +309,19 @@ exports.statusOfAllUsers = function(request, response){
     }
   });
 }
+
 /*
-input array of numbers who have created account
-output user parse objects with input username,phone,name,created_groups
-function to get how many signedup of tried user ,sms,call db
-a simple query on user table
+Function to get how many signedup of tried user, sms, call db
+  Input =>
+    Array of numbers who have created account
+  Output =>
+    Parse user objects{
+      username: String
+      phone: String
+      name: String
+      Created_groups: Array
+  Procedure =>
+    A simple query on user table
 */
 exports.KnitDiagram = function(request, response){
   var today = new Date();
@@ -438,6 +446,7 @@ exports.KnitDiagram = function(request, response){
     }
   });
 }
+
 //getretened email id
 exports.getEmailId = function(request, response){
   var today = new Date();

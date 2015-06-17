@@ -308,8 +308,7 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
     });
 });
 /*----------------------------------------------------  CLOUD fUCNTIONs   -----------------------------------------------------*/
-Parse.Cloud.define("getServerTime", function(request, response) {
-//#*#console.log(new Date());
+Parse.Cloud.define("getServerTime", function(request, response){
   response.success(new Date());
 });
 /*----------------------------------------------------  PHONEMESSAGE.JS   -----------------------------------------------------*/  
@@ -557,6 +556,10 @@ Parse.Cloud.define("appLogout", function(request, response){
 /*---------------------------------------------------- MAIL.JS   -------------------------------------------------*/
 Parse.Cloud.define("mailInstructions", function(request, response){
     mail.mailInstructions(request, response);
+});
+
+Parse.Cloud.define("mailPdf", function(request, response){
+  mail.mailPdf(request, response);
 });
 /*---------------------------------------------------- ANALYTICS.JS   -------------------------------------------------*/
 Parse.Cloud.define("newSignUps", function(request, response){

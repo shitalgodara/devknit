@@ -3,7 +3,13 @@ Function to genrate OTP
   Input => 
     number: String // 10 digit phone no
   Output => 
-    result: Bool // Success or error
+    <Success>
+      <Valid Number>
+        flag: true
+      <Invalid Number>
+        flag: false
+    <Error>
+      error: String
   Procedure =>
     Process generates random code, save entry in new table and send code via sms
 */

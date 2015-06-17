@@ -6,7 +6,7 @@ Function to mail instructions to teachers
 	Output =>
 		flag: Bool // Success in case of email sent otherwise error
 */
-exports.mailInstructions = function(request, response) {
+exports.mailInstructions = function(request, response){
 	var name = request.user.get("name");
 	var emailId = request.params.emailId;
 	var messagetext = "Hi " + name + '\n' + "Welcome to KNIT" + '\n' + "To invite parents to your class you have to share your class code with them, you can send this paper to all students in your class" + '\n' + '\n' + "write your class code in the box provided in the pdf below" + '\n' + "Regards" + '\n' + "KNIT Team";
@@ -47,7 +47,7 @@ exports.mailInstructions = function(request, response) {
 	});
 }
 
-Parse.Cloud.define("mailPdf", function(request, response){
+exports.mailPdf = function(request, response){
     Mandrill.initialize('GrD1JI_5pNZ6MGUCNBYqUw');
     Mandrill.sendEmail({
       message: {
@@ -70,11 +70,12 @@ Parse.Cloud.define("mailPdf", function(request, response){
       },
       async: true
     },{
-      success: function(httpResponse) {
-        response.success(httpResponse);
+      success: function(httpResponse){
+        response.success(true);
         },
-      error: function(httpResponse) {
-        response.error(httpResponse);
+      error: function(httpResponse){
+      	console.error(httpResponse.text);
+        response.error(false);
       }
     });
-});
+}
