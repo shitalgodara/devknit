@@ -1,5 +1,4 @@
 var _ = require('underscore.js');
-var Mandrill = require('mandrill');
 var run = require('cloud/run.js');
 
 /*
@@ -224,15 +223,14 @@ exports.inviteUsers = function(request, response){
         response.success(true);
         break;
     }
-    var promises = _.map(recipients, function(recipient){
-      var phone = recipient[1];
-      phone = phone.replace(/\s+/g, '');
-      return run.smsText({
-        "phone": phone, 
-        "msg": text
-      });
+    var numberArray = _.map(recipients, function(recipient){
+      return recipient[1];    
     });
-    Parse.Promise.when(promises).then(function(){
+    var numberList = numberArray.join();
+    run.smsText({
+      "numberList": numberList,
+      "msg": text
+    }).then(function(){
       response.success(true);
     },
     function(error){
@@ -240,8 +238,34 @@ exports.inviteUsers = function(request, response){
     });  
   }
   else if(mode == "email"){
+    var android = require('cloud/Attachments/android.js');
+    var ios = require('cloud/Attachments/ios.js');
+    var logo = require('cloud/Attachments/logo.js');
+    var web = require('cloud/Attachments/web.js');
     var template_name;
     var template_content;
+    var images = [
+      {
+        type: "image/png",
+        name: "android",
+        content: android.getBase64()
+      },
+      {
+        type: "image/png",
+        name: "ios",
+        content: ios.getBase64()
+      },
+      {
+        type: "image/png",
+        name: "logo",
+        content: logo.getBase64()
+      },
+      {
+        type: "image/png",
+        name: "web",
+        content: web.getBase64()
+      }
+    ];
     switch(type){
       case 1:
         template_name = "p2t";
@@ -330,19 +354,23 @@ exports.inviteUsers = function(request, response){
         response.success(true);
         break;
     }
-    var promises = _.map(recipients, function(recipient){
+    recipients = _.map(recipients, function(recipient){
       var name = recipient[0].trim();
       var email = recipient[1];
       email = email.replace(/\s+/g, '');
-      return run.mailTemplate({
-        "email": email,
-        "name": name,       
-        "subject": "Invitation to join Knit",
-        "template_name": template_name,
-        "template_content": template_content
-      });
+      return {
+        "name": name,
+        "email": email
+      };
     });
-    Parse.Promise.when(promises).then(function(){
+    console.log(recipients);
+    run.mailTemplate({
+      "recipients": recipients,
+      "subject": "Invitation to join Knit",
+      "images": images,
+      "template_name": template_name,
+      "template_content": template_content
+    }).then(function(){
       response.success(true);
     },
     function(error){

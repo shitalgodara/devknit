@@ -2,15 +2,15 @@
 Function to send sms
   Input =>
     msg: String
-    phone: String // number of the recipient
+    numberList: String // numbers of the recipient separated by commas
   Output =>
-    response: Parse.Promise
+    httpResponse: Parse.Promise
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
 exports.smsText = function(request){
   var msg = request.msg;
-  var phone = request.phone;
+  var numberList = request.numberList;
   var response = new Parse.Promise();
   return Parse.Cloud.httpRequest({
     url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
@@ -19,7 +19,7 @@ exports.smsText = function(request){
     },
     params: {
       method: 'sendMessage',
-      send_to: phone,
+      send_to: numberList,
       msg: msg,
       msg_type: 'Text',
       userid: '2000133095',
@@ -32,20 +32,28 @@ exports.smsText = function(request){
 }
 
 /*
-Function to send template 
+Function to mail template 
   Input =>
-    email: String // emailId of the recipient
-    name: String // name of the recipient
+    recipients: Array of objects{
+      email: String  // emailId of recipient
+      <Optional>
+        name: String // name of recipient 
+    }
     subject: String // subject of email
     template_name: String
     template_content: Array of object{
       name: String
       content: String
     }
+    images: Array of object{
+      type: String
+      name: String
+      content: String
+    }
   Output =>
-    response: Parse.Promise
+    httpResponse: Parse.Promise
   Procedure =>
-    Calling sendEmail function of Mandrill to send mail 
+    Calling to sendTemplate function of Mandrill api to send template 
 */
 exports.mailTemplate = function(request){
   return Parse.Cloud.httpRequest({
@@ -59,17 +67,90 @@ exports.mailTemplate = function(request){
       "template_name": request.template_name,
       "template_content": request.template_content,
       "message": {
-          "subject": request.subject,
-          "from_email": "knit@trumplab.com",
-          "from_name": "Knit",
-          "to": [
-              {
-                  "email": request.email,
-                  "name": request.name
-              }
-          ]
+        "subject": request.subject,
+        "from_email": "knit@trumplab.com",
+        "from_name": "Knit",
+        "to": request.recipients,
+        "images": request.images
       },
       "async": false
     }
   });
 } 
+
+/*
+Function to mail attachment
+  Input =>
+    recipients: Array of objects{
+      email: String  // emailId of recipient
+      <Optional>
+        name: String // name of recipient  
+    }
+    attachments: Array of attachment{
+      type: String // type of the attachment
+      name: String
+      content: String // base64 encoded content of the attachment
+    }
+    subject: String // subject of email
+    text: String
+  Output =>
+    httpResponse: Parse.Promise
+  Procedure =>
+    Calling to sendEmail function to send attachment
+*/
+exports.mailAttachment = function(request){
+  var promise = new Parse.Promise();
+  var Mandrill = require('mandrill');
+  Mandrill.initialize('GrD1JI_5pNZ6MGUCNBYqUw');
+  Mandrill.sendEmail({
+    message: {
+      text: request.text,
+      subject: request.subject,
+      from_email: "knit@trumplab.com",
+      from_name: "Knit",
+      to: request.recipients,
+      attachments: request.attachments
+    },
+    async: false
+  }, {
+    success: function(httpResponse){
+      promise.resolve();
+    },
+    error: function(httpResponse){
+      console.error(httpResponse.data);
+      promise.reject();
+    }
+  });
+  return promise;
+}
+
+/* 
+Function to generate Revocable Session Token 
+  Input =>
+    sessionToken: String // Legacy session Token
+  Output =>
+    sessionToken: String // Revocable Session Token 
+  Procedure =>
+    Post request on upgradeToRevocableSession
+*/
+exports.genRevocableSession = function(request){
+  return Parse.Cloud.httpRequest({
+    method: "POST",
+    url: "https://api.parse.com/1/upgradeToRevocableSession",
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+      'X-Parse-Application-Id': 'tTqAhR73SE4NWFhulYX4IjQSDH2TkuTblujAbvOK',
+      'X-Parse-REST-API-Key': 'Rlfgv99tWRrpJDr484IkewPiQA7k2DRBQCzWjcC1', 
+      'X-Parse-Session-Token': request.sessionToken
+    }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.data.sessionToken);
+  }, function(httpResponse){
+    console.error(httpResponse.data);
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
+  });
+}

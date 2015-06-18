@@ -1,3 +1,5 @@
+var run = require('cloud/run.js');
+
 /*
 Function to genrate OTP 
   Input => 
@@ -23,34 +25,21 @@ exports.genCode = function(request, response){
     code: code
   }, {
     success: function(temp){
-      Parse.Cloud.httpRequest({
-        url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        params: {
-          method: 'sendMessage',
-          send_to: number,
-          msg: "Your requested verification code is " + code, 
-          msg_type: 'Text',
-          userid: '2000133095',
-          auth_scheme: 'plain',
-          password: 'wdq6tyUzP',
-          v: '1.1',
-          format: 'text'
-        },
-        success: function(httpResponse){
-          var text = httpResponse.text;
-          console.log(text);
-          if(text.substr(0,3) == 'err')
-            response.success(false);
-          else
-            response.success(true);
-        },
-        error: function(httpResponse){
-          console.error('Request failed with response code ' + httpResponse.status);
-          response.error(httpResponse.text);
-        }
+      var msg = "Your requested verification code is " + code;
+      run.smsText({
+        "msg": msg,
+        "numberList": number
+      }).then(function(httpResponse){
+        var text = httpResponse.text;
+        console.log(text);
+        if(text.substr(0,3) == 'err')
+          response.success(false);
+        else
+          response.success(true);
+      },
+      function(httpResponse){
+        console.error('Request failed with response code ' + httpResponse.status);
+        response.error(httpResponse.text);
       });
     },
     error: function(temp, error){
@@ -103,7 +92,7 @@ exports.verifyCode = function(request, response) {
         response.success(result);
       },
       error: function(user, error){
-        console.log(error);
+        console.error(error);
         if(error.code == 101)
           response.error("USER_DOESNOT_EXISTS");
         else
@@ -139,7 +128,7 @@ exports.verifyCode = function(request, response) {
                 response.success(result);
               },
               error: function(user, error){
-                console.log('Login failed !!');
+                console.error('Login failed !!');
                 if(error.code == 101)
                   response.error("USER_DOESNOT_EXISTS");
                 else
@@ -165,7 +154,7 @@ exports.verifyCode = function(request, response) {
                 response.success(result);
               },
               error: function(user, error){
-                console.log('SignUp failed !!');
+                console.error('SignUp failed !!');
                 if(error.code == 202)
                   response.error("USER_ALREADY_EXISTS");
                 else
@@ -184,25 +173,12 @@ exports.verifyCode = function(request, response) {
           response.success(result);
         }
       },
-      error: function(temp, error){
-        console.log(error);
+      error: function(error){
+        console.error(error);
         response.error(error.code + ": " + error.message);
       }
     });
   } 
-}
-
-function generateRevocableSessionToken(sessionToken){
-  return Parse.Cloud.httpRequest({
-    method: "POST",
-    url: "https://api.parse.com/1/upgradeToRevocableSession",
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8',
-      'X-Parse-Application-Id': 'tTqAhR73SE4NWFhulYX4IjQSDH2TkuTblujAbvOK',
-      'X-Parse-REST-API-Key': 'Rlfgv99tWRrpJDr484IkewPiQA7k2DRBQCzWjcC1', 
-      'X-Parse-Session-Token': sessionToken
-    }
-  });
 }
 
 /*
@@ -234,18 +210,20 @@ Function to verify OTP by generating revocable session tokens
   Description =>
     Process check entry in new table with time constraint
 */
-exports.verifyCod = function(request, response) {
+exports.verifyCod = function(request, response){
   var email = request.params.email;
   if(typeof email != 'undefined'){
     var password = request.params.password;
     Parse.User.logIn(email, password).then(function(user){
       console.log("Login successful !!");
-      return generateRevocableSessionToken(user.getSessionToken());
-    }).then(function(httpResponse){
+      return run.genRevocableSession({
+        "sessionToken": user._sessionToken
+      });
+    }).then(function(sessionToken){
         var flag = true;
         var result = {
           "flag": flag,
-          "sessionToken": JSON.parse(httpResponse.text).sessionToken
+          "sessionToken": sessionToken
         };
         response.success(result);
     }, function(error){
@@ -274,14 +252,9 @@ exports.verifyCod = function(request, response) {
         if(typeof name == 'undefined'){
           return Parse.User.logIn(number, number + "qwerty12345").then(function(user){
             console.log("Login successful !!");
-            return generateRevocableSessionToken(user.getSessionToken());
-          }, function(error){
-            var promise;
-            if(error.code == 101)
-                promise = Parse.Promise.error("USER_DOESNOT_EXISTS");
-              else
-                promise = Parse.Promise.error(error.code + ": " + error.message);
-            return promise;
+            return run.genRevocableSession({
+              "sessionToken": user._sessionToken
+            });
           });
         }
         else{
@@ -292,14 +265,9 @@ exports.verifyCod = function(request, response) {
           user.set("role", request.params.role);
           return user.signUp(null).then(function(user){
             console.log("SignUp successful !!");
-            return generateRevocableSessionToken(user.getSessionToken());
-          }, function(error){
-            var promise;
-            if(error.code == 202)
-                promise = Parse.Promise.error("USER_ALREADY_EXISTS");
-              else
-                promise = Parse.Promise.error(error.code + ": " + error.message);
-            return promise;
+            return run.genRevocableSession({
+              "sessionToken": user._sessionToken
+            });
           });
         }
       }
@@ -308,12 +276,10 @@ exports.verifyCod = function(request, response) {
         var promise = Parse.Promise.as("");
         return promise;
       }
-    }).then(function(httpResponse){
+    }).then(function(sessionToken){
         var flag = false;
-        var sessionToken = "";
-        if(httpResponse != ""){
+        if(sessionToken != ""){
           flag = true;
-          sessionToken = JSON.parse(httpResponse.text).sessionToken
         }
         var result = {
           "flag": flag,
@@ -321,8 +287,16 @@ exports.verifyCod = function(request, response) {
         };
         response.success(result);
     }, function(error){
-      console.log(error);
-      response.error(error.code + ": " + error.message);
+      console.error(error);
+      if(error.code == 101){
+        response.error("USER_DOESNOT_EXISTS");
+      }
+      else if(error.code == 202){
+        response.error("USER_ALREADY_EXISTS");
+      }
+      else{
+        response.error(error.code + ": " + error.message);
+      }
     });
   } 
 }
@@ -391,6 +365,30 @@ exports.appLogout = function(request, response) {
   }).then(function(result){
     response.success(true);
   }, function(error){
-    response.error(error);
+    response.error(error.code + ": " + error.message);
   });
+}
+
+/*
+Function to logout from the app given installationId
+  Input =>
+    installationId: String
+  Output =>
+    flag: Bool // true in case of success
+  Description =>
+    Procedure simple clear entry of channels on installation table
+*/
+exports.appExit = function(request, response){
+  var id = request.params.installationId;
+  Parse.Cloud.useMasterKey();
+  var query = new Parse.Query(Parse.Installation);
+  query.equalTo("installationId", id);
+  query.each(function(result){
+    result.set("channels", []);
+    return result.save();
+  }).then(function(result){
+    response.success(true);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
+  }); 
 }
