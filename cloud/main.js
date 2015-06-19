@@ -15,6 +15,8 @@ var login = require('cloud/login.js');
 var mail = require('cloud/mail.js');
 var analytics = require('cloud/analytics.js');
 var followup = require('cloud/followup.js');
+var developer = require('cloud/developer.js');
+var classlist = require('cloud/classlist.js');
 var _ = require('underscore.js');
 
 /*------------------------------------------------after/before functions---------------------------*/
@@ -599,85 +601,24 @@ Parse.Cloud.define("KnitDiagram", function(request, response){
 Parse.Cloud.define("getEmailId", function(request, response){
     followup.KnitDiagram(request, response);
 });
+/*---------------------------------------------------- DEVELOPER.JS   -------------------------------------------------*/
+Parse.Cloud.define("deleteKioClassFromUserJoinedGroups", function(request, response){
+    developer.deleteKioClassFromUserJoinedGroups(request, response);
+});
 
+/*---------------------------------------------------- CLASSLIST.JS   -------------------------------------------------*/
+Parse.Cloud.define("giveCLassesInCodegroup", function(request, response){
+    classlist.giveCLassesInCodegroup(request, response);
+});
+
+Parse.Cloud.define("giveCLassesInGroupDetails", function(request, response){
+    classlist.giveCLassesInGroupDetails(request, response);
+});
+
+Parse.Cloud.define("giveCLassesInUser", function(request, response){
+    classlist.giveCLassesInUser(request, response);
+});
 /*-------------------------- CLOUD FUNCTIONS ---------------------*/
-
-function HashTable(obj){
-    this.length = 0;
-    this.items = {};
-    for (var p in obj){
-        if (obj.hasOwnProperty(p)){
-            this.items[p] = obj[p];
-            this.length++;
-        }
-    }
-
-    this.setItem = function(key, value){
-        var previous = undefined;
-        if (this.hasItem(key)){
-            previous = this.items[key];
-        }
-        else {
-            this.length++;
-        }
-        this.items[key] = value;
-        return previous;
-    }
-
-    this.getItem = function(key){
-        return this.hasItem(key) ? this.items[key] : undefined;
-    }
-
-    this.hasItem = function(key){
-        return this.items.hasOwnProperty(key);
-    }
-   
-    this.removeItem = function(key){
-        if (this.hasItem(key)){
-            previous = this.items[key];
-            this.length--;
-            delete this.items[key];
-            return previous;
-        }
-        else {
-            return undefined;
-        }
-    }
-
-    this.keys = function(){
-        var keys = [];
-        for (var k in this.items){
-            if (this.hasItem(k)){
-                keys.push(k);
-            }
-        }
-        return keys;
-    }
-
-    this.values = function(){
-        var values = [];
-        for (var k in this.items){
-            if (this.hasItem(k)){
-                values.push(this.items[k]);
-            }
-        }
-        return values;
-    }
-
-    this.each = function(fn){
-        for (var k in this.items){
-            if (this.hasItem(k)){
-                fn(k, this.items[k]);
-            }
-        }
-    }
-
-    this.clear = function(){
-        this.items = {}
-        this.length = 0;
-    }
-}
-
 /*
 Function to get list of members subscribed to that class via app
   Input =>
