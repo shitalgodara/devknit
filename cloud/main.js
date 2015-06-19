@@ -618,6 +618,14 @@ Parse.Cloud.define("giveCLassesInGroupDetails", function(request, response){
 Parse.Cloud.define("giveCLassesInUser", function(request, response){
     classlist.giveCLassesInUser(request, response);
 });
+
+Parse.Cloud.define("giveCLassesInGroupmembers", function(request, response){
+    classlist.giveCLassesInGroupmembers(request, response);
+});
+
+Parse.Cloud.define("giveCLassesInMessageneeders", function(request, response){
+    classlist.giveCLassesInMessageneeders(request, response);
+});
 /*-------------------------- CLOUD FUNCTIONS ---------------------*/
 /*
 Function to get list of members subscribed to that class via app
