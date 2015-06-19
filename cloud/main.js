@@ -553,6 +553,10 @@ Parse.Cloud.define("appInstallation", function(request, response){
 Parse.Cloud.define("appLogout", function(request, response){
     login.appLogout(request, response);
 });
+
+Parse.Cloud.define("appExit", function(request, response){
+    login.appExit(request, response);
+});
 /*---------------------------------------------------- MAIL.JS   -------------------------------------------------*/
 Parse.Cloud.define("mailInstructions", function(request, response){
     mail.mailInstructions(request, response);
