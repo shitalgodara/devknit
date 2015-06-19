@@ -181,18 +181,6 @@ exports.verifyCode = function(request, response) {
   } 
 }
 
-function generateRevocableSessionToken(sessionToken){
-  return Parse.Cloud.httpRequest({
-    method: "POST",
-    url: "https://api.parse.com/1/upgradeToRevocableSession",
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8',
-      'X-Parse-Application-Id': 'tTqAhR73SE4NWFhulYX4IjQSDH2TkuTblujAbvOK',
-      'X-Parse-REST-API-Key': 'Rlfgv99tWRrpJDr484IkewPiQA7k2DRBQCzWjcC1', 
-      'X-Parse-Session-Token': sessionToken
-    }
-  });
-}
 
 /*
 Function to verify OTP by generating revocable session tokens
