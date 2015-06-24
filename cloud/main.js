@@ -56,7 +56,7 @@ Parse.Cloud.afterSave("wrong", function(request){
   var a = code;
   b = a.substr(0,4);
   if(b == "STOP"){
-    c = a.substr(5);
+    c = a.substr(4);
     var Messageneeders = Parse.Object.extend("Messageneeders");
     var query = new Parse.Query(Messageneeders);
     query.equalTo("cod", c);
