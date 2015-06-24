@@ -223,12 +223,11 @@ exports.inviteUsers = function(request, response){
         response.success(true);
         break;
     }
-    var numberArray = _.map(recipients, function(recipient){
+    var numbers = _.map(recipients, function(recipient){
       return recipient[1].replace(/\s+/g, '');    
     });
-    var numberList = numberArray.join();
     run.smsText({
-      "numberList": numberList,
+      "numbers": numbers,
       "msg": text
     }).then(function(){
       response.success(true);
@@ -374,7 +373,7 @@ exports.inviteUsers = function(request, response){
       response.success(true);
     },
     function(error){
-      response.error(error);
+      response.error(error.code + ": " + error.message);
     });  
   }
 }

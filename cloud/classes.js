@@ -1,4 +1,6 @@
-﻿/*
+﻿var run = require('cloud/run.js');
+
+/*
   Function to notify which kind of operation failed in which step
 */
 function Notify(a, b, c, d, f, g){
@@ -528,46 +530,20 @@ exports.removeMember = function(request, response){
     var query = new Parse.Query(Messageneeders);
     query.equalTo("cod", clcode);
     query.equalTo("number", number);
-    query.first({
-      success: function(myObject){
-        if (myObject){
-          myObject.set("status","REMOVED");
-          myObject.save({
-            success: function(myObject){
-              Parse.Cloud.httpRequest({
-                url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                params: {
-                  method: 'sendMessage',
-                  send_to: number,
-                  msg: "You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher",
-                  msg_type: 'Text',
-                  userid: '2000133095',
-                  auth_scheme: 'plain',
-                  password: 'wdq6tyUzP',
-                  v: '1.0',
-                  format: 'text'
-                },
-                success: function(httpResponse){
-                  var flag = true;
-                  response.success(flag);
-                },
-                error: function(httpResponse){
-                  response.error("Error: " + error.code + " " + error.message);
-                }
-              });
-            },
-            error: function(myObject, error){
-              response.error("Error: " + error.code + " " + error.message);
-            }
-          });
-        } 
-      },
-      error: function(error){
-        response.error("Error: " + error.code + " " + error.message);
-      }
+    query.first().then(function(myObject){
+      myObject.set("status","REMOVED");
+      return myObject.save(); 
+    }).then(function(myObject){
+      var numbers = [number];
+      return run.smsText({
+        "numbers": numbers,
+        "msg": "You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher"
+      });
+    }).then(function(){
+      var flag = true;
+      response.success(flag);
+    }, function(error){
+      response.error("error.code" + ": " + error.message);
     });
   }                        
 }

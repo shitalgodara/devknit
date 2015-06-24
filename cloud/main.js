@@ -6,9 +6,9 @@ var message = require('cloud/message.js');
 var messagecount = require('cloud/messagecount.js');
 var classes = require('cloud/classes.js');
 var channel= require('cloud/channel.js');
-var user= require('cloud/user.js');
-var rest= require('cloud/rest.js');
-var temp= require('cloud/temp.js');
+var user = require('cloud/user.js');
+var rest = require('cloud/rest.js');
+var temp = require('cloud/temp.js');
 var schoolapi= require('cloud/schoolapi.js');
 var inbox = require('cloud/inbox.js');
 var login = require('cloud/login.js');
@@ -17,57 +17,36 @@ var analytics = require('cloud/analytics.js');
 var followup = require('cloud/followup.js');
 var developer = require('cloud/developer.js');
 var classlist = require('cloud/classlist.js');
+var run = require('cloud/run.js');
 var _ = require('underscore.js');
 
 /*------------------------------------------------after/before functions---------------------------*/
 Parse.Cloud.afterSave("Messageneeders", function(request){
   var num = request.object.get("number");
   var code = request.object.get("cod");
-  console.log(request.object.get("status"));
-  if((request.object.get("status")!="LEAVE") && (request.object.get("status") != "REMOVED")){
-    console.log("in");
-    var a = code;
-    a = a.replace(/\s+/g, '');
-    a = a.toUpperCase();
+  if((request.object.get("status") != "LEAVE") && (request.object.get("status") != "REMOVED")){
     var Codegroup = Parse.Object.extend("Codegroup");
     var query = new Parse.Query("Codegroup");
-    query.equalTo("code", a);
-    query.first({
-      success: function(obj){
-        if(obj){
-          var cls = obj.get("Creator");
-          var nam = obj.get("name");    
-          Parse.Cloud.httpRequest({
-            url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            params: {
-              method: 'sendMessage',
-              send_to: num,
-              msg: "Congratulations you have successfully subscribed to" + " " + cls + "'s " + nam + " " + "classroom You will start receieving messages as soon as your Teacher start using it",
-              msg_type: 'Text',
-              userid: '2000133095',
-              auth_scheme: 'plain',
-              password: 'wdq6tyUzP',
-              v: '1.0',
-              format: 'text'
-            },
-            success: function(httpResponse){
-              console.log(httpResponse.text);
-            },
-            error: function(httpResponse){
-              console.error('Request failed with response code ' + httpResponse.status);
-            }
-          });
-        } 
-        else{
-    
-            }
-        },
-        error: function(error){
-        }
-      });
+    query.equalTo("code", code);
+    query.first().then(function(obj){
+      if(obj){
+        var teacher = obj.get("Creator");
+        var cls = obj.get("name");    
+        var numbers = [num];
+        var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + cls + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
+        return run.smsText({
+          "numbers": [num],
+          "msg": msg
+        });
+      }
+      else{
+        return Parse.Promise.as();
+      }
+    }).then(function(text){
+      console.log(text);
+    }, function(error){
+      console.error(error.code + ": " + error.message);
+    });
   }
 });
     
@@ -75,79 +54,56 @@ Parse.Cloud.afterSave("wrong", function(request){
   var num = request.object.get("number");
   var code = request.object.get("cod");
   var a = code;
-  b = a.substr(0, 4);
-  if (b == "STOP"){
-    c = a.substr(4); 
+  b = a.substr(0,4);
+  if(b == "STOP"){
+    c = a.substr(5);
     var Messageneeders = Parse.Object.extend("Messageneeders");
     var query = new Parse.Query(Messageneeders);
     query.equalTo("cod", c);
     query.equalTo("number", num);
-    query.first({
-          success: function(myObject){
-            if (myObject){
-              myObject.set("status","LEAVE");
-              myObject.save({
-                success: function(myObject){    
-                  Parse.Cloud.httpRequest({
-                    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    params: {
-                      method: 'sendMessage',
-                      send_to: num,
-                      msg: "You have been successfully unsubscribed,Now you will not recieve any message from your Teacher",
-                      msg_type: 'Text',
-                      userid: '2000133095',
-                      auth_scheme: 'plain',
-                      password: 'wdq6tyUzP',
-                      v: '1.0',
-                      format: 'text'
-                    },
-                    success: function(httpResponse){
-                      console.log(httpResponse.text);  
-                    },
-                    error: function(httpResponse){
-                      console.error('Request failed with response code ' + httpResponse.status);                                    
-                    }
-                  });
-                },
-                error: function(myObject, error){
-                }
-              });
-            } 
-            else{
-            }
-          },
-          error: function(error){
-          }
+    query.first().then(function(myObject){
+      if (myObject){
+        myObject.set("status", "LEAVE");
+        return myObject.save().then(function(myObject){
+          var msg = "You have been successfully unsubscribed, now you will not recieve any message from your teacher"; 
+          var numbers = [num];
+          return run.smsText({
+            "numbers": numbers,
+            "msg": msg
+          });
+        });  
+      }
+      else{
+        return Parse.Promise.as();
+      }
+    }).then(function(text){
+      console.log(text);
+    }, function(error){
+      console.error(error.code + ": " + error.message);
     });
   } 
+  else if(b == "SEND"){
+    var msg = "You seems to have forgot to enter student's name, general format to subscribe via sms is '<classCode> <space> <Student Name>'";
+    var numbers = [num];
+    run.smsText({
+      "numbers": numbers,
+      "msg": msg
+    }).then(function(text){
+      console.log(text);
+    }, function(error){
+      console.error(error.code + ": " + error.message);
+    });
+  }
   else{
-    Parse.Cloud.httpRequest({
-        url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        params: {
-          method: 'sendMessage',
-          send_to: num,
-          msg: "You seems to hav entered a wrong Classcode,Genral format of code is  7 DIGIT CODE,if you dont know code Ask Teacher for code",
-          msg_type: 'Text',
-          userid: '2000133095',
-          auth_scheme: 'plain',
-          password: 'wdq6tyUzP',
-          v: '1.0',
-          format: 'text'
-        },
-        success: function(httpResponse){
-          console.log(httpResponse.text);
-          response.success(httpResponse.text);
-        },
-        error: function(httpResponse){
-          console.error('Request failed with response code ' + httpResponse.status);
-          response.error(httpResponse.text);
-        }
+    var msg = "You seems to have entered a wrong class code, general format of code is 7 DIGIT CODE, if you don't know code ask teacher for code";
+    var numbers = [num];
+    run.smsText({
+      "numbers": numbers,
+      "msg": msg
+    }).then(function(text){
+      console.log(text);
+    }, function(error){
+      console.error(error.code + ": " + error.message);
     });
   }
 });

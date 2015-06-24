@@ -2,7 +2,7 @@
 Function to send sms
   Input =>
     msg: String
-    numberList: String // numbers of the recipient separated by commas
+    numbers: Array of numbers 
   Output =>
     httpResponse: Parse.Promise
   Procedure =>
@@ -10,7 +10,8 @@ Function to send sms
 */
 exports.smsText = function(request){
   var msg = request.msg;
-  var numberList = request.numberList;
+  var numbers = request.numbers;
+  var numberList = numbers.join();
   var response = new Parse.Promise();
   return Parse.Cloud.httpRequest({
     url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
@@ -28,6 +29,15 @@ exports.smsText = function(request){
       v: '1.1',
       format: 'text'
     }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.text);
+  }, function(httpResponse){
+    console.error(httpResponse.data);
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
   });
 }
 
@@ -75,6 +85,15 @@ exports.mailTemplate = function(request){
       },
       "async": false
     }
+  }).then(function(httpResponse){
+    return Parse.Promise.as();
+  }, function(httpResponse){
+    console.error(httpResponse.data);
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
   });
 } 
 
@@ -94,7 +113,7 @@ Function to mail attachment
     subject: String // subject of email
     text: String
   Output =>
-    httpResponse: Parse.Promise
+    Empty
   Procedure =>
     Calling to sendEmail function to send attachment
 */
@@ -118,7 +137,11 @@ exports.mailAttachment = function(request){
     },
     error: function(httpResponse){
       console.error(httpResponse.data);
-      promise.reject();
+      var error = {
+        "code": httpResponse.data.code,
+        "message": httpResponse.data.error
+      };
+      promise.reject(error);
     }
   });
   return promise;

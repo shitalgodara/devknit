@@ -23,28 +23,20 @@ exports.genCode = function(request, response){
   temp.save({
     phoneNumber: number,
     code: code
-  }, {
-    success: function(temp){
-      var msg = "Your requested verification code is " + code;
-      run.smsText({
-        "msg": msg,
-        "numberList": number
-      }).then(function(httpResponse){
-        var text = httpResponse.text;
-        console.log(text);
-        if(text.substr(0,3) == 'err')
-          response.success(false);
-        else
-          response.success(true);
-      },
-      function(httpResponse){
-        console.error('Request failed with response code ' + httpResponse.status);
-        response.error(httpResponse.text);
-      });
-    },
-    error: function(temp, error){
-      response.error(error.code + ": " + error.message);
-    }
+  }).then(function(temp){
+    var msg = "Your requested verification code is " + code;
+    var numbers = [number];
+    return run.smsText({
+      "msg": msg,
+      "numbers": numbers
+    });
+  }).then(function(text){
+    if(text.substr(0,3) == 'err')
+      response.success(false);
+    else
+      response.success(true);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
   }); 
 }
 

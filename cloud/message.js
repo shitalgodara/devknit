@@ -1,3 +1,6 @@
+var _ = require('underscore.js');
+var run = require('cloud/run.js');
+
 /*
 Function to send text messages
   Input =>
@@ -10,7 +13,7 @@ Function to send text messages
   Procedure =>
     Save entry in groupdetail and send push to app user and send sms to message user
 */
-exports.sendTextMessage= function(request, response){
+exports.sendTextMessage = function(request, response){
   var clcode = request.params.classcode;
   var classname = request.params.classname;
   var name = request.user.get("name");
@@ -24,87 +27,48 @@ exports.sendTextMessage= function(request, response){
       title: message,
       senderId: email,
       code: clcode
-  }, {
-    success: function(obj) {
-      Parse.Push.send({
-        channels: [clcode],
-        data: {
-          msg: message,
-			    alert: message,
-          badge: "Increment",
-          groupName: classname,
-			    type: "NORMAL",
-			    action: "INBOX"
-        }
-      }, {
-        success: function() {
-          var result = {
-            messageId: groupdetails.id,
-            createdAt: groupdetails.createdAt
-          };
-          var c = clcode;
-          var msg = message;
-          var username = name;
-          msg = classname + ": " + msg;
-          var Messageneeders = Parse.Object.extend("Messageneeders");
-          var query = new Parse.Query(Messageneeders);
-          var mlist = "";
-          msg = msg.substr(0, 330);
-          query.equalTo("cod", c);
-          query.notEqualTo("status", "REMOVED");
-          query.find({
-            success: function(results){
-              if(results){
-                for(var i = 0; i < results.length; i++){
-                    var object = results[i];
-                    var a = object.get('number');
-                    if (i == 0) 
-                        mlist = a;
-                    else
-                        mlist = mlist + "," + a;
-                }
-                if(results.length > 0){
-                  Parse.Cloud.httpRequest({
-                      url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-                      headers: {
-                        'Content-Type': 'application/json'
-                      },
-                      params: {
-                        method: 'sendMessage',
-                        send_to: mlist,
-                        msg: msg,
-                        msg_type: 'Text',
-                        userid: '2000133095',
-                        auth_scheme: 'plain',
-                        password: 'wdq6tyUzP',
-                        v: '1.0',
-                        format: 'text'
-                      },
-                      success: function(httpResponse){
-			                  response.success(result);
-                      },
-                      error: function(httpResponse){
-                        response.error(httpResponse.text);
-                      }
-                  });
-                }
-                else
-				          response.success(result);
-              }
-            },
-            error: function(error) {
-				      response.error(error.message);
-            }
-          });
-        },
-        error: function(error) {
-          response.error("Error: " + error.code + " " + error.message);
-        }
+  }).then(function(obj){
+    return Parse.Push.send({
+      channels: [clcode],
+      data: {
+        msg: message,
+		    alert: message,
+        badge: "Increment",
+        groupName: classname,
+		    type: "NORMAL",
+		    action: "INBOX"
+      }
+    });
+  }).then(function(){
+    var result = {
+      messageId: groupdetails.id,
+      createdAt: groupdetails.createdAt
+    };
+    var c = clcode;
+    var msg = message;
+    var username = name;
+    msg = classname + ": " + msg;
+    var Messageneeders = Parse.Object.extend("Messageneeders");
+    var query = new Parse.Query(Messageneeders);
+    msg = msg.substr(0, 330);
+    query.equalTo("cod", c);
+    query.notEqualTo("status", "REMOVED");
+    return query.find().then(function(results){
+      var numbers = _.map(results, function(res){
+        return res.get("number");
       });
-    },
-    error: function(groupdetails, error) {
-      response.error("Error: " + error.code + " " + error.message);
-    }
+      return run.smsText({
+        "numbers": numbers,
+        "msg": msg
+      });  
+    }).then(function(){
+      return result;
+    });
+  }).then(function(result){
+    response.success(result);
+  },
+  function(error){
+    response.error(error.code + ": " + error.message);
   });
 }
 
@@ -133,6 +97,7 @@ exports.sendPhotoTextMessage = function(request, response){
   var msg;
   var GroupDetails = Parse.Object.extend("GroupDetails");
   var groupdetails = new GroupDetails();
+  var url;
   groupdetails.save({
     Creator: name,
     name: classname,
@@ -141,106 +106,63 @@ exports.sendPhotoTextMessage = function(request, response){
     code: clcode,
     attachment: parsefile,
     attachment_name: filename
-  }, {
-    success: function(obj){
-      if (message == "") 
-        msg = "You have received an Image";
-      else
-        msg = message;
-      Parse.Push.send({
-        channels: [clcode],
-        data: {
-          msg: msg,
-			    alert: msg,
-          badge: "Increment",
-          groupName: classname,
-			    type: "NORMAL",
-			    action: "INBOX"
-        }
-      }, {
-        success: function(){
-          var result = {
-            messageId: groupdetails.id,
-            createdAt: groupdetails.createdAt
-          };
-          var c = clcode;
-          var username = name;
-          msg = classname + ": " + msg;
-          msg = msg + ", Your Teacher " + username + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
-          msg = msg + " you can view image at ";
-          var url = obj.get('attachment').url();
-          Parse.Cloud.httpRequest({
-            url: 'http://tinyurl.com/api-create.php',
-            params: {
-              url : url
-            },
-            success: function(httpResponse){
-              msg = msg + httpResponse.text;
-              var Messageneeders = Parse.Object.extend("Messageneeders");
-              var query = new Parse.Query(Messageneeders);
-              var mlist = "";
-              query.equalTo("cod", c);
-              query.notEqualTo("status", "REMOVED");
-              query.find({
-                success: function(results){
-                  console.log(results.length);
-                  if(results){
-                    for (var i = 0; i < results.length; i++){
-                    var object = results[i];
-                    var a = object.get('number');
-                    if (i == 0)
-                        mlist = a;
-                    else
-                      mlist = mlist + "," + a;
-                    }
-                    if(results.length > 0){
-                      Parse.Cloud.httpRequest({
-                        url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-                        headers: {
-                          'Content-Type': 'application/json'
-                        },
-                        params: {
-                          method: 'sendMessage',
-                          send_to: mlist,
-                          msg: msg,
-                          msg_type: 'Text',
-                          userid: '2000133095',
-                          auth_scheme: 'plain',
-                          password: 'wdq6tyUzP',
-                          v: '1.0',
-                          format: 'text'
-                        },
-                        success: function(httpResponse){
-                          response.success(result);
-                        },
-                        error: function(httpResponse){
-                          response.error(httpResponse.text);
-                        }
-                      });
-                    } 
-                    else{
-                      response.success(result);
-                    }
-                  }
-                },
-                error: function(error){
-                  response.error(error.message);
-                }
-              });
-            },
-            error: function(httpResponse){
-              console.error('Request failed with response code ' + httpResponse.status);
-            }
-          });
-        },
-        error: function(error) {
-          response.error("Error: " + error.code + " " + error.message);
-        }
-      });  
-    },
-    error: function(groupdetails, error) {
-        response.error("Error: " + error.code + " " + error.message);
-    }
+  }).then(function(obj){
+    if (message == "") 
+      msg = "You have received an Image";
+    else
+      msg = message;
+    url = obj.get('attachment').url();
+    return Parse.Push.send({
+      channels: [clcode],
+      data: {
+        msg: msg,
+		    alert: msg,
+        badge: "Increment",
+        groupName: classname,
+		    type: "NORMAL",
+		    action: "INBOX"
+      }
+    });
+  }).then(function(){
+    var result = {
+      messageId: groupdetails.id,
+      createdAt: groupdetails.createdAt
+    };
+    var c = clcode;
+    var username = name;
+    msg = classname + ": " + msg;
+    msg = msg + ", Your Teacher " + username + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
+    msg = msg + " you can view image at ";
+    Parse.Cloud.httpRequest({
+      url: 'http://tinyurl.com/api-create.php',
+      params: {
+        url : url
+      }
+    }).then(function(httpResponse){
+      msg = msg + httpResponse.text;
+      var Messageneeders = Parse.Object.extend("Messageneeders");
+      var query = new Parse.Query(Messageneeders);
+      query.equalTo("cod", c);
+      query.notEqualTo("status", "REMOVED");
+      query.find().then(function(results){
+        var numbers = _.map(results, function(res){
+          return res.get("number");
+        });
+        return run.smsText({
+          "numbers": numbers,
+          "msg": msg
+        });  
+      }).then(function(){
+        response.success(result);
+      }, function(error){
+        response.error(error.code + ": " + error.message);
+      });
+    }, function(httpResponse){
+      response.error(httpResponse.data.code + ": " + httpResponse.data.error);
+    });
+  },
+  function(error){
+    response.error(error.code + ": " + error.message);
   });
 }
 
@@ -500,13 +422,10 @@ exports.smsSubscribe = function(request, response){
   msgnd.set("cod", classcode);
   msgnd.set("subscriber", child);
   msgnd.set("number", "91" + phno.substr(phno.length - 10));
-  msgnd.save(null, {
-    success: function(msgnd){
-      response.success(true);
-    },
-    error: function(msgnd, error){
-      response.error("Error: " + error.code + " " + error.message);
-    }
+  msgnd.save().then(function(msgnd){
+    response.success(true);
+  }, function(error){
+    response.error(error.code + " " + error.message);
   });
 }
 
