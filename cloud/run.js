@@ -11,23 +11,19 @@ Function to send sms
 exports.smsText = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
-  var numberList = numbers.join();
-  var response = new Parse.Promise();
-  return Parse.Cloud.httpRequest({
-    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
+  numbers = numbers.join();
+  Parse.Cloud.httpRequest({
+    url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
     headers: {
       'Content-Type': 'application/json'
     },
     params: {
-      method: 'sendMessage',
-      send_to: numberList,
-      msg: msg,
-      msg_type: 'Text',
-      userid: '2000133095',
-      auth_scheme: 'plain',
-      password: 'wdq6tyUzP',
-      v: '1.1',
-      format: 'text'
+      'usr': 'knitapp',
+      'pass': 'knitapp',
+      'msisdn': numbers,
+      'msg': msg,
+      'sid': 'MYKNIT',
+      'mt': 0
     }
   }).then(function(httpResponse){
     return Parse.Promise.as(httpResponse.text);
