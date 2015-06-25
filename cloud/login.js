@@ -36,6 +36,7 @@ exports.genCode = function(request, response){
     else
       response.success(true);
   }, function(error){
+    console.error(error);
     response.error(error.code + ": " + error.message);
   }); 
 }

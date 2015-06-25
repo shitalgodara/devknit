@@ -68,6 +68,7 @@ exports.sendTextMessage = function(request, response){
     response.success(result);
   },
   function(error){
+    console.error(error);
     response.error(error.code + ": " + error.message);
   });
 }
@@ -155,13 +156,16 @@ exports.sendPhotoTextMessage = function(request, response){
       }).then(function(){
         response.success(result);
       }, function(error){
+        console.error(error);
         response.error(error.code + ": " + error.message);
       });
     }, function(httpResponse){
+      console.error(httpResponse.data);
       response.error(httpResponse.data.code + ": " + httpResponse.data.error);
     });
   },
   function(error){
+    console.error(error);
     response.error(error.code + ": " + error.message);
   });
 }

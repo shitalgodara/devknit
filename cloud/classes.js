@@ -543,7 +543,8 @@ exports.removeMember = function(request, response){
       var flag = true;
       response.success(flag);
     }, function(error){
-      response.error("error.code" + ": " + error.message);
+      console.error(error);
+      response.error(error.code + ": " + error.message);
     });
   }                        
 }

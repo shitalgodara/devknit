@@ -233,7 +233,8 @@ exports.inviteUsers = function(request, response){
       response.success(true);
     },
     function(error){
-      response.error(error);
+      console.error(error);
+      response.error(error.code + ": " + error.message);
     });  
   }
   else if(mode == "email"){
@@ -362,7 +363,6 @@ exports.inviteUsers = function(request, response){
         "email": email
       };
     });
-    console.log(recipients);
     run.mailTemplate({
       "recipients": recipients,
       "subject": "Invitation to join Knit",
@@ -373,6 +373,7 @@ exports.inviteUsers = function(request, response){
       response.success(true);
     },
     function(error){
+      console.error(error);
       response.error(error.code + ": " + error.message);
     });  
   }
