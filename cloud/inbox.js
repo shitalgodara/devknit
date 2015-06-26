@@ -203,7 +203,7 @@ exports.updateMessageState = function(request, response){
             msgState.set("message_id", objectId);
           }
           else{
-            var msgState = results[0];
+            msgState = results[0];
             oldLikeStatus = msgState.get("like_status");
             oldConfusedStatus = msgState.get("confused_status");
           }
@@ -247,7 +247,7 @@ Function to get the like, confused and seen count of message
   Procedure =>
     A simple query on groupDetails table using objectId to retrieve like, confused and seen counts
 */
-exports.getLikeConfusedCount = function(request, response) {
+exports.getLikeConfusedCount = function(request, response){
   var objectid = request.params.objectId;
   var query = new Parse.Query("GroupDetails");
   query.select("like_count", "confused_count", "seen_count");
@@ -289,7 +289,7 @@ Function to get outbox messages for teacher
   Procedure =>  
     A simple query on GroupDetails table using senderId and return max 100 messages
 */
-exports.getOutboxMessages = function(request, response) {
+exports.getOutboxMessages = function(request, response){
   var senderId = request.params.senderId;
   var limit = request.params.limit;
   var query = new Parse.Query("GroupDetails");
@@ -320,7 +320,7 @@ Function to invite teacher
   Procedure =>
     Create a new TeacherInvitation object and save using the parameter details
 */
-exports.inviteTeacher = function(request, response) {
+exports.inviteTeacher = function(request, response){
   var senderId = request.params.senderId;
   var schoolName = request.params.schoolName;
   var teacherName = request.params.teacherName;
@@ -342,5 +342,5 @@ exports.inviteTeacher = function(request, response) {
     response.success(1);
   }, function(error){
     response.error(-1);
-  })
+  });
 }

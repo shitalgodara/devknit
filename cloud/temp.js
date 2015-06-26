@@ -21,8 +21,8 @@ exports.cloudpic = function(request, response){
       // Do something with the returned Parse.Object values
       for (var i = 0; i < results.length; i++) {
         var object = results[i];
-        object.set(senderPic, pfile);
-        object.set(picName, pname);
+        object.set("senderPic", pfile);
+        object.set("picName", pname);
         object.save();
       }
       response.success('ok');

@@ -87,7 +87,6 @@ exports.createClass = function(request, response){
   classname = classname.toUpperCase();
   classname = classname.replace(/[''""]/g, ' ');
   var user = request.user;
-  var clarray = user.get("Created_groups");
   var currentname = user.get("name");
   var username = user.get("username");
   var pid = user.get("pid");
@@ -274,7 +273,6 @@ exports.suggestClasses = function(request, response){
   if(groups.length == 0)
     response.success([]);
   else{
-    var Codegroup = Parse.Object.extend("Codegroup");
     var data = groups[0];
     var query1 = new Parse.Query("Codegroup");
     query1.equalTo("school", data.school);
@@ -364,7 +362,6 @@ exports.giveClassesDetails = function(request, response){
       }
     }
     console.log(clarray);
-    var Codegroup = Parse.Object.extend("Codegroup");
     var query = new Parse.Query("Codegroup");
     query.containedIn("code", clarray);
     query.find({
@@ -406,8 +403,6 @@ Function to remove member from any joined class and send him notification regard
 exports.removeMember = function(request, response){
   var echannel;
   var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
   if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
     echannel = eplatform;
   else
@@ -416,9 +411,6 @@ exports.removeMember = function(request, response){
   var classname = request.params.classname;
   var clcode = request.params.classcode;
   var usertype = request.params.usertype;
-  console.log(classname);
-  console.log(clcode);
-  console.log(usertype);
   if(usertype == 'app'){
     var username = request.params.emailId;
     console.log(username);
@@ -526,8 +518,7 @@ exports.removeMember = function(request, response){
   }
   else{
     var number = request.params.number;
-    var Messageneeders = Parse.Object.extend("Messageneeders");
-    var query = new Parse.Query(Messageneeders);
+    var query = new Parse.Query("Messageneeders");
     query.equalTo("cod", clcode);
     query.equalTo("number", number);
     query.first().then(function(myObject){
@@ -670,8 +661,6 @@ Function to join a class
 exports.joinClass = function(request, response){
   var echannel;
   var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
   if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
     echannel = eplatform;
   else
@@ -680,16 +669,12 @@ exports.joinClass = function(request, response){
   var child = request.params.associateName;
   var childnam = [child];
   classcode = classcode.toUpperCase();
-  var Codegroup = Parse.Object.extend("Codegroup");
   var query = new Parse.Query("Codegroup");
   query.equalTo("code", classcode);
   query.first({
     success: function(result){
       if (result){
         var classname = result.get('name');
-        var clarray = request.user.get("Created_groups");
-        var currentname = request.user.get("name");
-        var email = request.user.get("email");
         var array = [classcode, classname, child];
         request.user.addUnique("joined_groups", array);
         request.user.save(null, {
@@ -709,7 +694,6 @@ exports.joinClass = function(request, response){
                     object.addUnique("channels", classcode);
                     object.save({
                       success: function(object){
-                        var GroupDetails = Parse.Object.extend("GroupDetails");
                         var query = new Parse.Query("GroupDetails");
                         query.equalTo("code", classcode);
                         var d = new Date();
@@ -808,7 +792,6 @@ exports.suggestClass = function(request, response){
       i++;
     }
   }
-  var Codegroup = Parse.Object.extend("Codegroup");
   var query1 = new Parse.Query("Codegroup");
   query1.equalTo("school", school);
   query1.equalTo("standard", standard);
@@ -822,7 +805,7 @@ exports.suggestClass = function(request, response){
     },
     error: function(error){
       var errormessage = "Error: " + error.code + " " + error.message;
- Notify(eplatform, emodal, eusr, "suggestClass"," finding entries of codegroup", echannel, errormessage);
+      Notify(eplatform, emodal, eusr, "suggestClass"," finding entries of codegroup", echannel, errormessage);
       response.error(errormessage);    
     }
   });

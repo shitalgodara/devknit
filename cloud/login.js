@@ -127,7 +127,6 @@ exports.verifyCode = function(request, response) {
             });
           }
           else{
-            var user = new Parse.User();
             user.set("username", number);
             user.set("password", number + "qwerty12345");
             user.set("name", request.params.name);

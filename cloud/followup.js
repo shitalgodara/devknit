@@ -19,7 +19,7 @@ exports.yesterdayNewSignUpDetails = function(request, response){
   var today = new Date();
   if(typeof date !='undefined'){
 	  today = date;
-    todate = new Date(today.getTime() + 86400000);
+    today = new Date(today.getTime() + 86400000);
   }
 	today.setHours(0);
 	today.setMinutes(0);
@@ -175,7 +175,7 @@ function HashTable(obj){
  
   this.removeItem = function(key){
     if(this.hasItem(key)){
-      previous = this.items[key];
+      var previous = this.items[key];
       this.length--;
       delete this.items[key];
       return previous;
@@ -213,7 +213,7 @@ function HashTable(obj){
   }
 
   this.clear = function(){
-    this.items = {}
+    this.items = {};
     this.length = 0;
   }
 }

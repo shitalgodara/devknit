@@ -60,7 +60,7 @@ exports.samplemessage = function(request, response) {
   var name = request.user.get("name");
   var Messageneeders = Parse.Object.extend("Messageneeders");
   var query = new Parse.Query(Messageneeders);
-  msg = "Your Teacher " + name + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
+  var msg = "Your Teacher " + name + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
   query.equalTo("cod", c);
   query.find().then(function(results){
     if(results){

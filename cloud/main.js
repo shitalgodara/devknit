@@ -25,7 +25,6 @@ Parse.Cloud.afterSave("Messageneeders", function(request){
   var num = request.object.get("number");
   var code = request.object.get("cod");
   if((request.object.get("status") != "LEAVE") && (request.object.get("status") != "REMOVED")){
-    var Codegroup = Parse.Object.extend("Codegroup");
     var query = new Parse.Query("Codegroup");
     query.equalTo("code", code);
     query.first().then(function(obj){
@@ -35,7 +34,7 @@ Parse.Cloud.afterSave("Messageneeders", function(request){
         var numbers = [num];
         var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + cls + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
         return run.smsText({
-          "numbers": [num],
+          "numbers": numbers,
           "msg": msg
         });
       }
@@ -54,12 +53,12 @@ Parse.Cloud.afterSave("wrong", function(request){
   var num = request.object.get("number");
   var code = request.object.get("cod");
   var a = code;
-  b = a.substr(0,4);
+  var b = a.substr(0,4);
   if(b == "STOP"){
-    c = a.substr(4);
+    var cod = a.substr(4);
     var Messageneeders = Parse.Object.extend("Messageneeders");
     var query = new Parse.Query(Messageneeders);
-    query.equalTo("cod", c);
+    query.equalTo("cod", cod);
     query.equalTo("number", num);
     query.first().then(function(myObject){
       if (myObject){
@@ -298,7 +297,7 @@ Parse.Cloud.define("toupdatetimebyclass", function(request, response){
 });
     
 Parse.Cloud.define("toupdatetime", function(request, response){
-    stime.toupdatetime(request, response);
+    time.toupdatetime(request, response);
 });
 
 /*----------------------------------------------------  MESSAGE.JS   -----------------------------------------------------*/   
@@ -661,7 +660,6 @@ Function to show details of message of a particular class
 Parse.Cloud.define("showclassmessages", function(request, response){
   var clcode = request.params.classcode;
   var limit = request.params.limit;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   query.equalTo("code", clcode);
   query.descending("createdAt");
@@ -698,7 +696,6 @@ Parse.Cloud.define("showallclassesmessages", function(request, response){
   for (var i = 0; i < clarray1.length; i++){
     clarray[i]=clarray1[i][0];
   }
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   query.containedIn("code", clarray);
   query.descending("createdAt");

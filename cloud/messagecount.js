@@ -8,7 +8,6 @@ Function to get like_count, confused_count and seen_count after a given time
     A simple query on GroupDetails 
 */
 exports.updateCount = function(request, response){
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   var array = request.params.array;
   query.containedIn("objectId", array);
@@ -33,7 +32,6 @@ Function to update seen_count of messages
 */
 exports.updateSeenCount = function(request, response){
   var array = request.params.array;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   query.containedIn("objectId", array);
   query.select("seen_count");
@@ -81,7 +79,6 @@ exports.updateLikeAndConfusionCount = function(request, response){
   var msg_array = Object.keys(input);
   console.log(msg_array);
   var msgarray = request.params.array;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   query.containedIn("objectId", msgarray);
   query.select("confused_count", "like_count");
@@ -200,7 +197,6 @@ Function to get counts of like,confusion and seen after a given time
     A simple query on GroupDetails 
 */
 exports.updateCount2= function(request, response){
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   var array = request.params.array;
   query.select("seen_count", "like_count","confused_count");
@@ -241,7 +237,6 @@ Function to get like_count, confused_count and seen_count after a given time
     A simple query on groupdetail 
 */
 exports.updateCounts= function(request, response){
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   var limit = request.params.limit;
   var date = request.params.date;

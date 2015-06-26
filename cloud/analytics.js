@@ -88,7 +88,7 @@ exports.newSignUps = function(request, response){
   				nextday = new Date(nextday.getTime() + 86400000);
   			}
   		}
-      response.success(data)
+      response.success(data);
     },
     error: function(error) {
       response.error(error.code + error.message);
@@ -141,8 +141,8 @@ exports.newMessageSent = function(request, response){
     				else
     					data[j]++;
     				break;
-    				var prevday = nextday;
-    				var nextday = new Date(nextday.getTime() + 86400000);
+    				prevday = nextday;
+    				nextday = new Date(nextday.getTime() + 86400000);
     			}
     		}
       }
@@ -161,7 +161,7 @@ Function to get unique message senders in last month
   Input =>
     Nothing
   Output =>
-    Number of active messagenes in last month: Integer
+    Number of active messages in last month: Integer
   Procedure =>
     A simple query on groupdetail and use set
 */
