@@ -172,3 +172,29 @@ exports.genRevocableSession = function(request){
     return Parse.Promise.error(error);
   });
 }
+
+var delayUntil;
+var delayPromise;
+
+var _delay = function (){
+  if (Date.now() >= delayUntil){
+    delayPromise.resolve();
+    return;
+  } 
+  else{
+    process.nextTick(_delay);
+  }
+} 
+
+/*
+Function to delay 
+  Input =>
+    millis: Number
+*/
+exports.delay = function(request) {
+  var millis = request.millis;
+  delayUntil = Date.now() + millis;
+  delayPromise = new Parse.Promise();
+  _delay();
+  return delayPromise;
+};

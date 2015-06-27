@@ -108,7 +108,6 @@ Parse.Cloud.afterSave("wrong", function(request){
 });
     
 /*---------------------------------------------JOBS----------------------*/
-
 /*
 Job to send like notifications
   Input => 
@@ -262,6 +261,33 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
       status.error(error);
     });
 });
+
+Parse.Cloud.job("removeKIO", function(request, status){
+  Parse.Cloud.useMasterKey();
+  var query = new Parse.Query(Parse.User);
+  query.select("joined_groups");
+  query.each(function(user){
+    var groups = user.get("joined_groups");
+    var promise = Parse.Promise.as();
+    if(groups){
+      for(var i = 0; i < groups.length; i++){
+        if(groups[i][1] == "MR. KIO"){
+          groups.splice(i,1);
+          user.set("joined_groups", groups);
+          promise = promise.then(function(){
+            return user.save();
+          });
+          break;
+        }
+      }
+    }
+  }).then(function(){
+    status.success("Successfully removed KIO from joined groups");
+  }, function(error){
+    status.error(error.code + ": " + error.message);
+  });
+});
+
 /*----------------------------------------------------  CLOUD fUCNTIONs   -----------------------------------------------------*/
 Parse.Cloud.define("getServerTime", function(request, response){
   response.success(new Date());
@@ -585,6 +611,7 @@ Parse.Cloud.define("giveCLassesInGroupmembers", function(request, response){
 Parse.Cloud.define("giveCLassesInMessageneeders", function(request, response){
     classlist.giveCLassesInMessageneeders(request, response);
 });
+
 /*-------------------------- CLOUD FUNCTIONS ---------------------*/
 /*
 Function to get list of members subscribed to that class via app
