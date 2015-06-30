@@ -31,7 +31,10 @@ exports.genCode = function(request, response){
       "numbers": numbers
     });
   }).then(function(text){
-    response.success(true);
+    if(text.substr(0,3) == 'err')
+      response.success(false);
+    else 
+      response.success(true);
   }, function(error){
     console.error(error);
     response.error(error.code + ": " + error.message);
