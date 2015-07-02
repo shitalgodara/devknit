@@ -9,7 +9,6 @@ Function to output list of school names
     List of school names
 */
 exports.schoollist = function(request, response) {
-  var FAQs = Parse.Object.extend("SCHOOLS");
   var query = new Parse.Query("SCHOOLS");
   query.select("school_name");
   query.find({
@@ -54,33 +53,32 @@ Function to give school id corresponding to school name
   Procedure =>
     Search query then save if doesn't exists on school
 */
-exports.getSchoolId = function(request, response) {
+exports.getSchoolId = function(request, response){
   var schoolName = request.params.school;
-    var SCHOOLS = Parse.Object.extend("SCHOOLS");
-    var query = new Parse.Query("SCHOOLS");
-    query.equalTo("school_name", schoolName);
-    query.first({
-        success: function(result){
-      if(result)
+  var query = new Parse.Query("SCHOOLS");
+  query.equalTo("school_name", schoolName);
+  query.first({
+    success: function (result){
+      if (result)
         response.success(result.id);
-      else{
+      else {
         var SCHOOLS = Parse.Object.extend("SCHOOLS");
-                var schools = new SCHOOLS();
-                schools.set("school_name", schoolName);                    
-                schools.save(null, {
-                    success: function(school){
+        var schools = new SCHOOLS();
+        schools.set("school_name", schoolName);
+        schools.save(null, {
+          success: function (school) {
             response.success(school.id);
           },
-                  error: function(error){
-                        response.error("Error: " + error.code + " " + error.message);
-                  }
-            });
+          error: function (error) {
+            response.error("Error: " + error.code + " " + error.message);
+          }
+        });
       }
-        },
-    error: function(error) {
-        response.error("Error: " + error.code + " " + error.message);
+    },
+    error: function (error){
+      response.error("Error: " + error.code + " " + error.message);
     }
-    });
+  });
 }
 
 /*
@@ -95,7 +93,6 @@ Function to return FAQs
 exports.faq = function(request, response){
   var role = request.user.get("role");
   var date = request.params.date;
-  var FAQs = Parse.Object.extend("FAQs");
   var query = new Parse.Query("FAQs");
   if (role == "parent"){
       query.equalTo("role", "Parent");
@@ -149,7 +146,6 @@ Function to find class
 */
 exports.findClass = function(request, response){
   var classcode = request.params.code;
-  var Codegroup = Parse.Object.extend("Codegroup");
   var query = new Parse.Query("Codegroup");
   query.equalTo("code", classcode);
   query.find({
@@ -223,18 +219,18 @@ exports.inviteUsers = function(request, response){
         response.success(true);
         break;
     }
-    var numberArray = _.map(recipients, function(recipient){
+    var numbers = _.map(recipients, function(recipient){
       return recipient[1].replace(/\s+/g, '');    
     });
-    var numberList = numberArray.join();
     run.smsText({
-      "numberList": numberList,
+      "numbers": numbers,
       "msg": text
     }).then(function(){
       response.success(true);
     },
     function(error){
-      response.error(error);
+      console.error(error);
+      response.error(error.code + ": " + error.message);
     });  
   }
   else if(mode == "email"){
@@ -363,7 +359,6 @@ exports.inviteUsers = function(request, response){
         "email": email
       };
     });
-    console.log(recipients);
     run.mailTemplate({
       "recipients": recipients,
       "subject": "Invitation to join Knit",
@@ -374,7 +369,8 @@ exports.inviteUsers = function(request, response){
       response.success(true);
     },
     function(error){
-      response.error(error);
+      console.error(error);
+      response.error(error.code + ": " + error.message);
     });  
   }
 }

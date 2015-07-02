@@ -23,28 +23,21 @@ exports.genCode = function(request, response){
   temp.save({
     phoneNumber: number,
     code: code
-  }, {
-    success: function(temp){
-      var msg = code + " is your Knit verification Code";
-      run.smsText2({
-        "msg": msg,
-        "numberList": number
-      }).then(function(httpResponse){
-        var text = httpResponse.text;
-        console.log(text);
-        if(text.substr(0,3) == 'err')
-          response.success(false);
-        else
-          response.success(true);
-      },
-      function(httpResponse){
-        console.error('Request failed with response code ' + httpResponse.status);
-        response.error(httpResponse.text);
-      });
-    },
-    error: function(temp, error){
-      response.error(error.code + ": " + error.message);
-    }
+  }).then(function(temp){
+    var msg = code + " is your Knit verification Code";
+    var numbers = [number];
+    return run.smsText2({
+      "msg": msg,
+      "numbers": numbers
+    });
+  }).then(function(text){
+    if(text.substr(0,3) == 'err')
+      response.success(false);
+    else 
+      response.success(true);
+  }, function(error){
+    console.error(error);
+    response.error(error.code + ": " + error.message);
   }); 
 }
 
@@ -137,7 +130,6 @@ exports.verifyCode = function(request, response) {
             });
           }
           else{
-            var user = new Parse.User();
             user.set("username", number);
             user.set("password", number + "qwerty12345");
             user.set("name", request.params.name);

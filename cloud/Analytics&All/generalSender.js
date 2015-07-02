@@ -26,17 +26,9 @@ exports.SendNotifications = function(request, response) {
 exports.SendSms = function(request, response) {
     var usernames = request.params.usernames;
     var data = request.params.dataa;   
-    numberList=""
-for(var i = 0; i < usernames.length; i++){
-                    var a = usernames[i];
-                    if (i == 0) 
-                        numberList = a;
-                    else
-                        numberList= numberList + "," + a;
-                }
     old.smsText({
         "msg": data,
-        "numberList": numberList
+        "numberList": usernames
       }).then(function(httpResponse){
         var text = httpResponse.text;
         console.log(text);

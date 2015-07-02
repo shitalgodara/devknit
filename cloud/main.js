@@ -6,9 +6,9 @@ var message = require('cloud/message.js');
 var messagecount = require('cloud/messagecount.js');
 var classes = require('cloud/classes.js');
 var channel= require('cloud/channel.js');
-var user= require('cloud/user.js');
-var rest= require('cloud/rest.js');
-var temp= require('cloud/temp.js');
+var user = require('cloud/user.js');
+var rest = require('cloud/rest.js');
+var temp = require('cloud/temp.js');
 var schoolapi= require('cloud/schoolapi.js');
 var inbox = require('cloud/inbox.js');
 var login = require('cloud/login.js');
@@ -17,47 +17,44 @@ var analytics = require('cloud/analytics.js');
 var followup = require('cloud/followup.js');
 var developer = require('cloud/developer.js');
 var classlist = require('cloud/classlist.js');
+<<<<<<< HEAD
 var CatUser = require('cloud/CatUser.js');
 var generalSender = require('cloud/generalSender.js');
 var web = require('cloud/Websupport/web.js');
 var old = require('cloud/oldVersionSupport/old.js');
 
 
+=======
+var run = require('cloud/run.js');
+>>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
 var _ = require('underscore.js');
 
 /*------------------------------------------------after/before functions---------------------------*/
 Parse.Cloud.afterSave("Messageneeders", function(request){
   var num = request.object.get("number");
   var code = request.object.get("cod");
-  console.log(request.object.get("status"));
-  if((request.object.get("status")!="LEAVE") && (request.object.get("status") != "REMOVED")){
-    console.log("in");
-    var a = code;
-    a = a.replace(/\s+/g, '');
-    a = a.toUpperCase();
-    var Codegroup = Parse.Object.extend("Codegroup");
+  if((request.object.get("status") != "LEAVE") && (request.object.get("status") != "REMOVED")){
     var query = new Parse.Query("Codegroup");
-    query.equalTo("code", a);
-    query.first({
-      success: function(obj){
-        if(obj){
-          var cls = obj.get("Creator");
-          var nam = obj.get("name");    
-          var text="Congratulations you have successfully subscribed to" + " " + cls + "'s " + nam + " " + "classroom You will start receieving messages as soon as your Teacher start using it";
-old.smsText({
-      "numberList": num,
-      "msg": text
-    }).then(function(){
-      
-    },
-    function(error){
-      console.log(error);
-    }); 
-        } 
-        },
-        error: function(error){
-        }
-      });
+    query.equalTo("code", code);
+    query.first().then(function(obj){
+      if(obj){
+        var teacher = obj.get("Creator");
+        var cls = obj.get("name");    
+        var numbers = [num];
+        var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + cls + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
+        return old.smsText({
+          "numbers": numbers,
+          "msg": msg
+        });
+      }
+      else{
+        return Parse.Promise.as();
+      }
+    }).then(function(text){
+      console.log(text);
+    }, function(error){
+      console.error(error.code + ": " + error.message);
+    });
   }
 });
     
@@ -65,57 +62,61 @@ Parse.Cloud.afterSave("wrong", function(request){
   var num = request.object.get("number");
   var code = request.object.get("cod");
   var a = code;
-  b = a.substr(0, 4);
-  if (b == "STOP"){
-    c = a.substr(4); 
+  var b = a.substr(0,4);
+  if(b == "STOP"){
+    var cod = a.substr(4);
     var Messageneeders = Parse.Object.extend("Messageneeders");
     var query = new Parse.Query(Messageneeders);
-    query.equalTo("cod", c);
+    query.equalTo("cod", cod);
     query.equalTo("number", num);
-    query.first({
-          success: function(myObject){
-            if (myObject){
-              myObject.set("status","LEAVE");
-              myObject.save({
-                success: function(myObject){    
-                  
- var text="You have been successfully unsubscribed,Now you will not recieve any message from your Teacher";
-old.smsText({
-      "numberList": num,
-      "msg": text
-    }).then(function(){
-      
-    },
-    function(error){
-      console.log(error);
-    }); 
-                },
-                error: function(myObject, error){
-                }
-              });
-            } 
-          },
-          error: function(error){
-          }
+    query.first().then(function(myObject){
+      if (myObject){
+        myObject.set("status", "LEAVE");
+        return myObject.save().then(function(myObject){
+          var msg = "You have been successfully unsubscribed, now you will not recieve any message from your teacher"; 
+          var numbers = [num];
+          return old.smsText({
+            "numbers": numbers,
+            "msg": msg
+          });
+        });  
+      }
+      else{
+        return Parse.Promise.as();
+      }
+    }).then(function(text){
+      console.log(text);
+    }, function(error){
+      console.error(error.code + ": " + error.message);
     });
   } 
+  else if(b == "SEND"){
+    var msg = "You seems to have forgot to enter student's name, general format to subscribe via sms is '<classCode> <space> <Student Name>'";
+    var numbers = [num];
+    run.smsText({
+      "numbers": numbers,
+      "msg": msg
+    }).then(function(text){
+      console.log(text);
+    }, function(error){
+      console.error(error.code + ": " + error.message);
+    });
+  }
   else{
-    var text="You seems to have entered a wrong Classcode,General format of code is  7 DIGIT CODE,if you dont know code Ask Teacher for code";
-old.smsText({
-      "numberList": num,
-      "msg": text
-    }).then(function(){
-    },
-    function(error){
-      console.log(error);
-    }); 
-
-
+    var msg = "You seems to have entered a wrong Classcode,General format of code is  7 DIGIT CODE,if you don't know code Ask Teacher for code";
+    var numbers = [num];
+    old.smsText({
+      "numbers": numbers,
+      "msg": msg
+    }).then(function(text){
+      console.log(text);
+    }, function(error){
+      console.error(error.code + ": " + error.message);
+    });
   }
 });
     
 /*---------------------------------------------JOBS----------------------*/
-
 /*
 Job to send like notifications
   Input => 
@@ -269,6 +270,7 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
       status.error(error);
     });
 });
+<<<<<<< HEAD
 //delete kio 
 Parse.Cloud.job("deleteKioClassFromUserJoinedGroups", function(request, status){ 
 var result = [];
@@ -316,6 +318,33 @@ var toupdate=[];
         });
       }
   process(false);
+=======
+
+Parse.Cloud.job("removeKIO", function(request, status){
+  Parse.Cloud.useMasterKey();
+  var query = new Parse.Query(Parse.User);
+  query.select("joined_groups");
+  query.each(function(user){
+    var groups = user.get("joined_groups");
+    var promise = Parse.Promise.as();
+    if(groups){
+      for(var i = 0; i < groups.length; i++){
+        if(groups[i][1] == "MR. KIO"){
+          groups.splice(i,1);
+          user.set("joined_groups", groups);
+          promise = promise.then(function(){
+            return user.save();
+          });
+          break;
+        }
+      }
+    }
+  }).then(function(){
+    status.success("Successfully removed KIO from joined groups");
+  }, function(error){
+    status.error(error.code + ": " + error.message);
+  });
+>>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
 });
 
 /*----------------------------------------------------  CLOUD fUCNTIONs   -----------------------------------------------------*/
@@ -353,7 +382,7 @@ Parse.Cloud.define("toupdatetimebyclass", function(request, response){
 });
     
 Parse.Cloud.define("toupdatetime", function(request, response){
-    stime.toupdatetime(request, response);
+    time.toupdatetime(request, response);
 });
 
 /*----------------------------------------------------  MESSAGE.JS   -----------------------------------------------------*/   
@@ -642,10 +671,41 @@ Parse.Cloud.define("giveCLassesInGroupmembers", function(request, response){
 Parse.Cloud.define("giveCLassesInMessageneeders", function(request, response){
     classlist.giveCLassesInMessageneeders(request, response);
 });
+<<<<<<< HEAD
 /*---------------------------------------------------- CATUSER.JS   -------------------------------------------------*/
 
 Parse.Cloud.define("allUsers", function(request, response) {
     CatUser.allUsers(request, response);
+=======
+
+/*-------------------------- CLOUD FUNCTIONS ---------------------*/
+/*
+Function to get list of members subscribed to that class via app
+  Input =>
+    classcode: String
+  Output =>
+    Array of GroupMembers Object{
+      name: String
+      children_name: String
+    }
+  Procedure =>
+     A simple query on GroupMembers 
+*/
+Parse.Cloud.define("showappsubscribers", function(request, response){
+  var clcode = request.params.classcode;
+  var GroupMembers = Parse.Object.extend("GroupMembers");
+  var query = new Parse.Query(GroupMembers);
+  query.equalTo("code", clcode);
+  query.select("name", "children_names");
+  query.find({
+    success: function(results){
+      response.success(results);
+    },
+    error: function(error){
+      response.error("Error: " + error.code + " " + error.message);
+    }
+  });
+>>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
 });
 
 Parse.Cloud.define("usersActiveInLastnMonths", function(request, response) {
@@ -696,10 +756,29 @@ Parse.Cloud.define("showsmssubscribers", function(request, response){
 });
 
 Parse.Cloud.define("showclassmessages", function(request, response){
+<<<<<<< HEAD
     web.showclassmessages(request, response);
+=======
+  var clcode = request.params.classcode;
+  var limit = request.params.limit;
+  var query = new Parse.Query("GroupDetails");
+  query.equalTo("code", clcode);
+  query.descending("createdAt");
+  query.select("title", "code", "Creator", "name");
+  query.limit(limit);
+  query.find({
+    success: function(results){
+      response.success(results);
+    },
+    error: function(error){
+      response.error("Error: " + error.code + " " + error.message);
+    }
+  });
+>>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
 });
   
 Parse.Cloud.define("showallclassesmessages", function(request, response){
+<<<<<<< HEAD
     web.showallclassesmessages(request, response);
 });
 /*------------------------------------------------------OLD.JS ----------------------------------------------------------*/
@@ -725,4 +804,26 @@ Parse.Cloud.define("leaveClass", function(request, response){
 
 Parse.Cloud.define("genCode", function(request, response){
     old.genCode(request, response);
+=======
+  var user = request.user;
+  var clarray = [];
+  var clarray1 = user.get("Created_groups");
+  for (var i = 0; i < clarray1.length; i++){
+    clarray[i]=clarray1[i][0];
+  }
+  var query = new Parse.Query("GroupDetails");
+  query.containedIn("code", clarray);
+  query.descending("createdAt");
+  var limit = request.params.limit;
+  query.select("title", "code", "Creator", "name");
+  query.limit(limit);
+  query.find({
+    success: function(results){
+      response.success(results);
+    },
+    error: function(error){
+      response.error("Error: " + error.code + " " + error.message);
+    }
+  });
+>>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
 });

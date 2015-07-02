@@ -2,7 +2,7 @@
 Function to send sms
   Input =>
     msg: String
-    numberList: String // numbers of the recipient separated by commas
+    numbers: Array of numbers 
   Output =>
     httpResponse: Parse.Promise
   Procedure =>
@@ -10,8 +10,9 @@ Function to send sms
 */
 exports.smsText2 = function(request){
   var msg = request.msg;
-  var numberList = request.numberList;
-  var response = new Parse.Promise();
+  var numbers = request.numbers;
+  numbers = numbers.join();
+  // <smsgupshup api>
   return Parse.Cloud.httpRequest({
     url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
     headers: {
@@ -19,7 +20,7 @@ exports.smsText2 = function(request){
     },
     params: {
       method: 'sendMessage',
-      send_to: numberList,
+      send_to: numbers,
       msg: msg,
       msg_type: 'Text',
       userid: '2000133095',
@@ -28,7 +29,39 @@ exports.smsText2 = function(request){
       v: '1.1',
       format: 'text'
     }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.text);
+  }, function(httpResponse){
+    console.error(httpResponse.data);
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
   });
+  // <startenterprise api>
+  // return Parse.Cloud.httpRequest({
+  //   url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
+  //   headers: {
+  //     'Content-Type': 'application/json'
+  //   },
+  //   params: {
+  //     'usr': 'knitapp',
+  //     'pass': 'knitapp',
+  //     'msisdn': numbers,
+  //     'msg': msg,
+  //     'sid': 'myKnit',
+  //     'mt': 0
+  //   }
+  // }).then(function(httpResponse){
+  //   return Parse.Promise.as(httpResponse.text);
+  // }, function(httpResponse){
+  //   var error = {
+  //     "code": httpResponse.data.code,
+  //     "message": httpResponse.data.error
+  //   };
+  //   return Parse.Promise.error(error);
+  // });
 }
 
 /*
@@ -75,6 +108,15 @@ exports.mailTemplate = function(request){
       },
       "async": false
     }
+  }).then(function(httpResponse){
+    return Parse.Promise.as();
+  }, function(httpResponse){
+    console.error(httpResponse.data);
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
   });
 } 
 
@@ -94,7 +136,7 @@ Function to mail attachment
     subject: String // subject of email
     text: String
   Output =>
-    httpResponse: Parse.Promise
+    Empty
   Procedure =>
     Calling to sendEmail function to send attachment
 */
@@ -118,7 +160,11 @@ exports.mailAttachment = function(request){
     },
     error: function(httpResponse){
       console.error(httpResponse.data);
-      promise.reject();
+      var error = {
+        "code": httpResponse.data.code,
+        "message": httpResponse.data.error
+      };
+      promise.reject(error);
     }
   });
   return promise;
@@ -154,3 +200,29 @@ exports.genRevocableSession = function(request){
     return Parse.Promise.error(error);
   });
 }
+
+var delayUntil;
+var delayPromise;
+
+var _delay = function (){
+  if (Date.now() >= delayUntil){
+    delayPromise.resolve();
+    return;
+  } 
+  else{
+    process.nextTick(_delay);
+  }
+} 
+
+/*
+Function to delay 
+  Input =>
+    millis: Number
+*/
+exports.delay = function(request) {
+  var millis = request.millis;
+  delayUntil = Date.now() + millis;
+  delayPromise = new Parse.Promise();
+  _delay();
+  return delayPromise;
+};

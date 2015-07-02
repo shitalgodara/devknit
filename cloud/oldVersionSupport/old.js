@@ -506,6 +506,7 @@ Function to send sms
 exports.smsText = function(request){
   var msg = request.msg;
   var numberList = request.numberList;
+  numberList = numberList.join();
   var response = new Parse.Promise();
   return Parse.Cloud.httpRequest({
     url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
