@@ -25,8 +25,8 @@ exports.genCode = function(request, response){
     code: code
   }, {
     success: function(temp){
-      var msg = "Your requested verification code is " + code;
-      run.smsText({
+      var msg = code + " is your Knit verification Code";
+      run.smsText2({
         "msg": msg,
         "numberList": number
       }).then(function(httpResponse){

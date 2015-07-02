@@ -1,3 +1,5 @@
+var run = require('cloud/oldVersionSupport/old.js');
+
 /*
 Function to send text messages
   Input =>
@@ -64,29 +66,16 @@ exports.sendTextMessage= function(request, response){
                         mlist = mlist + "," + a;
                 }
                 if(results.length > 0){
-                  Parse.Cloud.httpRequest({
-                      url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-                      headers: {
-                        'Content-Type': 'application/json'
-                      },
-                      params: {
-                        method: 'sendMessage',
-                        send_to: mlist,
-                        msg: msg,
-                        msg_type: 'Text',
-                        userid: '2000133095',
-                        auth_scheme: 'plain',
-                        password: 'wdq6tyUzP',
-                        v: '1.0',
-                        format: 'text'
-                      },
-                      success: function(httpResponse){
-			                  response.success(result);
-                      },
-                      error: function(httpResponse){
-                        response.error(httpResponse.text);
-                      }
-                  });
+run.smsText({
+      "numberList": mlist,
+      "msg": msg
+    }).then(function(){
+   response.success(result);
+    },
+    function(error){
+      response.error(error);
+    }); 
+
                 }
                 else
 				          response.success(result);
@@ -194,29 +183,15 @@ exports.sendPhotoTextMessage = function(request, response){
                       mlist = mlist + "," + a;
                     }
                     if(results.length > 0){
-                      Parse.Cloud.httpRequest({
-                        url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-                        headers: {
-                          'Content-Type': 'application/json'
-                        },
-                        params: {
-                          method: 'sendMessage',
-                          send_to: mlist,
-                          msg: msg,
-                          msg_type: 'Text',
-                          userid: '2000133095',
-                          auth_scheme: 'plain',
-                          password: 'wdq6tyUzP',
-                          v: '1.0',
-                          format: 'text'
-                        },
-                        success: function(httpResponse){
-                          response.success(result);
-                        },
-                        error: function(httpResponse){
-                          response.error(httpResponse.text);
-                        }
-                      });
+                      run.smsText({
+                    "numberList": mlist,
+                    "msg": msg
+                  }).then(function(){
+                 response.success(result);
+                  },
+                  function(error){
+                    response.error(error);
+                  }); 
                     } 
                     else{
                       response.success(result);

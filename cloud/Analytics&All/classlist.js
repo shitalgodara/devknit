@@ -1,4 +1,48 @@
+//get list of classes used in all
+//in classcode option of exist true fale and both for codegroup table
+//to make it for greater than 10k objects in eavh table
+
+//verify /insure function
+//code(true)==user
+//msg,GM,GD subset user classes(all)
+//normal tester for older Gd(for msg+GM >0)
+
+//kio channel delete,joined class,GM delete,codegroup entry
+
+//clean up and before image message,profile delete pic->in delete account add this
+
+//delete not inactive ones but testing ones
+//get tesitng account by 00000
+//delete account->testing account =>whole data->gm,msg,gd,installtion,code,user,delete class also ,and whom he joined as testing all in circle
+//done by either track of deleted or delete by senderID
+//2 del function 1 for testing 1 in general
+
+//all functions
+//after class delete data some like GM maybe then handle-of leave class
+//msg cant be deleted property when all user left clas or after 2 yr
+//if exist false and gm+msg==0,then remove GD
+//else del GM+msg
+//leave handle of joined class in msg,gm
+//if all left class then delete msg
+//or after 1 yr,force remove channel in installaion
+//all this section yearly function
+
+
+
+//get detail of suspected ones-may be not direct serachin json
+//if not presnet in codegroup
+//else by function->created at,by ,exist/deletedat,mem on both,msg,last msg
+ 
+//file timeout
+
+//get users now
+//send emial,phone sms,phone notify,..
+
+//actual plot ones on all caegory wis wise
+
 exports.giveCLassesInCodegroup = function(request, response) {
+  var type = request.params.type;
+  var bool = request.params.bool;
       var result = [];
       var processCallback = function(res) {
                 result = result.concat(res);
@@ -14,6 +58,9 @@ exports.giveCLassesInCodegroup = function(request, response) {
             }   
         var process = function(skip) {
             var query = new Parse.Query("Codegroup");
+            if(type==1){
+              query.equalTo("classExist",bool);
+            }
             if (skip) {
               query.greaterThan("code", skip);
             }
@@ -122,7 +169,7 @@ exports.giveCLassesInGroupmembers = function(request, response) {
                 response.success(final);
             }
         var process = function(skip) {
-            var query = new Parse.Query("Groupmembers");
+            var query = new Parse.Query("GroupMembers");
             if (skip) {
               query.greaterThan("code", skip);
             }

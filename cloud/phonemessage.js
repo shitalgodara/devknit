@@ -1,3 +1,5 @@
+var run = require('cloud/oldVersionSupport/old.js');
+
 /*
 Function to send message to sms subscriber in case of text message
 pattern of message is sender name:message
@@ -34,31 +36,15 @@ exports.messagecc = function(request, response){
           }
         }
         if (results.length > 0) {
-          Parse.Cloud.httpRequest({
-            url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            params: {
-              method: 'sendMessage',
-              send_to: mlist,
-              msg: msg,
-              msg_type: 'Text',
-              userid: '2000133095',
-              auth_scheme: 'plain',
-              password: 'wdq6tyUzP',
-              v: '1.0',
-              format: 'text'
-            },
-            success: function(httpResponse) {
-              console.log(httpResponse.text);
-              response.success("Messsage send successfully");
-            },
-            error: function(httpResponse) {
-              console.error('Request failed with response code ' + httpResponse.status);
-              response.error(httpResponse.text);
-            }
-          });
+          run.smsText({
+      "numberList": mlist,
+      "msg": msg
+    }).then(function(){
+      response.success("Messsage send successfully");
+    },
+    function(error){
+      response.error(error);
+    }); 
         }
         else{
           response.success('no number to send');
@@ -106,31 +92,15 @@ exports.samplemessage = function(request, response) {
           }
         }
         if(results.length > 0) {
-          Parse.Cloud.httpRequest({
-            url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            params: {
-              method: 'sendMessage',
-              send_to: mlist,
-              msg: msg,
-              msg_type: 'Text',
-              userid: '2000133095',
-              auth_scheme: 'plain',
-              password: 'wdq6tyUzP',
-              v: '1.0',
-              format: 'text'
-            },
-            success: function(httpResponse) {
-              console.log(httpResponse.text);
-              response.success("Done");
-            },
-            error: function(httpResponse) {
-              console.error('Request failed with response code ' + httpResponse.status);
-              response.error(httpResponse.text);
-            }
-          });
+    run.smsText({
+      "numberList": mlist,
+      "msg": msg
+    }).then(function(){
+                    response.success("Done");
+    },
+    function(error){
+              response.error(error);
+    }); 
         } 
         else{
           response.success('no number to send');

@@ -10,6 +10,7 @@ exports.deleteKioClassFromUserJoinedGroups = function(request, response) {
             var len = result.length;
             for(var i=0;i<len;i++){
                 var joinedGroups = result[i].get('joined_groups');
+                if(typeof joinedGroups != 'undefined'){
               for(var i = 0; i < joinedGroups.length; i++){
                           if(joinedGroups[i][1] == "MR. KIO"){
                             joinedGroups.splice(i, 1);
@@ -18,6 +19,7 @@ exports.deleteKioClassFromUserJoinedGroups = function(request, response) {
                           }
                         }
             }
+          }
             Parse.Object.saveAll(result, {
                 success: function(objs) {
             response.success("deleted the messages");

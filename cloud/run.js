@@ -8,7 +8,7 @@ Function to send sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-exports.smsText = function(request){
+exports.smsText2 = function(request){
   var msg = request.msg;
   var numberList = request.numberList;
   var response = new Parse.Promise();

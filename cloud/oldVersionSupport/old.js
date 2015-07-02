@@ -1,30 +1,3 @@
-﻿var run = require('cloud/oldVersionSupport/old.js');
-
-/*
-  Function to notify which kind of operation failed in which step
-*/
-function Notify(a, b, c, d, f, g){
-  var operationinfo = " For operation " + d + "step with error message ";
-  var message = "Operation failed in " + a + " " + b + " for user " + c + operationinfo + g;
-  Parse.Push.send({
-    channels: ["ios"],
-    data: {                        
-      msg: message,
-			alert: message,
-      groupName: f,
-			type: "NORMAL",
-			action: "INBOX"        
-    }, 
-    success: function(){
-      console.log('Notified the error');
-      //callback.success(true);
-    },
-    error: function(error){
-      console.warn("Failed to Notified");
-      //callback.error(false);
-    }
-  });
-}
 
 /*
 Function for creating class  
@@ -32,9 +5,7 @@ Function for creating class
     user: Parse User
     classname: String
   Output =>
-  json object with keys codegroup and user and values there corresponding objects
     codegroup: Parse object
-    user:Parse object
   Procedure =>
     * Username is taken from Parse User 
     * Class code is created and class name is modified
@@ -115,11 +86,7 @@ exports.createClass = function(request, response){
         success: function(codegroup){
           console.log(codegroup.get("senderId"));
           console.log(codegroup.get("Creator"));
-          var output = {
-                              "codegroup": codegroup,
-                              "user": user
-                            };
-          response.success(output);
+          response.success(codegroup);
         },
         error: function(codegroup, error){
           var errormessage = "Error in::" + "codegroup::" + "save::" + error.code + "::" + error.message + "::";
@@ -141,7 +108,7 @@ Function to delete user's created class
   Input =>
     classcode: String 
   Output =>
-    user:Parse object
+    flag: Bool // true in case of successful deletion otherwise error 
   Procedure =>
     * Deleted class entry in Created_groups 
     * Made classExist entry of Codegroup class false,
@@ -212,7 +179,9 @@ exports.deleteClass = function(request, response){
                     }
                   },{
                     success: function(){
-    	                response.success(user);
+    			            var flag = true;
+                      console.log(flag);
+    	                response.success(flag);
                     },
                     error: function(error){
                       var errormessage = "Error in::" + "push::" + "send::" + error.code + "::" + error.message + "::";
@@ -251,328 +220,12 @@ exports.deleteClass = function(request, response){
 }
 
 /*
-Function for returning list of classes as a suggestion for parent to join
-  Input =>
-    input: Array of json object{
-      school: String,
-      standard: Sting,
-      division: String
-    }
-    date: String // latest date of suggested codegroup created date
-  Output =>
-    Codegroup entries of suggested classes 
-  Procedure =>
-    Use of compound query on codegroup to compute suggestion whose class exits and removed groups that are already joined, created and removed
-*/
-exports.suggestClasses = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
-  var groups = request.params.input;
-  var date = request.params.date;
-  if(groups.length == 0)
-    response.success([]);
-  else{
-    var Codegroup = Parse.Object.extend("Codegroup");
-    var data = groups[0];
-    var query1 = new Parse.Query("Codegroup");
-    query1.equalTo("school", data.school);
-    query1.equalTo("standard", data.standard);
-    if(data.division != 'NA')
-      query1.equalTo("divison", data.division);
-    for(var i = 1; i < groups.length; i++){
-      data = groups[i];
-      var query2 = new Parse.Query("Codegroup");
-      query2.equalTo("school", data.school);
-      query2.equalTo("standard", data.standard);
-      if(data.division != 'NA')
-        query2.equalTo("divison", data.division);
-      query1 = Parse.Query.or(query1, query2);
-    }
-    var clarray1 = request.user.get("joined_groups");
-    var clarray2 = request.user.get("Created_groups");
-    var clarray3 = request.user.get("removed_groups");
-    var clarray =[];
-    var i;
-    if(typeof clarray1 != 'undefined'){
-      for (i = 0; i < clarray1.length; i++){
-        clarray[i] = clarray1[i][0];
-      }
-    }
-    if(typeof clarray2 != 'undefined'){    
-      for (var j = 0; j < clarray2.length; j++){
-        clarray[i] = clarray2[j][0];
-        i++;
-      }
-    }
-    if(typeof clarray3 != 'undefined'){
-      for (var k = 0; k < clarray3.length; k++){
-        clarray[i] = clarray3[k][0];
-        i++;
-      }
-    }
-    query1.greaterThan("updatedAt", date);
-    query1.notContainedIn("code", clarray);
-    query1.find({
-      success: function(results){
-        response.success(results);
-      },
-      error: function(error){
-        var errormessage = "Error: " + error.code + " " + error.message;
-        Notify(eplatform, emodal, eusr, "suggestClass"," finding entries of codegroup", echannel, errormessage);
-        response.error(errormessage);    
-      }
-    });
-  }
-} 
-
-/* 
-Function to return all details related to joined or created classes through codegroup table
-  Input => 
-    Nothing
-  Output =>
-    Codegroup entries
-  Procedure =>
-    Simple query on user created and joined group then on codegroup table
-*/
-exports.giveClassesDetails = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
-  var clarray1 = request.user.get("joined_groups");
-  var clarray2 = request.user.get("Created_groups");
-  if((typeof clarray1 == 'undefined') && (typeof clarray2 == 'undefined'))
-    response.success([]);
-  else{
-    var clarray =[];
-    var i;
-    if(typeof clarray1 != 'undefined'){
-      for (i = 0; i < clarray1.length; i++){
-        clarray[i]= clarray1[i][0];
-      }
-    }
-    if(typeof clarray2 != 'undefined'){
-      for (var j = 0; j < clarray2.length; j++){
-        clarray[i]= clarray2[j][0];
-        i++;
-      }
-    }
-    console.log(clarray);
-    var Codegroup = Parse.Object.extend("Codegroup");
-    var query = new Parse.Query("Codegroup");
-    query.containedIn("code", clarray);
-    query.find({
-      success: function(results){
-        if(results.length>0)
-          console.log(results.length);
-        response.success(results);
-      },
-      error: function(error){
-        var errormessage = "Error in::" + "codegroup::" + "find::" + error.code + "::" + error.message + "::";
-        Notify(eplatform, emodal, eusr, "giving Classes details", echannel, errormessage);
-        response.error(errormessage);    
-      }
-    });
-  }
-}
-
-/*
-Function to remove member from any joined class and send him notification regarding that
-  Input =>
-    classname: String
-    classcode: String
-    usertype: String // App user or sms user
-    <App user>   
-      emailId: String  
-    <SMS user> 
-      number: String
-  Output =>
-    flag: Bool //true in case of successful removal
-  Procedure =>
-    <App user>
-      * Made status entry to REMOVED in Groupmember class using emailId and classcode
-      * Changed entry in joined group
-      * Clear all the installations and send push notificaions at all the installations(using target push)
-    <SMS user>
-      * Made status entry to REMOVED in Messageneeders class using classcode and number 
-      * Send message saying removed
-*/
-exports.removeMember = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
-  Parse.Cloud.useMasterKey();
-  var classname = request.params.classname;
-  var clcode = request.params.classcode;
-  var usertype = request.params.usertype;
-  console.log(classname);
-  console.log(clcode);
-  console.log(usertype);
-  if(usertype == 'app'){
-    var username = request.params.emailId;
-    console.log(username);
-    var GroupMembers = Parse.Object.extend("GroupMembers");
-    var query = new Parse.Query(GroupMembers);
-		query.equalTo("code", clcode);
-		query.equalTo("emailId", username);
-    query.notEqualTo("status", "REMOVED");
-    query.notEqualTo("status", "LEAVE");
-		query.first({
-      success: function(object){
-        console.log(object.id);
-        object.set("status", "REMOVED");
-        object.save({                        
-          success: function(object){
-            console.log(object.id);
-            var query = new Parse.Query(Parse.User);
-            query.equalTo("username", username);
-            query.first({
-              success: function(object){
-                console.log(object.id);
-                var clarray = object.get("joined_groups");
-                console.log(classname);
-                for (var i = 0; i < clarray.length; i++){
-                  if (clarray[i][0] == clcode){
-                    clarray.splice(i, 1);
-                    break;
-                  }
-                }
-                console.log(clarray);
-                object.set("joined_groups", clarray);
-                object.save(null, {
-                  success: function(user){
-                    console.log(user.id);
-                    var query = new Parse.Query(Parse.Installation);
-                    query.equalTo("username",username);
-                    query.find({
-                      success: function(results){
-                        console.log(results.length);
-                        var allObjects = [];
-                        for (var i = 0; i < results.length; i++){ 
-                          results[i].remove("channels", clcode);
-                          allObjects.push(results[i]);
-                        }
-                        Parse.Object.saveAll(allObjects, {
-                          success: function(objs){
-                            var query = new Parse.Query(Parse.Installation);
-                            query.equalTo('username', username);
-                            query.ascending("updatedAt");
-                            query.limit(1);                             
-                            var message = "You have been removed from " + classname + " class, you won't receive any notification from this class from now onwards";
-                            Parse.Push.send({
-                              where: query,
-                              data: {                        
-                                msg: message,
-                          			alert:message,
-                          			badge: "Increment",
-                                groupName: classname,
-                          			groupCode: clcode,
-                          			type: "REMOVE",
-                          			action: "INBOX"        
-                              }
-                            },{
-                              success: function(){
-                                console.log(message);
-                                var flag = true;
-                                console.log(flag);
-                                response.success(flag);
-                              },
-                              error: function(error){
-                                var flag = false;
-                                response.error(flag);
-                              }
-                            });
-                          },
-                          error: function(error){ 
-                            response.error("Error: " + error.code + " " + error.message);
-                          }
-                        });
-                      },
-                      error: function(error){
-                        response.error("Error: " + error.code + " " + error.message);
-                      }
-                    });   
-                  },
-                  error: function(user, error){
-                    response.error("Error: " + error.code + " " + error.message);
-                  }
-                });  
-              },
-              error: function(object, error){
-                response.error("Error: " + error.code + " " + error.message);
-              }
-            });   
-          },
-          error: function(object, error){
-            response.error("Error: " + error.code + " " + error.message);
-          }
-        });                      
-      },
-      error: function(object, error){
-        response.error("Error: " + error.code + " " + error.message);
-      }
-    });          
-  }
-  else{
-    var number = request.params.number;
-    var Messageneeders = Parse.Object.extend("Messageneeders");
-    var query = new Parse.Query(Messageneeders);
-    query.equalTo("cod", clcode);
-    query.equalTo("number", number);
-    query.first({
-      success: function(myObject){
-        if (myObject){
-          myObject.set("status","REMOVED");
-          myObject.save({
-            success: function(myObject){
-
-              var text="You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher";
-run.smsText({
-      "numberList": number,
-      "msg": text
-    }).then(function(){
-                  var flag = true;
-                  response.success(flag);
-    },
-    function(error){
-        response.error(error);
-    }); 
-            },
-            error: function(myObject, error){
-              response.error("Error: " + error.code + " " + error.message);
-            }
-          });
-        } 
-      },
-      error: function(error){
-        response.error("Error: " + error.code + " " + error.message);
-      }
-    });
-  }                        
-}
-
-/*
 Function for user to leave a class 
   Input =>
     classcode: String
     installationObjectId: String
   Output =>
-    user:Parse object
+    flag: Bool true or error
   Procedure =>
     * Changed entry in joined group
     * Clear classcode from channels entry in Installation class 
@@ -609,11 +262,11 @@ exports.leaveClass = function(request, response){
       console.log(user.id);
       var GroupMembers = Parse.Object.extend("GroupMembers");
       var query = new Parse.Query(GroupMembers);
-		  query.equalTo("code", clcode);
-		  query.equalTo("emailId", user.get("username"));
+      query.equalTo("code", clcode);
+      query.equalTo("emailId", user.get("username"));
       query.notEqualTo("status", "LEAVE");
       query.notEqualTo("status", "REMOVED");
-		  query.first({
+      query.first({
         success: function(object){
           console.log(object.id);
           object.set("status", "LEAVE");
@@ -622,14 +275,16 @@ exports.leaveClass = function(request, response){
               console.log(object.id);
               var query = new Parse.Query(Parse.Installation);
               console.log(ID);
-  	          query.get(ID, {
+              query.get(ID, {
                 success: function(object){
                   console.log(object.id);
-  	              object.remove("channels", clcode);  
+                  object.remove("channels", clcode);  
                   object.save(null, {
                     success: function(object){
                       console.log(object.id);
-                      response.success(user);
+                      var flag = true;
+                      console.log(flag);
+                      response.success(flag);
                     },
                     error: function(object, error){
                       var errormessage = "Error in::" + "installation::" + "save::" + error.code + "::" + error.message + "::";
@@ -644,7 +299,7 @@ exports.leaveClass = function(request, response){
                   response.error(errormessage);
                 }
               });
-  		      },
+            },
             error: function(object,error){
               var errormessage = "Error in::" + "groupmembers::" + "save::" + error.code + "::" + error.message + "::";
               Notify(eplatform, emodal, eusr, "leaveClass", echannel, errormessage);
@@ -674,7 +329,7 @@ Function to join a class
     associateName: String
     installationObjectId: String
   Output =>
-    json object codegroup(as codegroup) entry related to that user,user Parse object and 5 message (as messages) of groupdetail table
+    json object codegroup(as codegroup) entry related to that user and 5 message (as messages) of groupdetail table
   Procedure =>
     * Checked the existence of class code 
     * Added in user joined_groups 
@@ -719,7 +374,7 @@ exports.joinClass = function(request, response){
               success: function(groupmembers){
                 var installId = request.params.installationObjectId;
                 var query = new Parse.Query(Parse.Installation);
-	              query.get(installId, {
+                query.get(installId, {
                   success: function(object){
                     object.addUnique("channels", classcode);
                     object.save({
@@ -736,7 +391,6 @@ exports.joinClass = function(request, response){
                           success: function(results){
                             var output = {
                               "codegroup": result,
-                              "user":user,
                               "messages": results
                             };
                             response.success(output);
@@ -780,66 +434,142 @@ exports.joinClass = function(request, response){
 }
 
 /*
-Function for returning list of classes as a suggest for parent to join
-  Input => 
-    school: String 
-    standard: String
-    divison: String
+Function to change assoicate name of joined class
+  Input =>
+    classCode: String
+    childName: String
   Output =>
-    codegroup entries of suggested classes 
+    flag: bool //true in case of success
   Procedure =>
-    Use of compound query on codegroup to compute suggestion whose class exits and removed groups that are already joined/created or removed
+    Changed entry in GroupMembers and in users joined_groups
 */
-exports.suggestClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
-  var school = request.params.school;
-  var standard = request.params.standard;
-  var division = request.params.division;
-  var clarray1 = request.user.get("joined_groups");
-  var clarray2 = request.user.get("Created_groups");
-  var clarray3 = request.user.get("removed_groups");
-  var clarray =[];
-  var i;
-  if(typeof clarray1 != 'undefined'){
-    for (i = 0; i < clarray1.length; i++){
-      clarray[i]= clarray1[i][0];
-    }
-  }
-  if(typeof clarray2 != 'undefined'){
-    for (var j = 0; j < clarray2.length; j++){
-      clarray[i]= clarray2[j][0];
-      i++;
-    }
-  }
-  if(typeof clarray3 != 'undefined'){
-    for (var k = 0; k < clarray3.length; k++){
-      clarray[i] = clarray3[k][0];
-      i++;
-    }
-  }
-  var Codegroup = Parse.Object.extend("Codegroup");
-  var query1 = new Parse.Query("Codegroup");
-  query1.equalTo("school", school);
-  query1.equalTo("standard", standard);
-  if(division != 'NA'){
-    query1.equalTo("divison", division);
-  }
-  query1.notContainedIn("code", clarray);
-  query1.find({
-    success: function(results){
-      response.success(results);
+exports.changeAssociateName = function(request, response){
+  var classcode = request.params.classCode;
+  var newchild = request.params.childName;
+  var child = [newchild];
+  var emailId = request.user.get("username");
+  classcode = classcode.toUpperCase();
+  var GroupMembers = Parse.Object.extend("GroupMembers");
+  var query = new Parse.Query("GroupMembers");
+  query.equalTo("emailId", emailId);
+  query.equalTo("code", classcode);
+  query.notEqualTo("status", "REMOVED");
+  query.notEqualTo("status", "LEAVE");
+  query.first({
+    success: function(object){
+      object.set("children_names",child);
+      object.save({
+        success: function(object){
+          var user = request.user;
+          var classname = "";
+          var clarray = user.get("joined_groups");
+          for(var i = 0; i < clarray.length; i++){
+            if(clarray[i][0] == classcode){
+              classname = clarray[i][1];
+              clarray.splice(i, 1);
+              break;
+            }
+          }
+          var clelement = [classcode,classname,newchild];
+          clarray.push(clelement);
+          user.set("joined_groups", clarray);
+          user.save(null, {
+            success: function(user){
+              var flag = true;
+              response.success(flag);
+            },
+            error: function(object, error){
+              response.error("Error: " + error.code + " " + error.message);
+            }
+          });
+        },
+        error: function(object, error){
+          response.error("Error: " + error.code + " " + error.message);
+        }
+      });
     },
     error: function(error){
-      var errormessage = "Error: " + error.code + " " + error.message;
- Notify(eplatform, emodal, eusr, "suggestClass"," finding entries of codegroup", echannel, errormessage);
-      response.error(errormessage);    
+      response.error("Error: " + error.code + " " + error.message);
+    }
+  });  
+}
+/*
+Function to send sms
+  Input =>
+    msg: String
+    numberList: String // numbers of the recipient separated by commas
+  Output =>
+    httpResponse: Parse.Promise
+  Procedure =>
+    Sending a HTTPRequest to smsgupshup API
+*/
+exports.smsText = function(request){
+  var msg = request.msg;
+  var numberList = request.numberList;
+  var response = new Parse.Promise();
+  return Parse.Cloud.httpRequest({
+    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    params: {
+      method: 'sendMessage',
+      send_to: numberList,
+      msg: msg,
+      msg_type: 'Text',
+      userid: '2000133095',
+      auth_scheme: 'plain',
+      password: 'wdq6tyUzP',
+      v: '1.1',
+      format: 'text'
     }
   });
+}
+
+/*
+Function to genrate OTP 
+  Input => 
+    number: String // 10 digit phone no
+  Output => 
+    <Success>
+      <Valid Number>
+        flag: true
+      <Invalid Number>
+        flag: false
+    <Error>
+      error: String
+  Procedure =>
+    Process generates random code, save entry in new table and send code via sms
+*/
+exports.genCode = function(request, response){
+  var number = request.params.number;
+  var code = Math.floor(Math.random() * 9000 + 1000);
+  var Temp = Parse.Object.extend("Temp");
+  var temp = new Temp();
+  temp.save({
+    phoneNumber: number,
+    code: code
+  }, {
+    success: function(temp){
+      var msg = "Your requested verification code is " + code;
+      run.smsText({
+        "msg": msg,
+        "numberList": number
+      }).then(function(httpResponse){
+        var text = httpResponse.text;
+        console.log(text);
+        if(text.substr(0,3) == 'err')
+          response.success(false);
+        else
+          response.success(true);
+      },
+      function(httpResponse){
+        console.error('Request failed with response code ' + httpResponse.status);
+        response.error(httpResponse.text);
+      });
+    },
+    error: function(temp, error){
+      response.error(error.code + ": " + error.message);
+    }
+  }); 
 }

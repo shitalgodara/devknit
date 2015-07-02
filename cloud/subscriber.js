@@ -41,7 +41,7 @@ Function to change assoicate name of joined class
     classCode: String
     childName: String
   Output =>
-    flag: bool //true in case of success
+    currentuser Parse object
   Procedure =>
     Changed entry in GroupMembers and in users joined_groups
 */
@@ -77,8 +77,7 @@ exports.changeAssociateName = function(request, response){
           user.set("joined_groups", clarray);
           user.save(null, {
             success: function(user){
-			        var flag = true;
-              response.success(flag);
+              response.success(user);
             },
             error: function(object, error){
               response.error("Error: " + error.code + " " + error.message);
