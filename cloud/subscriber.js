@@ -51,6 +51,7 @@ exports.changeAssociateName = function(request, response){
   var child = [newchild];
   var emailId = request.user.get("username");
   classcode = classcode.toUpperCase();
+  var GroupMembers = Parse.Object.extend("GroupMembers");
   var query = new Parse.Query("GroupMembers");
   query.equalTo("emailId", emailId);
   query.equalTo("code", classcode);

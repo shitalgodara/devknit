@@ -1,4 +1,4 @@
-var old = require('cloud/oldVersionSupport/old.js');
+var run = require('../cloud/run.js');
 
 //send notification to username given 
 //send email to given list 
@@ -26,20 +26,14 @@ exports.SendNotifications = function(request, response) {
 exports.SendSms = function(request, response) {
     var usernames = request.params.usernames;
     var data = request.params.dataa;   
-    old.smsText({
+    run.smsText2({
         "msg": data,
         "numberList": usernames
       }).then(function(httpResponse){
-        var text = httpResponse.text;
-        console.log(text);
-        if(text.substr(0,3) == 'err')
-          response.success(false);
-        else
           response.success(true);
       },
       function(httpResponse){
-        console.error('Request failed with response code ' + httpResponse.status);
-        response.error(httpResponse.text);
+        response.error(httpResponse);
       });
 }
 
@@ -51,15 +45,9 @@ exports.SendEmails = function(request, response) {
         "msg": data,
         "numberList": usernames
       }).then(function(httpResponse){
-        var text = httpResponse.text;
-        console.log(text);
-        if(text.substr(0,3) == 'err')
-          response.success(false);
-        else
           response.success(true);
       },
       function(httpResponse){
-        console.error('Request failed with response code ' + httpResponse.status);
-        response.error(httpResponse.text);
+        response.error(httpResponse);
       });
 }

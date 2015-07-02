@@ -31,9 +31,6 @@ exports.genCode = function(request, response){
       "numbers": numbers
     });
   }).then(function(text){
-    if(text.substr(0,3) == 'err')
-      response.success(false);
-    else 
       response.success(true);
   }, function(error){
     console.error(error);
@@ -130,6 +127,7 @@ exports.verifyCode = function(request, response) {
             });
           }
           else{
+            var user = new Parse.User();
             user.set("username", number);
             user.set("password", number + "qwerty12345");
             user.set("name", request.params.name);

@@ -17,16 +17,12 @@ var analytics = require('cloud/analytics.js');
 var followup = require('cloud/followup.js');
 var developer = require('cloud/developer.js');
 var classlist = require('cloud/classlist.js');
-<<<<<<< HEAD
 var CatUser = require('cloud/CatUser.js');
 var generalSender = require('cloud/generalSender.js');
 var web = require('cloud/Websupport/web.js');
 var old = require('cloud/oldVersionSupport/old.js');
-
-
-=======
 var run = require('cloud/run.js');
->>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
+
 var _ = require('underscore.js');
 
 /*------------------------------------------------after/before functions---------------------------*/
@@ -42,7 +38,7 @@ Parse.Cloud.afterSave("Messageneeders", function(request){
         var cls = obj.get("name");    
         var numbers = [num];
         var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + cls + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
-        return old.smsText({
+        return run.smsText2({
           "numbers": numbers,
           "msg": msg
         });
@@ -75,7 +71,7 @@ Parse.Cloud.afterSave("wrong", function(request){
         return myObject.save().then(function(myObject){
           var msg = "You have been successfully unsubscribed, now you will not recieve any message from your teacher"; 
           var numbers = [num];
-          return old.smsText({
+          return run.smsText2({
             "numbers": numbers,
             "msg": msg
           });
@@ -93,7 +89,7 @@ Parse.Cloud.afterSave("wrong", function(request){
   else if(b == "SEND"){
     var msg = "You seems to have forgot to enter student's name, general format to subscribe via sms is '<classCode> <space> <Student Name>'";
     var numbers = [num];
-    run.smsText({
+    run.smsText2({
       "numbers": numbers,
       "msg": msg
     }).then(function(text){
@@ -105,7 +101,7 @@ Parse.Cloud.afterSave("wrong", function(request){
   else{
     var msg = "You seems to have entered a wrong Classcode,General format of code is  7 DIGIT CODE,if you don't know code Ask Teacher for code";
     var numbers = [num];
-    old.smsText({
+    run.smsText2({
       "numbers": numbers,
       "msg": msg
     }).then(function(text){
@@ -270,7 +266,6 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
       status.error(error);
     });
 });
-<<<<<<< HEAD
 //delete kio 
 Parse.Cloud.job("deleteKioClassFromUserJoinedGroups", function(request, status){ 
 var result = [];
@@ -318,8 +313,7 @@ var toupdate=[];
         });
       }
   process(false);
-=======
-
+});
 Parse.Cloud.job("removeKIO", function(request, status){
   Parse.Cloud.useMasterKey();
   var query = new Parse.Query(Parse.User);
@@ -344,7 +338,6 @@ Parse.Cloud.job("removeKIO", function(request, status){
   }, function(error){
     status.error(error.code + ": " + error.message);
   });
->>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
 });
 
 /*----------------------------------------------------  CLOUD fUCNTIONs   -----------------------------------------------------*/
@@ -671,41 +664,11 @@ Parse.Cloud.define("giveCLassesInGroupmembers", function(request, response){
 Parse.Cloud.define("giveCLassesInMessageneeders", function(request, response){
     classlist.giveCLassesInMessageneeders(request, response);
 });
-<<<<<<< HEAD
+
 /*---------------------------------------------------- CATUSER.JS   -------------------------------------------------*/
 
 Parse.Cloud.define("allUsers", function(request, response) {
     CatUser.allUsers(request, response);
-=======
-
-/*-------------------------- CLOUD FUNCTIONS ---------------------*/
-/*
-Function to get list of members subscribed to that class via app
-  Input =>
-    classcode: String
-  Output =>
-    Array of GroupMembers Object{
-      name: String
-      children_name: String
-    }
-  Procedure =>
-     A simple query on GroupMembers 
-*/
-Parse.Cloud.define("showappsubscribers", function(request, response){
-  var clcode = request.params.classcode;
-  var GroupMembers = Parse.Object.extend("GroupMembers");
-  var query = new Parse.Query(GroupMembers);
-  query.equalTo("code", clcode);
-  query.select("name", "children_names");
-  query.find({
-    success: function(results){
-      response.success(results);
-    },
-    error: function(error){
-      response.error("Error: " + error.code + " " + error.message);
-    }
-  });
->>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
 });
 
 Parse.Cloud.define("usersActiveInLastnMonths", function(request, response) {
@@ -756,29 +719,11 @@ Parse.Cloud.define("showsmssubscribers", function(request, response){
 });
 
 Parse.Cloud.define("showclassmessages", function(request, response){
-<<<<<<< HEAD
     web.showclassmessages(request, response);
-=======
-  var clcode = request.params.classcode;
-  var limit = request.params.limit;
-  var query = new Parse.Query("GroupDetails");
-  query.equalTo("code", clcode);
-  query.descending("createdAt");
-  query.select("title", "code", "Creator", "name");
-  query.limit(limit);
-  query.find({
-    success: function(results){
-      response.success(results);
-    },
-    error: function(error){
-      response.error("Error: " + error.code + " " + error.message);
-    }
-  });
->>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
+
 });
   
 Parse.Cloud.define("showallclassesmessages", function(request, response){
-<<<<<<< HEAD
     web.showallclassesmessages(request, response);
 });
 /*------------------------------------------------------OLD.JS ----------------------------------------------------------*/
@@ -804,26 +749,4 @@ Parse.Cloud.define("leaveClass", function(request, response){
 
 Parse.Cloud.define("genCode", function(request, response){
     old.genCode(request, response);
-=======
-  var user = request.user;
-  var clarray = [];
-  var clarray1 = user.get("Created_groups");
-  for (var i = 0; i < clarray1.length; i++){
-    clarray[i]=clarray1[i][0];
-  }
-  var query = new Parse.Query("GroupDetails");
-  query.containedIn("code", clarray);
-  query.descending("createdAt");
-  var limit = request.params.limit;
-  query.select("title", "code", "Creator", "name");
-  query.limit(limit);
-  query.find({
-    success: function(results){
-      response.success(results);
-    },
-    error: function(error){
-      response.error("Error: " + error.code + " " + error.message);
-    }
-  });
->>>>>>> 74c2fd7b089f4d74d266c448308781eec40320b5
 });

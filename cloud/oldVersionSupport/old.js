@@ -515,7 +515,7 @@ exports.smsText = function(request){
     },
     params: {
       method: 'sendMessage',
-      send_to: numberList,
+      send_to: numbers,
       msg: msg,
       msg_type: 'Text',
       userid: '2000133095',
@@ -524,6 +524,15 @@ exports.smsText = function(request){
       v: '1.1',
       format: 'text'
     }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.text);
+  }, function(httpResponse){
+    console.error(httpResponse.data);
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
   });
 }
 
@@ -553,20 +562,17 @@ exports.genCode = function(request, response){
   }, {
     success: function(temp){
       var msg = "Your requested verification code is " + code;
-      run.smsText({
+      smsText({
         "msg": msg,
         "numberList": number
-      }).then(function(httpResponse){
-        var text = httpResponse.text;
-        console.log(text);
+      }).then(function(text){
         if(text.substr(0,3) == 'err')
           response.success(false);
         else
           response.success(true);
       },
       function(httpResponse){
-        console.error('Request failed with response code ' + httpResponse.status);
-        response.error(httpResponse.text);
+        response.error(httpResponse.code+":"+httpResponse.message);
       });
     },
     error: function(temp, error){

@@ -1,4 +1,4 @@
-﻿var run = require('cloud/oldVersionSupport/old.js');
+﻿var run = require('cloud/run.js');
 
 
 /*
@@ -278,6 +278,7 @@ exports.suggestClasses = function(request, response){
   if(groups.length == 0)
     response.success([]);
   else{
+      var Codegroup = Parse.Object.extend("Codegroup");
     var data = groups[0];
     var query1 = new Parse.Query("Codegroup");
     query1.equalTo("school", data.school);
@@ -367,6 +368,7 @@ exports.giveClassesDetails = function(request, response){
       }
     }
     console.log(clarray);
+      var Codegroup = Parse.Object.extend("Codegroup");
     var query = new Parse.Query("Codegroup");
     query.containedIn("code", clarray);
     query.find({
@@ -523,6 +525,7 @@ exports.removeMember = function(request, response){
   }
   else{
     var number = request.params.number;
+    var Messageneeders = Parse.Object.extend("Messageneeders");
     var query = new Parse.Query("Messageneeders");
     query.equalTo("cod", clcode);
     query.equalTo("number", number);
@@ -531,7 +534,7 @@ exports.removeMember = function(request, response){
       return myObject.save(); 
     }).then(function(myObject){
       var numbers = [number];
-      return run.smsText({
+      return run.smsText2({
         "numbers": numbers,
         "msg": "You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher"
       });
@@ -539,7 +542,6 @@ exports.removeMember = function(request, response){
       var flag = true;
       response.success(flag);
     }, function(error){
-      console.error(error);
       response.error(error.code + ": " + error.message);
     });
   }                        
@@ -697,6 +699,7 @@ exports.joinClass = function(request, response){
                     object.addUnique("channels", classcode);
                     object.save({
                       success: function(object){
+                        var GroupDetails = Parse.Object.extend("GroupDetails");
                         var query = new Parse.Query("GroupDetails");
                         query.equalTo("code", classcode);
                         var d = new Date();
@@ -796,6 +799,7 @@ exports.suggestClass = function(request, response){
       i++;
     }
   }
+  var Codegroup = Parse.Object.extend("Codegroup");
   var query1 = new Parse.Query("Codegroup");
   query1.equalTo("school", school);
   query1.equalTo("standard", standard);

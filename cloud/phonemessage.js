@@ -1,4 +1,4 @@
-var run = require('cloud/oldVersionSupport/old.js');
+var run = require('cloud/run.js');
 var _ = require('underscore.js');
 
 /*
@@ -26,7 +26,7 @@ exports.messagecc = function(request, response){
       var numbers = _.map(results, function(result){
         return result.get('number');
       });
-      return run.smsText({
+      return run.smsText2({
         "numbers": numbers,
         "msg": msg
       }).then(function(text){
@@ -67,7 +67,7 @@ exports.samplemessage = function(request, response) {
       var numbers = _.map(results, function(result){
         return result.get('number');
       });
-      return run.smsText({
+      return run.smsText2({
         "numbers": numbers,
         "msg": msg
       }).then(function(text){

@@ -12,56 +12,30 @@ exports.smsText2 = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
   numbers = numbers.join();
-  // <smsgupshup api>
-  return Parse.Cloud.httpRequest({
-    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    params: {
-      method: 'sendMessage',
-      send_to: numbers,
-      msg: msg,
-      msg_type: 'Text',
-      userid: '2000133095',
-      auth_scheme: 'plain',
-      password: 'wdq6tyUzP',
-      v: '1.1',
-      format: 'text'
-    }
-  }).then(function(httpResponse){
-    return Parse.Promise.as(httpResponse.text);
-  }, function(httpResponse){
-    console.error(httpResponse.data);
-    var error = {
-      "code": httpResponse.data.code,
-      "message": httpResponse.data.error
-    };
+
+   //<startenterprise api>
+   return Parse.Cloud.httpRequest({
+     url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
+     headers: {
+       'Content-Type': 'application/json'
+     },
+     params: {
+       'usr': 'knitapp',
+       'pass': 'knitapp',
+       'msisdn': numbers,
+       'msg': msg,
+       'sid': 'myKnit',
+       'mt': 0
+     }
+   }).then(function(httpResponse){
+     return Parse.Promise.as(httpResponse.text);
+   }, function(httpResponse){
+     var error = {
+       "code": httpResponse.data.code,
+       "message": httpResponse.data.error
+     };
     return Parse.Promise.error(error);
-  });
-  // <startenterprise api>
-  // return Parse.Cloud.httpRequest({
-  //   url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
-  //   headers: {
-  //     'Content-Type': 'application/json'
-  //   },
-  //   params: {
-  //     'usr': 'knitapp',
-  //     'pass': 'knitapp',
-  //     'msisdn': numbers,
-  //     'msg': msg,
-  //     'sid': 'myKnit',
-  //     'mt': 0
-  //   }
-  // }).then(function(httpResponse){
-  //   return Parse.Promise.as(httpResponse.text);
-  // }, function(httpResponse){
-  //   var error = {
-  //     "code": httpResponse.data.code,
-  //     "message": httpResponse.data.error
-  //   };
-  //   return Parse.Promise.error(error);
-  // });
+   });
 }
 
 /*
