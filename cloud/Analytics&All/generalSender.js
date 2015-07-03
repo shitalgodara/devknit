@@ -1,4 +1,4 @@
-var run = require('../cloud/run.js');
+var run = require('cloud/run.js');
 
 //send notification to username given 
 //send email to given list 
