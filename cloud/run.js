@@ -12,9 +12,7 @@ exports.smsText2 = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
   numbers = numbers.join();
-
-   //<startenterprise api>
-   return Parse.Cloud.httpRequest({
+  return Parse.Cloud.httpRequest({
      url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
      headers: {
        'Content-Type': 'application/json'
@@ -34,7 +32,7 @@ exports.smsText2 = function(request){
        "code": httpResponse.data.code,
        "message": httpResponse.data.error
      };
-    return Parse.Promise.error(error);
+     return Parse.Promise.error(error);
    });
 }
 

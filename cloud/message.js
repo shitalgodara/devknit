@@ -182,7 +182,6 @@ Function to show class messages within a limit in webbrowser
 exports.showClassMessages = function(request, response){
   var clcode = request.params.classcode;
   var limit = request.params.limit;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   query.equalTo("code", clcode);
   query.descending("createdAt");
@@ -216,7 +215,6 @@ exports.showLatestMessages = function(request, response){
       clarray[i]=clarray1[i][0];
     }
     var date = request.params.date;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
     var query = new Parse.Query("GroupDetails");
     query.greaterThan("createdAt", date);
     query.containedIn("code", clarray);
@@ -253,7 +251,6 @@ Function for getting latest message of all joined classes but with limit in case
 exports.showLatestMessagesWithLimit= function(request, response){
   var type = request.params.classtype;
   var limit = request.params.limit;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   query.descending("createdAt");
   query.limit(limit);
@@ -296,7 +293,6 @@ exports.showLatestMessagesWithLimit= function(request, response){
           messageIds[i] = results[i].id;
         }
         console.log(messageIds);
-        var MessageState = Parse.Object.extend("MessageState");
         var query = new Parse.Query("MessageState");
         query.equalTo("username", request.user.get("username"));
         query.containedIn("message_id", messageIds);
@@ -340,7 +336,6 @@ Function for getting old message of all joined classes after a given time
     * if message > 0 and type = 'j' then query on MessageState too 
 */
 exports.showOldMessages = function(request, response){
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   var limit = request.params.limit;
   var date = request.params.date;
@@ -381,7 +376,6 @@ exports.showOldMessages = function(request, response){
         for(var i = 0; i < results.length; i++){
           messageIds[i] = results[i].id;
         }
-        var MessageState = Parse.Object.extend("MessageState");
         var query = new Parse.Query("MessageState");
         query.equalTo("username", request.user.get("username"));
         query.containedIn("message_id", messageIds);
@@ -451,7 +445,6 @@ Function for getting old message of all joined classes after a given time
     * if message > 0 and type = 'j' then query on MessageState too 
 */
 exports.showOldMessages2 = function(request, response){
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");
   var limit = request.params.limit;
   var date = request.params.date;
@@ -492,7 +485,6 @@ exports.showOldMessages2 = function(request, response){
         for(var i = 0;i < results.length; i++){
           messageIds[i] = results[i].id;
         }
-        var MessageState = Parse.Object.extend("MessageState");
         var query = new Parse.Query("MessageState");
         query.equalTo("username", request.user.get("username"));
         query.containedIn("message_id", messageIds);
@@ -548,7 +540,6 @@ exports.showLatestMessagesWithLimit2 = function(request, response){
   var limit = request.params.limit;
   console.log(type);
   console.log(limit);
-  var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query("GroupDetails");  
   query.descending("createdAt");
   query.limit(limit);
@@ -592,7 +583,6 @@ exports.showLatestMessagesWithLimit2 = function(request, response){
         }
         console.log(messageIds);
         console.log(request.user.get("username"));
-        var MessageState = Parse.Object.extend("MessageState");
         var query = new Parse.Query("MessageState");
         query.equalTo("username", request.user.get("username"));
         query.containedIn("message_id", messageIds);

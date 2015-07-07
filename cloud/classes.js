@@ -1,46 +1,20 @@
 ﻿var run = require('cloud/run.js');
 
-
-/*
-  Function to notify which kind of operation failed in which step
-*/
-function Notify(a, b, c, d, f, g){
-  var operationinfo = " For operation " + d + "step with error message ";
-  var message = "Operation failed in " + a + " " + b + " for user " + c + operationinfo + g;
-  Parse.Push.send({
-    channels: ["ios"],
-    data: {                        
-      msg: message,
-			alert: message,
-      groupName: f,
-			type: "NORMAL",
-			action: "INBOX"        
-    }, 
-    success: function(){
-      console.log('Notified the error');
-      //callback.success(true);
-    },
-    error: function(error){
-      console.warn("Failed to Notified");
-      //callback.error(false);
-    }
-  });
-}
-
 /*
 Function for creating class  
   Input =>
     user: Parse User
     classname: String
   Output =>
-  json object with keys codegroup and user and values there corresponding objects
-    codegroup: Parse object
-    user:Parse object
+    JSON object{
+      codegroup: Parse object
+      user: Parse object
+    }
   Procedure =>
     * Username is taken from Parse User 
     * Class code is created and class name is modified
     * Added user in Created_groups
-    * check first already created or not in client side also remove space in names of class
+    * Check first already created or not in client side also remove space in names of class
     procedure first create code ,then add in user created_groups,then in codegroup entry
 */
 exports.createClass = function(request, response){
@@ -116,14 +90,14 @@ exports.createClass = function(request, response){
           console.log(codegroup.get("senderId"));
           console.log(codegroup.get("Creator"));
           var output = {
-                              "codegroup": codegroup,
-                              "user": user
-                            };
+            "codegroup": codegroup,
+            "user": user
+          };
           response.success(output);
         },
         error: function(codegroup, error){
           var errormessage = "Error in::" + "codegroup::" + "save::" + error.code + "::" + error.message + "::";
-              response.error(errormessage);
+          response.error(errormessage);
         }
       });
 		},
@@ -139,7 +113,7 @@ Function to delete user's created class
   Input =>
     classcode: String 
   Output =>
-    user:Parse object
+    user: Parse object
   Procedure =>
     * Deleted class entry in Created_groups 
     * Made classExist entry of Codegroup class false,
@@ -214,12 +188,11 @@ exports.deleteClass = function(request, response){
                     },
                     error: function(error){
                       var errormessage = "Error in::" + "push::" + "send::" + error.code + "::" + error.message + "::";
-                      
                       response.error(errormessage);
                     }
                   });
                 },
-                error: function(obj,error){
+                error: function(obj, error){
                   var errormessage = "Error in::" + "groupdetail::" + "save::" + error.code + "::" + error.message + "::";
                   response.error(errormessage);
                 }
@@ -272,7 +245,6 @@ exports.suggestClasses = function(request, response){
   if(groups.length == 0)
     response.success([]);
   else{
-      var Codegroup = Parse.Object.extend("Codegroup");
     var data = groups[0];
     var query1 = new Parse.Query("Codegroup");
     query1.equalTo("school", data.school);
@@ -360,8 +332,6 @@ exports.giveClassesDetails = function(request, response){
         i++;
       }
     }
-    console.log(clarray);
-      var Codegroup = Parse.Object.extend("Codegroup");
     var query = new Parse.Query("Codegroup");
     query.containedIn("code", clarray);
     query.find({
@@ -517,7 +487,6 @@ exports.removeMember = function(request, response){
   }
   else{
     var number = request.params.number;
-    var Messageneeders = Parse.Object.extend("Messageneeders");
     var query = new Parse.Query("Messageneeders");
     query.equalTo("cod", clcode);
     query.equalTo("number", number);
@@ -545,7 +514,7 @@ Function for user to leave a class
     classcode: String
     installationObjectId: String
   Output =>
-    user:Parse object
+    user: Parse Object
   Procedure =>
     * Changed entry in joined group
     * Clear classcode from channels entry in Installation class 
@@ -642,7 +611,11 @@ Function to join a class
     associateName: String
     installationObjectId: String
   Output =>
-    json object codegroup(as codegroup) entry related to that user,user Parse object and 5 message (as messages) of groupdetail table
+    JSON Object{ 
+		codegroup: Pare Object
+		user: Parse object
+		messages: Array // 5 atmost
+	}
   Procedure =>
     * Checked the existence of class code 
     * Added in user joined_groups 
@@ -686,7 +659,6 @@ exports.joinClass = function(request, response){
                     object.addUnique("channels", classcode);
                     object.save({
                       success: function(object){
-                        var GroupDetails = Parse.Object.extend("GroupDetails");
                         var query = new Parse.Query("GroupDetails");
                         query.equalTo("code", classcode);
                         var d = new Date();
@@ -698,7 +670,7 @@ exports.joinClass = function(request, response){
                           success: function(results){
                             var output = {
                               "codegroup": result,
-                              "user":user,
+                              "user": user,
                               "messages": results
                             };
                             response.success(output);
@@ -786,7 +758,6 @@ exports.suggestClass = function(request, response){
       i++;
     }
   }
-  var Codegroup = Parse.Object.extend("Codegroup");
   var query1 = new Parse.Query("Codegroup");
   query1.equalTo("school", school);
   query1.equalTo("standard", standard);

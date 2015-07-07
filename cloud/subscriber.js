@@ -41,7 +41,7 @@ Function to change assoicate name of joined class
     classCode: String
     childName: String
   Output =>
-    currentuser Parse object
+    user: Parse Object
   Procedure =>
     Changed entry in GroupMembers and in users joined_groups
 */
@@ -51,7 +51,6 @@ exports.changeAssociateName = function(request, response){
   var child = [newchild];
   var emailId = request.user.get("username");
   classcode = classcode.toUpperCase();
-  var GroupMembers = Parse.Object.extend("GroupMembers");
   var query = new Parse.Query("GroupMembers");
   query.equalTo("emailId", emailId);
   query.equalTo("code", classcode);

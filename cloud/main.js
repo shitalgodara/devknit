@@ -22,7 +22,6 @@ var generalSender = require('cloud/Analytics&All/generalSender.js');
 var web = require('cloud/Websupport/web.js');
 var old = require('cloud/oldVersionSupport/old.js');
 var run = require('cloud/run.js');
-
 var _ = require('underscore.js');
 
 /*------------------------------------------------after/before functions---------------------------*/
@@ -165,7 +164,6 @@ Parse.Cloud.job("sendLikeNotifications", function(request, status){
         post = ' "' + post + '"';
       } 
       var msg = result.get("like_count") + " people like your post" + post;
-      console.log(username + ": " + msg);
       query2.equalTo("username", username); 
       promise = promise.then(function(){
         return Parse.Push.send({
@@ -184,9 +182,9 @@ Parse.Cloud.job("sendLikeNotifications", function(request, status){
     });
     return promise;
   }).then(function(){
-    status.success("Successful sent like notifications to all teachers !!");
+    status.success("Successfully sent like notifications to all teachers !!");
   }, function(error){
-    status.error(error);
+    status.error(error.message);
   });
 });
 
@@ -242,7 +240,6 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
           post = ' "' + post + '"';
         } 
         var msg = result.get("confused_count") + " people seems to be confused by your post" + post;
-        console.log(username + ": " + msg);
         query2.equalTo("username", username); 
         promise = promise.then(function(){
           return Parse.Push.send({
@@ -261,9 +258,9 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
       });
       return promise;
     }).then(function(){
-      status.success("Successful sent confused notifications to all teachers !!");
+      status.success("Successfully sent confused notifications to all teachers !!");
     }, function(error){
-      status.error(error);
+      status.error(error.message);
     });
 });
 
@@ -274,65 +271,69 @@ Parse.Cloud.job("memberNotifications", function(request, status){
   var currentTime = date.getTime();
   var currentHours = date.getHours();
   var dateLowerBound = new Date(currentTime - 6 * intervalTime);
-  var dateUpperBound;
-  switch(currentHours){
-    case 2:
-    case 6:
-    case 10: 
-      dateUpperBound = new Date(currentTime - 5 * intervalTime);
-      break;
-    case 14:
-      dateUpperBound = new Date(currentTime - 3 * intervalTime);
-      break;
-    default:
-      status.success("Not sending any confused notifications at this time");
-      break;
-  }
+  var newMembers = [];
   var query1 = new Parse.Query("GroupMembers");
   query1.greaterThanOrEqualTo("createdAt", dateLowerBound);
-  //query1.lessThan("createdAt", dateUpperBound);
-  //query1.greaterThan("confused_count", 0);
+  query1.doesNotExist("status");
   query1.select("code");
-    query1.find().then(function(results){
-      var promise = Parse.Promise.as();
-      _.each(results, function(result){
-        
-        Parse.Cloud.useMasterKey();
-        var query2 = new Parse.Query(Parse.Installation);
-        var username = result.get("senderId");
-        var post = result.get('title');
-        if(post.length > 15){
-          post = post.substr(0,12);
-          post = post + "...";
-        }
-        if(post.length > 0){
-          post = ' "' + post + '"';
-        } 
-        var msg = result.get("confused_count") + " people seems to be confused by your post" + post;
-        console.log(username + ": " + msg);
-        query2.equalTo("username", username); 
-        promise = promise.then(function(){
-          return Parse.Push.send({
-            where: query2, 
-            data: {
-              msg: msg,
-              alert: msg,
-              badge: "Increment",
-              groupName: result.get("name"),
-              type: "TRANSITION",
-              action: "CONFUSE",
-              id: result.id
-            }
-          });
-        });
-      });
-      return promise;
-    }).then(function(){
-      status.success("Successful sent confused notifications to all teachers !!");
-    }, function(error){
-      status.error(error);
+  query1.each(function(result){
+    var classCode = result.get("code");
+    if(newMembers[classCode])
+      newMembers[classCode]++;
+    else
+      newMembers[classCode] = 1;
+    return Parse.Promise.as();
+  }).then(function(success){
+    var query2 = new Parse.Query("Messageneeders");
+    query2.doesNotExist("status");
+    query2.greaterThanOrEqualTo("createdAt", dateLowerBound); 
+    query2.select("cod");
+    return query2.each(function(result){
+      var classCode = result.get("cod");
+      if(newMembers[classCode])
+        newMembers[classCode]++;
+      else
+        newMembers[classCode] = 1;
+      return Parse.Promise.as();
     });
+  }).then(function(success){
+    var codes = _.keys(newMembers);
+    var query = new Parse.Query("Codegroup");
+    query.equalTo("classExist", true);
+    query.containedIn("code", codes);
+    query.select("code", "senderId", "name");
+    return query.each(function(group){
+      var username = group.get("senderId");
+      var classCode = group.get("code");
+      var className = group.get("name");  
+      var count = newMembers[classCode];
+      if(count > 0){
+        var msg = newMembers[classCode] + " new subscribers added to the class " + className;
+        var query3 = new Parse.Query(Parse.Installation);
+        query3.equalTo("username", username);
+        return Parse.Push.send({
+          where: query3, 
+          data: {
+            msg: msg,
+            alert: msg,
+            badge: "Increment",
+            groupName: className,
+            groupCode: classCode,
+            type: "TRANSITION",
+            action: "MEMBER"
+          }
+        });
+      }
+      else
+        return Parse.Promise.as();
+    });  
+  }).then(function(){
+    status.success("Successfully sent new member notifications to all teachers !!");
+  }, function(error){
+    status.error(error.message);
+  });
 });
+
 //delete kio 
 Parse.Cloud.job("deleteKioClassFromUserJoinedGroups", function(request, status){ 
 var result = [];
@@ -381,6 +382,7 @@ var toupdate=[];
       }
   process(false);
 });
+
 Parse.Cloud.job("removeKIO", function(request, status){
   Parse.Cloud.useMasterKey();
   var query = new Parse.Query(Parse.User);

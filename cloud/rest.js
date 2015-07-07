@@ -93,7 +93,6 @@ Function to return FAQs
 exports.faq = function(request, response){
   var role = request.user.get("role");
   var date = request.params.date;
-  var FAQs = Parse.Object.extend("FAQs");
   var query = new Parse.Query("FAQs");
   if (role == "parent"){
       query.equalTo("role", "Parent");
@@ -147,7 +146,6 @@ Function to find class
 */
 exports.findClass = function(request, response){
   var classcode = request.params.code;
-  var Codegroup = Parse.Object.extend("Codegroup");
   var query = new Parse.Query("Codegroup");
   query.equalTo("code", classcode);
   query.find({
@@ -224,9 +222,8 @@ exports.inviteUsers = function(request, response){
     var numbers = _.map(recipients, function(recipient){
       return recipient[1].replace(/\s+/g, '');    
     });
-    var numberList = numbers.join();
     run.smsText2({
-      "numberList": numberList,
+      "numbers": numbers,
       "msg": text
     }).then(function(){
       response.success(true);
