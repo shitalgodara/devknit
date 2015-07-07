@@ -3,7 +3,6 @@ var run = require('cloud/run.js');
 //send notification to username given 
 //send email to given list 
 //send sms to given list
-//notify not working
 //mail make it
 exports.SendNotifications = function(request, response) {
     var usernames = request.params.usernames;

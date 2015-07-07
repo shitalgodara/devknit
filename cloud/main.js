@@ -266,6 +266,73 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
       status.error(error);
     });
 });
+
+//member notification
+Parse.Cloud.job("memberNotifications", function(request, status){ 
+  var intervalTime = 14400000;
+  var date = new Date();
+  var currentTime = date.getTime();
+  var currentHours = date.getHours();
+  var dateLowerBound = new Date(currentTime - 6 * intervalTime);
+  var dateUpperBound;
+  switch(currentHours){
+    case 2:
+    case 6:
+    case 10: 
+      dateUpperBound = new Date(currentTime - 5 * intervalTime);
+      break;
+    case 14:
+      dateUpperBound = new Date(currentTime - 3 * intervalTime);
+      break;
+    default:
+      status.success("Not sending any confused notifications at this time");
+      break;
+  }
+  var query1 = new Parse.Query("GroupMembers");
+  query1.greaterThanOrEqualTo("createdAt", dateLowerBound);
+  //query1.lessThan("createdAt", dateUpperBound);
+  //query1.greaterThan("confused_count", 0);
+  query1.select("code");
+    query1.find().then(function(results){
+      var promise = Parse.Promise.as();
+      _.each(results, function(result){
+        
+        Parse.Cloud.useMasterKey();
+        var query2 = new Parse.Query(Parse.Installation);
+        var username = result.get("senderId");
+        var post = result.get('title');
+        if(post.length > 15){
+          post = post.substr(0,12);
+          post = post + "...";
+        }
+        if(post.length > 0){
+          post = ' "' + post + '"';
+        } 
+        var msg = result.get("confused_count") + " people seems to be confused by your post" + post;
+        console.log(username + ": " + msg);
+        query2.equalTo("username", username); 
+        promise = promise.then(function(){
+          return Parse.Push.send({
+            where: query2, 
+            data: {
+              msg: msg,
+              alert: msg,
+              badge: "Increment",
+              groupName: result.get("name"),
+              type: "TRANSITION",
+              action: "CONFUSE",
+              id: result.id
+            }
+          });
+        });
+      });
+      return promise;
+    }).then(function(){
+      status.success("Successful sent confused notifications to all teachers !!");
+    }, function(error){
+      status.error(error);
+    });
+});
 //delete kio 
 Parse.Cloud.job("deleteKioClassFromUserJoinedGroups", function(request, status){ 
 var result = [];

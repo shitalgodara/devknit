@@ -123,14 +123,12 @@ exports.createClass = function(request, response){
         },
         error: function(codegroup, error){
           var errormessage = "Error in::" + "codegroup::" + "save::" + error.code + "::" + error.message + "::";
-          Notify(eplatform, emodal, eusr, "createClass", echannel, errormessage);
-          response.error(errormessage);
+              response.error(errormessage);
         }
       });
 		},
 		error: function(user, error){
       var errormessage = "Error in::" + "user::" + "save::" + error.code + "::" + error.message + "::";
-      Notify(eplatform, emodal, eusr, "createClass", echannel, errormessage);
       response.error(errormessage);
     }
   });
@@ -216,35 +214,31 @@ exports.deleteClass = function(request, response){
                     },
                     error: function(error){
                       var errormessage = "Error in::" + "push::" + "send::" + error.code + "::" + error.message + "::";
-                      Notify(eplatform, emodal, eusr, "deleteClass", echannel, errormessage);
+                      
                       response.error(errormessage);
                     }
                   });
                 },
                 error: function(obj,error){
                   var errormessage = "Error in::" + "groupdetail::" + "save::" + error.code + "::" + error.message + "::";
-                  Notify(eplatform, emodal, eusr, "deleteClass", echannel, errormessage);
                   response.error(errormessage);
                 }
               });
             },
             error: function(object, error){
               var errormessage = "Error in::" + "codegroup::" + "save::" + error.code + "::" + error.message + "::";
-              Notify(eplatform, emodal, eusr, "deleteClass", echannel, errormessage);
               response.error(errormessage);
             }
           });
         },
         error: function(error){
           var errormessage = "Error in::" + "codegroup::" + "first::" + error.code + "::" + error.message + "::";
-          Notify(eplatform, emodal, eusr, "deleteClass", echannel, errormessage);
           response.error(errormessage);
         }
       });
     },
     error: function(user, error){
       var errormessage = "Error in::" + "user::" + "save::" + error.code + "::" + error.message + "::";
-      Notify(eplatform, emodal, eusr, "deleteClass", echannel, errormessage);
       response.error(errormessage);    
     }
   });
@@ -324,7 +318,6 @@ exports.suggestClasses = function(request, response){
       },
       error: function(error){
         var errormessage = "Error: " + error.code + " " + error.message;
-        Notify(eplatform, emodal, eusr, "suggestClass"," finding entries of codegroup", echannel, errormessage);
         response.error(errormessage);    
       }
     });
@@ -379,7 +372,6 @@ exports.giveClassesDetails = function(request, response){
       },
       error: function(error){
         var errormessage = "Error in::" + "codegroup::" + "find::" + error.code + "::" + error.message + "::";
-        Notify(eplatform, emodal, eusr, "giving Classes details", echannel, errormessage);
         response.error(errormessage);    
       }
     });
@@ -614,35 +606,30 @@ exports.leaveClass = function(request, response){
                     },
                     error: function(object, error){
                       var errormessage = "Error in::" + "installation::" + "save::" + error.code + "::" + error.message + "::";
-                      Notify(eplatform, emodal, eusr, "leaveClass", echannel, errormessage);
                       response.error(errormessage);
                     }
                   });          
                 },
                 error: function(object, error){    
                   var errormessage = "Error in::" + "installation::" + "get::" + error.code + "::" + error.message + "::";
-                  Notify(eplatform, emodal, eusr, "leaveClass", echannel, errormessage);
                   response.error(errormessage);
                 }
               });
   		      },
             error: function(object,error){
               var errormessage = "Error in::" + "groupmembers::" + "save::" + error.code + "::" + error.message + "::";
-              Notify(eplatform, emodal, eusr, "leaveClass", echannel, errormessage);
               response.error(errormessage);
             }
           });
         },
         error: function(error){
           var errormessage = "Error in::" + "groupmembers::" + "first::" + error.code + "::" + error.message + "::";
-          Notify(eplatform, emodal, eusr, "leaveClass", echannel, errormessage);
           response.error(errormessage);
         }
       });
     },
     error: function(object,error){
       var errormessage = "Error in::" + "user::" + "save::" + error.code + "::" + error.message + "::";
-      Notify(eplatform, emodal, eusr, "leaveClass", echannel, errormessage);
       response.error(errormessage); 
     }
   });
@@ -813,7 +800,6 @@ exports.suggestClass = function(request, response){
     },
     error: function(error){
       var errormessage = "Error: " + error.code + " " + error.message;
-      Notify(eplatform, emodal, eusr, "suggestClass"," finding entries of codegroup", echannel, errormessage);
       response.error(errormessage);    
     }
   });

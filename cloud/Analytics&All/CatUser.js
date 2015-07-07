@@ -1,12 +1,13 @@
 //categories of users
 //active teachers->name,emailId,phone-web,app->number,emailid->mail(on web emailID),notification(on app number,emailId),sms(on web with number)
-//parents of active classes->on app(username notify),sms->phone no
+//parents of active classes->on app(username notify),sms->phone no,mail to parens also
 //inactive teachers on web,app->number,emailid->
 //mail(on web emailID and on app emailId(just to double effort)),notification(on app username(number,emailId),sms(on web with number)
 
 //users on both->sms,app
 
-//user with feedback type->gud,
+//users->active ,retened,dropped
+//user with feedback type->loyal(likes),not getting app,buggy report bugs,suggestive[all in all roles]
 
 //replace with hash
 //>10k is right way skip find more element s for >10k it would 11k do
@@ -349,3 +350,7 @@ usersActiveInLastnMonths({
     response.error(false);
   });
 }
+
+//rentented teacher list
+//retented parent list
+//parent dropped

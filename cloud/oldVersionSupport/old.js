@@ -1,3 +1,4 @@
+var run = require('cloud/run.js');
 
 /*
 Function for creating class  
@@ -503,7 +504,7 @@ Function to send sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-exports.smsText = function(request){
+smsText = function(request){
   var msg = request.msg;
   var numberList = request.numberList;
   numberList = numberList.join();
@@ -515,7 +516,7 @@ exports.smsText = function(request){
     },
     params: {
       method: 'sendMessage',
-      send_to: numbers,
+      send_to: numberList,
       msg: msg,
       msg_type: 'Text',
       userid: '2000133095',
@@ -562,9 +563,10 @@ exports.genCode = function(request, response){
   }, {
     success: function(temp){
       var msg = "Your requested verification code is " + code;
+      var numbers=[number];
       smsText({
         "msg": msg,
-        "numberList": number
+        "numberList": numbers
       }).then(function(text){
         if(text.substr(0,3) == 'err')
           response.success(false);

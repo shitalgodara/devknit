@@ -224,7 +224,7 @@ exports.inviteUsers = function(request, response){
     var numbers = _.map(recipients, function(recipient){
       return recipient[1].replace(/\s+/g, '');    
     });
-    var numberList = numberArray.join();
+    var numberList = numbers.join();
     run.smsText2({
       "numberList": numberList,
       "msg": text
