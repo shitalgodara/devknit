@@ -74,11 +74,7 @@ exports.changeAssociateName = function(request, response){
     user.set("joined_groups", clarray);
     return user.save();
   }).then(function(user){
-    var query = new Parse.Query(Parse.User);
-    query.select("joined_groups");
-    return query.get(user.id);
-  }).then(function(object){
-    response.success(object);
+    response.success(user);
   }, function(error){
     response.error(error.code + " " + error.message);
   });  

@@ -7,9 +7,7 @@ Function for creating class
     classname: String
   Output =>
     JSON Object{
-      user : Parse Object{
-        Created_groups: Array
-      }
+      user : Parse Object
       codegroup: Parse Object
     }
   Procedure =>
@@ -85,15 +83,11 @@ exports.createClass = function(request, response){
 			sex: sex
     });
   }).then(function(codegroup){
-    var query = new Parse.Query(Parse.User);
-    query.select("Created_groups");
-    return query.get(user.id).then(function(object){
-      var output = {
-        "user": object,
-        "codegroup": codegroup
-      };
-      return Parse.Promise.as(output);
-    });
+    var output = {
+      "user": user,
+      "codegroup": codegroup
+    };
+    return Parse.Promise.as(output);
   }).then(function(output){
     response.success(output);
   }, function(error){
@@ -106,9 +100,7 @@ Function to delete user's created class
   Input =>
     classcode: String 
   Output =>
-    user: Parse Object{
-      Created_groups: Array
-    }
+    user: Parse Object
   Procedure =>
     * Deleted class entry in Created_groups 
     * Made classExist entry of Codegroup class false,
@@ -170,11 +162,7 @@ exports.deleteClass = function(request, response){
       });
     });
   }).then(function(){
-    var query = new Parse.Query(Parse.User);
-    query.select("Created_groups");
-    return query.get(user.id);
-  }).then(function(object){
-    response.success(object);
+    response.success(user);
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
@@ -519,12 +507,7 @@ exports.leaveClass = function(request, response){
     object.remove("channels", clcode);  
     return object.save();
   }).then(function(object){
-    console.log(object);
-    var query = new Parse.Query(Parse.User);
-    query.select("joined_groups");
-    return query.get(user.id);
-  }).then(function(object){
-    response.success(object);
+    response.success(user);
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
@@ -538,9 +521,7 @@ Function to join a class
     installationObjectId: String
   Output =>
     JSON Object{ 
-		user: Parse Object{
-      joined_groups: Array
-    }
+		user: Parse Object
     codegroup: Parse Object
 		messages: Array // 5 atmost
 	}
@@ -595,16 +576,12 @@ exports.joinClass = function(request, response){
         query.limit(5);
         return query.find();
       }).then(function(results){
-        var query = new Parse.Query(Parse.User);
-        query.select("joined_groups");
-        return query.get(user.id).then(function(object){
-          var output = {
-            "user": object,
-            "messages": results,
-            "codegroup": result
-          };
-          return Parse.Promise.as(output);
-        });
+        var output = {
+          "user": user,
+          "messages": results,
+          "codegroup": result
+        };
+        return Parse.Promise.as(output);
       }).then(function(output){
         response.success(output);
       }, function(error){
