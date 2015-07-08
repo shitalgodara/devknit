@@ -264,7 +264,13 @@ Parse.Cloud.job("sendConfusedNotifications", function(request, status){
     });
 });
 
-//member notification
+/*
+Job to send confused notifications
+  Input => 
+    Nothing
+  Output =>
+    Notitfication to the users
+*/
 Parse.Cloud.job("memberNotifications", function(request, status){ 
   var intervalTime = 14400000;
   var date = new Date();
@@ -308,7 +314,7 @@ Parse.Cloud.job("memberNotifications", function(request, status){
       var className = group.get("name");  
       var count = newMembers[classCode];
       if(count > 0){
-        var msg = newMembers[classCode] + " new subscribers added to the class " + className;
+        var msg = count + " new subscribers added to the class " + className;
         var query3 = new Parse.Query(Parse.Installation);
         query3.equalTo("username", username);
         return Parse.Push.send({

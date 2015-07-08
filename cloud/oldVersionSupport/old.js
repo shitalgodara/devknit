@@ -265,8 +265,7 @@ exports.leaveClass = function(request, response){
       var query = new Parse.Query(GroupMembers);
       query.equalTo("code", clcode);
       query.equalTo("emailId", user.get("username"));
-      query.notEqualTo("status", "LEAVE");
-      query.notEqualTo("status", "REMOVED");
+      query.doesNotExist("status");
       query.first({
         success: function(object){
           console.log(object.id);
@@ -454,8 +453,7 @@ exports.changeAssociateName = function(request, response){
   var query = new Parse.Query("GroupMembers");
   query.equalTo("emailId", emailId);
   query.equalTo("code", classcode);
-  query.notEqualTo("status", "REMOVED");
-  query.notEqualTo("status", "LEAVE");
+  query.doesNotExist("status");
   query.first({
     success: function(object){
       object.set("children_names",child);

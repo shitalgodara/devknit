@@ -51,7 +51,7 @@ exports.sendTextMessage = function(request, response){
     var query = new Parse.Query(Messageneeders);
     msg = msg.substr(0, 330);
     query.equalTo("cod", c);
-    query.notEqualTo("status", "REMOVED");
+    query.doesNotExist("status");
     return query.find().then(function(results){
       var numbers = _.map(results, function(res){
         return res.get("number");
@@ -143,7 +143,7 @@ exports.sendPhotoTextMessage = function(request, response){
       var Messageneeders = Parse.Object.extend("Messageneeders");
       var query = new Parse.Query(Messageneeders);
       query.equalTo("cod", c);
-      query.notEqualTo("status", "REMOVED");
+      query.doesNotExist("status");
       query.find().then(function(results){
         var numbers = _.map(results, function(res){
           return res.get("number");

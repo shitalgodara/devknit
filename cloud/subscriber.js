@@ -54,8 +54,7 @@ exports.changeAssociateName = function(request, response){
   var query = new Parse.Query("GroupMembers");
   query.equalTo("emailId", emailId);
   query.equalTo("code", classcode);
-  query.notEqualTo("status", "REMOVED");
-  query.notEqualTo("status", "LEAVE");
+  query.doesNotExist("status");
   query.first({
     success: function(object){
       object.set("children_names",child);
