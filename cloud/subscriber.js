@@ -55,41 +55,32 @@ exports.changeAssociateName = function(request, response){
   query.equalTo("emailId", emailId);
   query.equalTo("code", classcode);
   query.doesNotExist("status");
-  query.first({
-    success: function(object){
-      object.set("children_names",child);
-      object.save({
-        success: function(object){
-          var user = request.user;
-          var classname = "";
-          var clarray = user.get("joined_groups");
-          for(var i = 0; i < clarray.length; i++){
-            if(clarray[i][0] == classcode){
-              classname = clarray[i][1];
-              clarray.splice(i, 1);
-              break;
-            }
-          }
-          var clelement = [classcode,classname,newchild];
-          clarray.push(clelement);
-          user.set("joined_groups", clarray);
-          user.save(null, {
-            success: function(user){
-              response.success(user);
-            },
-            error: function(object, error){
-              response.error("Error: " + error.code + " " + error.message);
-            }
-          });
-        },
-        error: function(object, error){
-          response.error("Error: " + error.code + " " + error.message);
-        }
-      });
-    },
-    error: function(error){
-      response.error("Error: " + error.code + " " + error.message);
+  query.first().then(function(object){
+    object.set("children_names", child);
+    return object.save();
+  }).then(function(object){
+    var user = request.user;
+    var classname = "";
+    var clarray = user.get("joined_groups");
+    for(var i = 0; i < clarray.length; i++){
+      if(clarray[i][0] == classcode){
+        classname = clarray[i][1];
+        clarray.splice(i, 1);
+        break;
+      }
     }
+    var clelement = [classcode, classname, newchild];
+    clarray.push(clelement);
+    user.set("joined_groups", clarray);
+    return user.save();
+  }).then(function(user){
+    var query = new Parse.Query(Parse.User);
+    query.select("joined_groups");
+    return query.get(user.id);
+  }).then(function(object){
+    response.success(object);
+  }, function(error){
+    response.error(error.code + " " + error.message);
   });  
 }
 

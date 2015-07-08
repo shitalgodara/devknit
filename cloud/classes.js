@@ -6,16 +6,17 @@ Function for creating class
     user: Parse User
     classname: String
   Output =>
-    JSON object{
-      codegroup: Parse object
-      user: Parse object
+    JSON Object{
+      user : Parse Object{
+        Created_groups: Array
+      }
+      codegroup: Parse Object
     }
   Procedure =>
     * Username is taken from Parse User 
     * Class code is created and class name is modified
-    * Added user in Created_groups
+    * Added new item in Created_groups of user if not present already
     * Check first already created or not in client side also remove space in names of class
-    procedure first create code ,then add in user created_groups,then in codegroup entry
 */
 exports.createClass = function(request, response){
   var echannel;
@@ -68,43 +69,35 @@ exports.createClass = function(request, response){
   var username = user.get("username");
   var pid = user.get("pid");
   var sex = user.get("sex");
-  console.log(classname);
-  console.log(classcode);
   var array = [classcode, classname];
   user.addUnique("Created_groups", array);
-  user.save(null, {
-    success: function(user){
-      console.log(user.id);
-      var Codegroup = Parse.Object.extend("Codegroup");
-      var codegroup = new Codegroup();
-      codegroup.save({
-        name: classname,
-        code: classcode,
-        Creator: currentname,
-        classExist: true,
-        senderId: username,
-        senderPic: pid,
-				sex: sex
-      },{
-        success: function(codegroup){
-          console.log(codegroup.get("senderId"));
-          console.log(codegroup.get("Creator"));
-          var output = {
-            "codegroup": codegroup,
-            "user": user
-          };
-          response.success(output);
-        },
-        error: function(codegroup, error){
-          var errormessage = "Error in::" + "codegroup::" + "save::" + error.code + "::" + error.message + "::";
-          response.error(errormessage);
-        }
-      });
-		},
-		error: function(user, error){
-      var errormessage = "Error in::" + "user::" + "save::" + error.code + "::" + error.message + "::";
-      response.error(errormessage);
-    }
+  user.save().then(function(user){
+    console.log(user.id);
+    var Codegroup = Parse.Object.extend("Codegroup");
+    var codegroup = new Codegroup();
+    return codegroup.save({
+      name: classname,
+      code: classcode,
+      Creator: currentname,
+      classExist: true,
+      senderId: username,
+      senderPic: pid,
+			sex: sex
+    });
+  }).then(function(codegroup){
+    var query = new Parse.Query(Parse.User);
+    query.select("Created_groups");
+    return query.get(user.id).then(function(object){
+      var output = {
+        "user": object,
+        "codegroup": codegroup
+      };
+      return Parse.Promise.as(output);
+    });
+  }).then(function(output){
+    response.success(output);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
   });
 }
 
@@ -113,7 +106,9 @@ Function to delete user's created class
   Input =>
     classcode: String 
   Output =>
-    user: Parse object
+    user: Parse Object{
+      Created_groups: Array
+    }
   Procedure =>
     * Deleted class entry in Created_groups 
     * Made classExist entry of Codegroup class false,
@@ -140,80 +135,48 @@ exports.deleteClass = function(request, response){
       break;
     }
   }
-  console.log(clarray);
-  console.log(clcode);
   user.set("Created_groups", clarray);
-  user.save(null, {
-    success: function(user){
-      console.log(user.id);
-      console.log(user.get("Created_groups"));
-      var Codegroup = Parse.Object.extend("Codegroup");
-      var query = new Parse.Query(Codegroup);
-      query.equalTo("code", clcode);
-      query.first({
-        success: function(object){
-          console.log(object.id);
-          object.set("classExist", false);
-          object.save({
-            success: function(object){
-              console.log(object.id);
-              var name = request.user.get("name");
-              var username = request.user.get("username");
-              var message = "Your Teacher " + name + " has deleted his " + classname;
-              var GroupDetails = Parse.Object.extend("GroupDetails");
-              var groupdetails = new GroupDetails();
-              groupdetails.save({
-                Creator: name, 
-                name: classname,
-                title: message,
-                senderId: username,
-                code: clcode
-              },{
-                success: function(obj){
-                  console.log(obj.id);
-                  console.log(obj.get("title"));
-                  Parse.Push.send({
-                    channels: [clcode],
-                    data: {
-                      msg: message,
-  			              alert: message,
-  			              badge: "Increment",
-                      groupName: classname,
-  			              type: "NORMAL",
-  			              action: "INBOX"
-                    }
-                  },{
-                    success: function(){
-    	                response.success(user);
-                    },
-                    error: function(error){
-                      var errormessage = "Error in::" + "push::" + "send::" + error.code + "::" + error.message + "::";
-                      response.error(errormessage);
-                    }
-                  });
-                },
-                error: function(obj, error){
-                  var errormessage = "Error in::" + "groupdetail::" + "save::" + error.code + "::" + error.message + "::";
-                  response.error(errormessage);
-                }
-              });
-            },
-            error: function(object, error){
-              var errormessage = "Error in::" + "codegroup::" + "save::" + error.code + "::" + error.message + "::";
-              response.error(errormessage);
-            }
-          });
-        },
-        error: function(error){
-          var errormessage = "Error in::" + "codegroup::" + "first::" + error.code + "::" + error.message + "::";
-          response.error(errormessage);
+  user.save().then(function(user){
+    var Codegroup = Parse.Object.extend("Codegroup");
+    var query = new Parse.Query(Codegroup);
+    query.equalTo("code", clcode);
+    return query.first();
+  }).then(function(object){
+    object.set("classExist", false);
+    return object.save();
+  }).then(function(object){
+    var name = request.user.get("name");
+    var username = request.user.get("username");
+    var message = "Your Teacher " + name + " has deleted his class " + classname;
+    var GroupDetails = Parse.Object.extend("GroupDetails");
+    var groupdetails = new GroupDetails();
+    return groupdetails.save({
+      Creator: name, 
+      name: classname,
+      title: message,
+      senderId: username,
+      code: clcode
+    }).then(function(obj){
+      return Parse.Push.send({
+        channels: [clcode],
+        data: {
+          msg: message,
+          alert: message,
+          badge: "Increment",
+          groupName: classname,
+          type: "NORMAL",
+          action: "INBOX"
         }
       });
-    },
-    error: function(user, error){
-      var errormessage = "Error in::" + "user::" + "save::" + error.code + "::" + error.message + "::";
-      response.error(errormessage);    
-    }
+    });
+  }).then(function(){
+    var query = new Parse.Query(Parse.User);
+    query.select("Created_groups");
+    return query.get(user.id);
+  }).then(function(object){
+    response.success(object);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
   });
 }
 
@@ -528,77 +491,42 @@ exports.leaveClass = function(request, response){
     echannel = eplatform;
   else
     echannel = 'UNKNOWN';
-
   Parse.Cloud.useMasterKey();
   var clcode = request.params.classcode;
   var ID = request.params.installationObjectId;
-  console.log(clcode);
-  console.log(ID);
   var user = request.user;
   var clarray = request.user.get("joined_groups");
-  console.log(clarray);
   for (var i = 0; i < clarray.length; i++){
     if (clarray[i][0] == clcode){
       clarray.splice(i, 1);
       break;
     }
   }
-  console.log(clarray);
   user.set("joined_groups", clarray);
-  user.save(null, {
-    success: function(user){
-      console.log(user.id);
-      var GroupMembers = Parse.Object.extend("GroupMembers");
-      var query = new Parse.Query(GroupMembers);
-		  query.equalTo("code", clcode);
-		  query.equalTo("emailId", user.get("username"));
-      query.doesNotExist("status");
-		  query.first({
-        success: function(object){
-          console.log(object.id);
-          object.set("status", "LEAVE");
-          object.save({
-            success: function(object){
-              console.log(object.id);
-              var query = new Parse.Query(Parse.Installation);
-              console.log(ID);
-  	          query.get(ID, {
-                success: function(object){
-                  console.log(object.id);
-  	              object.remove("channels", clcode);  
-                  object.save(null, {
-                    success: function(object){
-                      console.log(object.id);
-                      response.success(user);
-                    },
-                    error: function(object, error){
-                      var errormessage = "Error in::" + "installation::" + "save::" + error.code + "::" + error.message + "::";
-                      response.error(errormessage);
-                    }
-                  });          
-                },
-                error: function(object, error){    
-                  var errormessage = "Error in::" + "installation::" + "get::" + error.code + "::" + error.message + "::";
-                  response.error(errormessage);
-                }
-              });
-  		      },
-            error: function(object,error){
-              var errormessage = "Error in::" + "groupmembers::" + "save::" + error.code + "::" + error.message + "::";
-              response.error(errormessage);
-            }
-          });
-        },
-        error: function(error){
-          var errormessage = "Error in::" + "groupmembers::" + "first::" + error.code + "::" + error.message + "::";
-          response.error(errormessage);
-        }
-      });
-    },
-    error: function(object,error){
-      var errormessage = "Error in::" + "user::" + "save::" + error.code + "::" + error.message + "::";
-      response.error(errormessage); 
-    }
+  user.save().then(function(user){
+    var query = new Parse.Query("GroupMembers");
+	  query.equalTo("code", clcode);
+	  query.equalTo("emailId", user.get("username"));
+    query.doesNotExist("status");
+		return query.first();
+  }).then(function(object){
+    object.set("status", "LEAVE");
+    return object.save();
+  }).then(function(object){
+    var query = new Parse.Query(Parse.Installation);
+    return query.get(ID);
+  }).then(function(object){
+    object.remove("channels", clcode);  
+    return object.save();
+  }).then(function(object){
+    console.log(object);
+    var query = new Parse.Query(Parse.User);
+    query.select("joined_groups");
+    return query.get(user.id);
+  }).then(function(object){
+    response.success(object);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
   });
 }
 
@@ -610,8 +538,10 @@ Function to join a class
     installationObjectId: String
   Output =>
     JSON Object{ 
-		codegroup: Pare Object
-		user: Parse object
+		user: Parse Object{
+      joined_groups: Array
+    }
+    codegroup: Parse Object
 		messages: Array // 5 atmost
 	}
   Procedure =>
@@ -634,80 +564,57 @@ exports.joinClass = function(request, response){
   classcode = classcode.toUpperCase();
   var query = new Parse.Query("Codegroup");
   query.equalTo("code", classcode);
-  query.first({
-    success: function(result){
-      if (result){
-        var classname = result.get('name');
-        var array = [classcode, classname, child];
-        request.user.addUnique("joined_groups", array);
-        request.user.save(null, {
-          success: function(user){
-            var GroupMembers = Parse.Object.extend("GroupMembers");
-            var groupmembers = new GroupMembers();
-            groupmembers.set("name", user.get("name"));
-            groupmembers.set("code", classcode);
-            groupmembers.set("children_names", childnam);
-            groupmembers.set("emailId", user.get("username"));
-            groupmembers.save(null, {
-              success: function(groupmembers){
-                var installId = request.params.installationObjectId;
-                var query = new Parse.Query(Parse.Installation);
-	              query.get(installId, {
-                  success: function(object){
-                    object.addUnique("channels", classcode);
-                    object.save({
-                      success: function(object){
-                        var query = new Parse.Query("GroupDetails");
-                        query.equalTo("code", classcode);
-                        var d = new Date();
-                        var e = new Date(d.getTime() - 432000000);
-                        query.greaterThan("createdAt", e);
-                        query.descending("createdAt");
-                        query.limit(5);
-                        query.find({
-                          success: function(results){
-                            var output = {
-                              "codegroup": result,
-                              "user": user,
-                              "messages": results
-                            };
-                            response.success(output);
-                          },
-                          error: function(error){
-                            response.error("Error: " + error.code + " " + error.message);
-                          }
-                        });
-                      },
-                      error: function(object, error){
-                        response.error("Error: " + error.code + " " + error.message);
-                      }
-                    });
-                  },
-                  error: function(object,error){
-                    if(error.code == 101)
-                      response.error("INSTALLATION_NOT_CREATED");
-                    else
-                      response.error("Error: " + error.code + " " + error.message);
-                  }
-                });
-              },
-              error: function(groupmembers, error){
-                response.error("Error: " + error.code + " " + error.message);
-              }
-            });
-          },
-          error: function(error){
-            response.error("interputed in user save");
-          }
+  query.first().then(function(result){
+    if (result){
+      var classname = result.get('name');
+      var array = [classcode, classname, child];
+      var user = request.user;
+      user.addUnique("joined_groups", array);
+      user.save().then(function(user){
+        var GroupMembers = Parse.Object.extend("GroupMembers");
+        var groupmembers = new GroupMembers();
+        groupmembers.set("name", user.get("name"));
+        groupmembers.set("code", classcode);
+        groupmembers.set("children_names", childnam);
+        groupmembers.set("emailId", user.get("username"));
+        return groupmembers.save();
+      }).then(function(groupmembers){
+        var installId = request.params.installationObjectId;
+        var query = new Parse.Query(Parse.Installation);
+	      return query.get(installId);
+      }).then(function(object){
+        object.addUnique("channels", classcode);
+        return object.save();
+      }).then(function(object){
+        var query = new Parse.Query("GroupDetails");
+        query.equalTo("code", classcode);
+        var d = new Date();
+        var e = new Date(d.getTime() - 432000000);
+        query.greaterThan("createdAt", e);
+        query.descending("createdAt");
+        query.limit(5);
+        return query.find();
+      }).then(function(results){
+        var query = new Parse.Query(Parse.User);
+        query.select("joined_groups");
+        return query.get(user.id).then(function(object){
+          var output = {
+            "user": object,
+            "messages": results,
+            "codegroup": result
+          };
+          return Parse.Promise.as(output);
         });
-      } 
-      else{
-        response.error("No such class exits");
-      }
-    },
-    error: function(error){
-      response.error("Error: " + error.code + " " + error.message);
+      }).then(function(output){
+        response.success(output);
+      }, function(error){
+        response.error(error.code + ": " + error.message);
+      });
     }
+    else
+      response.error("No such class exits");
+  }, function(error){
+    response.error(error.code + ": " + error.message);
   });  
 }
 
