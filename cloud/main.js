@@ -22,6 +22,8 @@ var generalSender = require('cloud/Analytics&All/generalSender.js');
 var web = require('cloud/Websupport/web.js');
 var old = require('cloud/oldVersionSupport/old.js');
 var run = require('cloud/run.js');
+var location = require('cloud/Analytics&All/location.js');
+
 var _ = require('underscore.js');
 
 /*------------------------------------------------after/before functions---------------------------*/
@@ -824,4 +826,8 @@ Parse.Cloud.define("leaveClass", function(request, response){
 
 Parse.Cloud.define("genCode", function(request, response){
     old.genCode(request, response);
+});
+/*--------------------------------------------------LOCATION.JS ----------------------------------------------------------*/
+Parse.Cloud.define("getGeoPointsForPlotting",function(request,response){
+  location.getGeoPointsForPlotting(request, response);
 });
