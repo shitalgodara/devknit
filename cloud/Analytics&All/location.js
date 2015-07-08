@@ -1,4 +1,5 @@
-Parse.Cloud.define("getGeoPointsForPlotting",function(request,response){
+  exports.getGeoPointsForPlotting = function(request, response){
+
 	Parse.Cloud.useMasterKey();
 	var result = [];
 	var processCallback = function(res) {
@@ -34,4 +35,4 @@ Parse.Cloud.define("getGeoPointsForPlotting",function(request,response){
         });
       }
   process(false);
-});
+}
