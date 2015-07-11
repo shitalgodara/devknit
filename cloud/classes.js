@@ -120,7 +120,7 @@ exports.deleteClass = function(request, response){
   var user = request.user;
   var classname;
   var clarray = user.get("Created_groups");
-  for (var i = 0; i < clarray.length; i++){
+  for(var i = 0; i < clarray.length; i++){
     if (clarray[i][0] == clcode){
       classname = clarray[i][1];
       clarray.splice(i, 1);
@@ -166,85 +166,6 @@ exports.deleteClass = function(request, response){
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
-}
-
-/*
-Function for returning list of classes as a suggestion for parent to join
-  Input =>
-    input: Array of json object{
-      school: String,
-      standard: Sting,
-      division: String
-    }
-    date: String // latest date of suggested codegroup created date
-  Output =>
-    Codegroup entries of suggested classes 
-  Procedure =>
-    Use of compound query on codegroup to compute suggestion whose class exits and removed groups that are already joined, created and removed
-*/
-exports.suggestClasses = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
-  var groups = request.params.input;
-  var date = request.params.date;
-  if(groups.length == 0)
-    response.success([]);
-  else{
-    var data = groups[0];
-    var query1 = new Parse.Query("Codegroup");
-    query1.equalTo("school", data.school);
-    query1.equalTo("standard", data.standard);
-    if(data.division != 'NA')
-      query1.equalTo("divison", data.division);
-    for(var i = 1; i < groups.length; i++){
-      data = groups[i];
-      var query2 = new Parse.Query("Codegroup");
-      query2.equalTo("school", data.school);
-      query2.equalTo("standard", data.standard);
-      if(data.division != 'NA')
-        query2.equalTo("divison", data.division);
-      query1 = Parse.Query.or(query1, query2);
-    }
-    var clarray1 = request.user.get("joined_groups");
-    var clarray2 = request.user.get("Created_groups");
-    var clarray3 = request.user.get("removed_groups");
-    var clarray =[];
-    var i;
-    if(typeof clarray1 != 'undefined'){
-      for (i = 0; i < clarray1.length; i++){
-        clarray[i] = clarray1[i][0];
-      }
-    }
-    if(typeof clarray2 != 'undefined'){    
-      for (var j = 0; j < clarray2.length; j++){
-        clarray[i] = clarray2[j][0];
-        i++;
-      }
-    }
-    if(typeof clarray3 != 'undefined'){
-      for (var k = 0; k < clarray3.length; k++){
-        clarray[i] = clarray3[k][0];
-        i++;
-      }
-    }
-    query1.greaterThan("updatedAt", date);
-    query1.notContainedIn("code", clarray);
-    query1.find({
-      success: function(results){
-        response.success(results);
-      },
-      error: function(error){
-        var errormessage = "Error: " + error.code + " " + error.message;
-        response.error(errormessage);    
-      }
-    });
-  }
 } 
 
 /* 
@@ -270,31 +191,25 @@ exports.giveClassesDetails = function(request, response){
   if((typeof clarray1 == 'undefined') && (typeof clarray2 == 'undefined'))
     response.success([]);
   else{
-    var clarray =[];
+    var clarray = [];
     var i;
     if(typeof clarray1 != 'undefined'){
       for (i = 0; i < clarray1.length; i++){
-        clarray[i]= clarray1[i][0];
+        clarray[i] = clarray1[i][0];
       }
     }
     if(typeof clarray2 != 'undefined'){
       for (var j = 0; j < clarray2.length; j++){
-        clarray[i]= clarray2[j][0];
+        clarray[i] = clarray2[j][0];
         i++;
       }
     }
     var query = new Parse.Query("Codegroup");
     query.containedIn("code", clarray);
-    query.find({
-      success: function(results){
-        if(results.length>0)
-          console.log(results.length);
-        response.success(results);
-      },
-      error: function(error){
-        var errormessage = "Error in::" + "codegroup::" + "find::" + error.code + "::" + error.message + "::";
-        response.error(errormessage);    
-      }
+    query.find().then(function(results){
+      response.success(results);
+    }, function(error){
+      response.error(error.code + ": " + error.message);    
     });
   }
 }
@@ -333,107 +248,61 @@ exports.removeMember = function(request, response){
   var usertype = request.params.usertype;
   if(usertype == 'app'){
     var username = request.params.emailId;
-    console.log(username);
-    var GroupMembers = Parse.Object.extend("GroupMembers");
-    var query = new Parse.Query(GroupMembers);
+    var query = new Parse.Query("GroupMembers");
 		query.equalTo("code", clcode);
 		query.equalTo("emailId", username);
     query.doesNotExist("status");
-		query.first({
-      success: function(object){
-        console.log(object.id);
-        object.set("status", "REMOVED");
-        object.save({                        
-          success: function(object){
-            console.log(object.id);
-            var query = new Parse.Query(Parse.User);
-            query.equalTo("username", username);
-            query.first({
-              success: function(object){
-                console.log(object.id);
-                var clarray = object.get("joined_groups");
-                console.log(classname);
-                for (var i = 0; i < clarray.length; i++){
-                  if (clarray[i][0] == clcode){
-                    clarray.splice(i, 1);
-                    break;
-                  }
-                }
-                console.log(clarray);
-                object.set("joined_groups", clarray);
-                object.save(null, {
-                  success: function(user){
-                    console.log(user.id);
-                    var query = new Parse.Query(Parse.Installation);
-                    query.equalTo("username",username);
-                    query.find({
-                      success: function(results){
-                        console.log(results.length);
-                        var allObjects = [];
-                        for (var i = 0; i < results.length; i++){ 
-                          results[i].remove("channels", clcode);
-                          allObjects.push(results[i]);
-                        }
-                        Parse.Object.saveAll(allObjects, {
-                          success: function(objs){
-                            var query = new Parse.Query(Parse.Installation);
-                            query.equalTo('username', username);
-                            query.ascending("updatedAt");
-                            query.limit(1);                             
-                            var message = "You have been removed from " + classname + " class, you won't receive any notification from this class from now onwards";
-                            Parse.Push.send({
-                              where: query,
-                              data: {                        
-                                msg: message,
-                          			alert:message,
-                          			badge: "Increment",
-                                groupName: classname,
-                          			groupCode: clcode,
-                          			type: "REMOVE",
-                          			action: "INBOX"        
-                              }
-                            },{
-                              success: function(){
-                                console.log(message);
-                                var flag = true;
-                                console.log(flag);
-                                response.success(flag);
-                              },
-                              error: function(error){
-                                var flag = false;
-                                response.error(flag);
-                              }
-                            });
-                          },
-                          error: function(error){ 
-                            response.error("Error: " + error.code + " " + error.message);
-                          }
-                        });
-                      },
-                      error: function(error){
-                        response.error("Error: " + error.code + " " + error.message);
-                      }
-                    });   
-                  },
-                  error: function(user, error){
-                    response.error("Error: " + error.code + " " + error.message);
-                  }
-                });  
-              },
-              error: function(object, error){
-                response.error("Error: " + error.code + " " + error.message);
-              }
-            });   
-          },
-          error: function(object, error){
-            response.error("Error: " + error.code + " " + error.message);
-          }
-        });                      
-      },
-      error: function(object, error){
-        response.error("Error: " + error.code + " " + error.message);
+		query.first().then(function(object){
+      object.set("status", "REMOVED");
+      return object.save();
+    }).then(function(object){
+      var query = new Parse.Query(Parse.User);
+      query.equalTo("username", username);
+      return query.first();
+    }).then(function(object){
+      var clarray = object.get("joined_groups");
+      for(var i = 0; i < clarray.length; i++){
+        if(clarray[i][0] == clcode){
+          clarray.splice(i, 1);
+          break;
+        }
       }
-    });          
+      object.set("joined_groups", clarray);
+      return object.save();
+    }).then(function(user){
+      var query = new Parse.Query(Parse.Installation);
+      query.equalTo("username", username);
+      return query.find();
+    }).then(function(results){        
+        var allObjects = [];
+        for (var i = 0; i < results.length; i++){ 
+          results[i].remove("channels", clcode);
+          allObjects.push(results[i]);
+        }
+        return Parse.Object.saveAll(allObjects);
+    }).then(function(objs){
+      var query = new Parse.Query(Parse.Installation);
+      query.equalTo('username', username);
+      query.ascending("updatedAt");
+      query.limit(1);
+      var message = "You have been removed from " + classname + " class, you won't receive any notification from this class from now onwards";
+      return Parse.Push.send({
+        where: query,
+        data: {                        
+          msg: message,
+    			alert: message,
+    			badge: "Increment",
+          groupName: classname,
+    			groupCode: clcode,
+    			type: "REMOVE",
+    			action: "INBOX"        
+        }
+      });
+    }).then(function(success){
+      response.success(true);
+    }, function(error){
+      response.error(error.code + ": " + error.message);
+    });         
   }
   else{
     var number = request.params.number;
@@ -450,8 +319,7 @@ exports.removeMember = function(request, response){
         "msg": "You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher"
       });
     }).then(function(){
-      var flag = true;
-      response.success(flag);
+      response.success(true);
     }, function(error){
       response.error(error.code + ": " + error.message);
     });
@@ -593,67 +461,4 @@ exports.joinClass = function(request, response){
   }, function(error){
     response.error(error.code + ": " + error.message);
   });  
-}
-
-/*
-Function for returning list of classes as a suggest for parent to join
-  Input => 
-    school: String 
-    standard: String
-    divison: String
-  Output =>
-    codegroup entries of suggested classes 
-  Procedure =>
-    Use of compound query on codegroup to compute suggestion whose class exits and removed groups that are already joined/created or removed
-*/
-exports.suggestClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
-  var school = request.params.school;
-  var standard = request.params.standard;
-  var division = request.params.division;
-  var clarray1 = request.user.get("joined_groups");
-  var clarray2 = request.user.get("Created_groups");
-  var clarray3 = request.user.get("removed_groups");
-  var clarray =[];
-  var i;
-  if(typeof clarray1 != 'undefined'){
-    for (i = 0; i < clarray1.length; i++){
-      clarray[i]= clarray1[i][0];
-    }
-  }
-  if(typeof clarray2 != 'undefined'){
-    for (var j = 0; j < clarray2.length; j++){
-      clarray[i]= clarray2[j][0];
-      i++;
-    }
-  }
-  if(typeof clarray3 != 'undefined'){
-    for (var k = 0; k < clarray3.length; k++){
-      clarray[i] = clarray3[k][0];
-      i++;
-    }
-  }
-  var query1 = new Parse.Query("Codegroup");
-  query1.equalTo("school", school);
-  query1.equalTo("standard", standard);
-  if(division != 'NA'){
-    query1.equalTo("divison", division);
-  }
-  query1.notContainedIn("code", clarray);
-  query1.find({
-    success: function(results){
-      response.success(results);
-    },
-    error: function(error){
-      var errormessage = "Error: " + error.code + " " + error.message;
-      response.error(errormessage);    
-    }
-  });
 }

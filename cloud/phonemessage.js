@@ -17,8 +17,7 @@ exports.messagecc = function(request, response){
   var msg = request.params.message;
   var name = request.user.get("name");
   msg = name + ": " + msg;
-  var Messageneeders = Parse.Object.extend("Messageneeders");
-  var query = new Parse.Query(Messageneeders);
+  var query = new Parse.Query("Messageneeders");
   msg = msg.substr(0, 330);
   query.equalTo("cod", c);
   query.find().then(function(results){

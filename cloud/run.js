@@ -93,6 +93,50 @@ exports.mailTemplate = function(request){
 } 
 
 /*
+Function to mail text
+  Input =>
+    recipients: Array of objects{
+      email: String  // emailId of recipient
+      <Optional>
+        name: String // name of recipient  
+    }
+    subject: String // subject of email
+    text: String
+  Output =>
+    Empty
+  Procedure =>
+    Calling to sendEmail function to send attachment
+*/
+exports.mailText = function(request){
+  var promise = new Parse.Promise();
+  var Mandrill = require('mandrill');
+  Mandrill.initialize('GrD1JI_5pNZ6MGUCNBYqUw');
+  Mandrill.sendEmail({
+    message: {
+      text: request.text,
+      subject: request.subject,
+      from_email: "knit@trumplab.com",
+      from_name: "Knit",
+      to: request.recipients
+    },
+    async: false
+  }, {
+    success: function(httpResponse){
+      promise.resolve();
+    },
+    error: function(httpResponse){
+      console.error(httpResponse.data);
+      var error = {
+        "code": httpResponse.data.code,
+        "message": httpResponse.data.error
+      };
+      promise.reject(error);
+    }
+  });
+  return promise;
+}
+
+/*
 Function to mail attachment
   Input =>
     recipients: Array of objects{

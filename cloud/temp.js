@@ -15,21 +15,18 @@ exports.cloudpic = function(request, response){
   query.equalTo("Creator", request.params.name);
   var pname = request.params.pname;
   var pfile = request.params.pfile;
-  query.find({
-    success: function(results) {
-      alert("Successfully retrieved " + results.length + " scores.");
-      // Do something with the returned Parse.Object values
-      for (var i = 0; i < results.length; i++) {
-        var object = results[i];
-        object.set("senderPic", pfile);
-        object.set("picName", pname);
-        object.save();
-      }
-      response.success('ok');
-    },
-    error: function(error) {
-      response.error("Error: " + error.code + " " + error.message);
+  query.find().then(function(results) {
+    alert("Successfully retrieved " + results.length + " scores.");
+    // Do something with the returned Parse.Object values
+    for (var i = 0; i < results.length; i++) {
+      var object = results[i];
+      object.set("senderPic", pfile);
+      object.set("picName", pname);
+      object.save();
     }
+    response.success('ok');
+  }, function(error) {
+    response.error(error.code + ": " + error.message);
   });
 }
 
@@ -98,34 +95,3 @@ exports.cloudpic = function(request, response){
     });
   });
 */
-
-/* 
-getSeuence returns new unique number
-*/
-function getSequence() {
-  var Test = Parse.Object.extend("Sequence");
-  var query = new Parse.Query(Test);
-  query.get("WxhFdmIB4k", {
-      success: function(object) {
-          object.increment('sequence');
-          object.save(null, {
-              success: function(object) {
-                  var x = object.get('sequence');
-                  console.log("X=" + x);
-                  return x;
-              },
-              error: function(object, error) {
-                  console.log('In error from getSequence save');
-                  console.log(error);
-                  return -1;
-              }
-          });
-      },
-      error: function(error) {
-          console.log('In error from getSeq get');
-          console.log(error);
-          return -2;
-      }
-  });
-}
-    

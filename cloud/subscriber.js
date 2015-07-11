@@ -1,41 +1,4 @@
 /*
-Function to get count of members subscribed to that class via app and sms
-  Input =>
-    classcode: String
-  Output =>
-    count: Number // Number of users subscribed to a class via app and sms 
-  Procedure =>
-    A simple query on GroupMembers and MessageNeeders
-*/ 
-exports.showclassstrength = function(request, response){
-  var clcode = request.params.classcode;
-  var GroupMembers = Parse.Object.extend("GroupMembers");
-  var query = new Parse.Query(GroupMembers);
-  query.equalTo("code", clcode);
-	query.count({
-    success: function(count1){
-      var Messageneeders = Parse.Object.extend("Messageneeders");
-      var query = new Parse.Query(Messageneeders);
-      query.equalTo("cod", clcode);
-      query.count({
-        success: function(count2){
-          console.log(count1 + count2);
-          response.success(count1 + count2);
-        },
-        error: function(error){
-          console.log("Error: " + error.code + " " + error.message);
-          response.error("Error: " + error.code + " " + error.message);
-        }
-      });
-    },
-    error: function(error){
-      console.log("Error: " + error.code + " " + error.message);
-      response.error("Error: " + error.code + " " + error.message);
-    }
-  });
-}
-
-/*
 Function to change assoicate name of joined class
   Input =>
     classCode: String
@@ -76,58 +39,8 @@ exports.changeAssociateName = function(request, response){
   }).then(function(user){
     response.success(user);
   }, function(error){
-    response.error(error.code + " " + error.message);
+    response.error(error.code + ": " + error.message);
   });  
-}
-
-/*
-Function to show all latest subscribers of a class (Max. 1000 => 500 via app and 500 via sms each)
-  Input =>
-    classcode: String
-    date: String
-  Output =>
-    JSON object{
-      app: Parse Object of GroupMembers
-      sms: Parse Object of Messageneeders 
-    }
-  Procedure =>
-    A simple query on GroupMembers and Messageneeders table
-*/
-exports.showSubscribers = function(request, response){
-  var limit = 500;
-  var clcode = request.params.classcode;
-  var Date = request.params.date;
-  var GroupMembers = Parse.Object.extend("GroupMembers");
-  var query = new Parse.Query(GroupMembers);
-  query.greaterThan("updatedAt", Date);
-  query.equalTo("code", clcode);
-  query.select("name", "children_names", "code", "status", "emailId");
-  query.limit(limit);
-  query.find({
-    success: function(results1){
-      var Messageneeders = Parse.Object.extend("Messageneeders");
-      var query = new Parse.Query(Messageneeders);
-      query.greaterThan("updatedAt", Date);
-      query.equalTo("cod", clcode);
-      query.select("subscriber", "number", "cod", "status");
-      query.limit(limit);
-      query.find({
-        success: function(results2){
-          var result = {
-            "app": results1,
-            "sms": results2
-          };
-          response.success(result);
-        },
-        error: function(error){
-          response.error("Error: " + error.code + " " + error.message);
-        }
-      });
-    },
-    error: function(error){
-      response.error("Error: " + error.code + " " + error.message);
-    }
-  });
 }
 
 /*
@@ -154,36 +67,28 @@ exports.showAllSubscribers = function(request, response){
 	  }
     var limit = 500;
     var date = request.params.date;
-    var GroupMembers = Parse.Object.extend("GroupMembers");
-    var query = new Parse.Query(GroupMembers);
+    var query = new Parse.Query("GroupMembers");
     query.greaterThan("updatedAt", date);
     query.containedIn("code", clarray);
     query.select("name", "children_names", "code", "status", "emailId");
     query.limit(limit);
-    query.find({
-      success: function(results1){
-        var Messageneeders = Parse.Object.extend("Messageneeders");
-        var query = new Parse.Query(Messageneeders);
-        query.containedIn("cod", clarray);
-        query.greaterThan("updatedAt", date);
-        query.select("subscriber", "number", "cod", "status");
-        query.limit(limit);
-        query.find({
-          success: function(results2){
-            var result = {
-              "app": results1,
-              "sms": results2
-            };
-            response.success(result);
-          },
-          error: function(error){
-            response.error("Error: " + error.code + " " + error.message);
-          }
-        });
-      },
-      error: function(error){
-        response.error("Error: " + error.code + " " + error.message);
-      }
+    query.find().then(function(results1){
+      var query = new Parse.Query("Messageneeders");
+      query.containedIn("cod", clarray);
+      query.greaterThan("updatedAt", date);
+      query.select("subscriber", "number", "cod", "status");
+      query.limit(limit);
+      return query.find().then(function(results2){
+        var result = {
+          "app": results1,
+          "sms": results2
+        };
+        return Parse.Promise.as(result);
+      });
+    }).then(function(result){
+      response.success(result);
+    }, function(error){
+      response.error(error.code + ": " + error.message);
     });
   }
 }

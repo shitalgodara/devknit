@@ -2,86 +2,6 @@ var _ = require('underscore.js');
 var run = require('cloud/run.js');
 
 /*
-Function to output list of school names
-  Input =>
-    Nothing
-  Output =>
-    List of school names
-*/
-exports.schoollist = function(request, response) {
-  var query = new Parse.Query("SCHOOLS");
-  query.select("school_name");
-  query.find({
-    success: function(results) {
-      response.success(results);
-    },
-    error: function(error) {
-      response.error("Error: " + error.code + " " + error.message);
-    }
-  });
-}
-
-/*
-Function to give school name corresponding to school id
-  Input =>
-    schoolId: String
-  Output =>
-    schoolName: String
-  Procedure =>
-    Simple query on schools table
-*/
-exports.getSchoolName = function(request, response) {
-  var school = request.params.schoolId;
-  var SCHOOLS = Parse.Object.extend("SCHOOLS");
-  var query = new Parse.Query(SCHOOLS); 
-  query.get(school, {
-    success: function(result){
-      response.success(result.get('school_name'));
-    },
-    error: function(temp, error){
-      response.error("Error: " + error.code + " " + error.message);
-    }
-  });
-} 
-
-/*
-Function to give school id corresponding to school name
-  Input =>
-    schoolName: String
-  Output =>
-    schoolId: String
-  Procedure =>
-    Search query then save if doesn't exists on school
-*/
-exports.getSchoolId = function(request, response){
-  var schoolName = request.params.school;
-  var query = new Parse.Query("SCHOOLS");
-  query.equalTo("school_name", schoolName);
-  query.first({
-    success: function (result){
-      if (result)
-        response.success(result.id);
-      else {
-        var SCHOOLS = Parse.Object.extend("SCHOOLS");
-        var schools = new SCHOOLS();
-        schools.set("school_name", schoolName);
-        schools.save(null, {
-          success: function (school) {
-            response.success(school.id);
-          },
-          error: function (error) {
-            response.error("Error: " + error.code + " " + error.message);
-          }
-        });
-      }
-    },
-    error: function (error){
-      response.error("Error: " + error.code + " " + error.message);
-    }
-  });
-}
-
-/*
 Function to return FAQs
   Input =>
     Date: String // Last date locally updated date available else 1st Nov 2014( some random old date)
@@ -95,18 +15,15 @@ exports.faq = function(request, response){
   var date = request.params.date;
   var query = new Parse.Query("FAQs");
   if (role == "parent"){
-      query.equalTo("role", "Parent");
+    query.equalTo("role", "Parent");
   }
   query.select("question", "answer");
   query.greaterThan("updatedAt", date);
-    query.find({
-        success: function(results){
-            response.success(results);
-        },
-        error: function(error) {
-            response.error("Error: " + error.code + " " + error.message);
-        }
-    });
+  query.find().then(function(results){
+    response.success(results);
+  }, function(error) {
+    response.error(error.code + ": " + error.message);
+  });
 }
 
 /*
@@ -118,43 +35,16 @@ Function to submit feedback
   Procedure =>
     Simple save query on feedback table
 */
-exports.feedback = function(request, response) {
+exports.feedback = function(request, response){
   var feed = request.params.feed;
   var Feedbacks = Parse.Object.extend("Feedbacks");
   var feedbacks = new Feedbacks();
-    feedbacks.set("content", feed);
-    feedbacks.set("emailId", request.user.get("username"));
-    feedbacks.save(null,{
-        success: function(feedbacks){
-      var flag = true;
-            response.success(flag);
-        },
-        error: function(object, error) {
-            response.error("Error: " + error.code + " " + error.message);
-        }
-    });
-}
-
-/*
-Function to find class
-  Input =>
-    code: String // class code
-  Output =>
-    Array of codegroup objects corresponding to class code
-  Procedure =>
-    Simple find query on codegroup
-*/
-exports.findClass = function(request, response){
-  var classcode = request.params.code;
-  var query = new Parse.Query("Codegroup");
-  query.equalTo("code", classcode);
-  query.find({
-    success: function(results){
-      response.success(results);
-    },
-    error: function(error){
-      response.error("Error: " + error.code + " " + error.message);    
-    }
+  feedbacks.set("content", feed);
+  feedbacks.set("emailId", request.user.get("username"));
+  feedbacks.save().then(function(feedbacks){
+    response.success(true);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
   });
 }
 
