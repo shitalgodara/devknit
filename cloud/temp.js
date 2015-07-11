@@ -16,8 +16,6 @@ exports.cloudpic = function(request, response){
   var pname = request.params.pname;
   var pfile = request.params.pfile;
   query.find().then(function(results) {
-    alert("Successfully retrieved " + results.length + " scores.");
-    // Do something with the returned Parse.Object values
     for (var i = 0; i < results.length; i++) {
       var object = results[i];
       object.set("senderPic", pfile);
