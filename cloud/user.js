@@ -34,7 +34,6 @@ exports.getUpdatesUserDetail = function(request, response){
 /* 
 Function to edit profile picture of user 
 	Input =>
-		picName: String
 		pid: File Pointer
 	Output =>
 		flag: Bool // true in case of success
@@ -43,7 +42,6 @@ Function to edit profile picture of user
 */
 exports.updateProfilePic = function(request, response){
 	var user = request.user;
-	user.set("picName", request.params.picName);
 	user.set("pid", request.params.pid);
 	user.save().then(function(user){
 		response.success(true);

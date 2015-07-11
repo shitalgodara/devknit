@@ -105,7 +105,7 @@ Function to mail text
   Output =>
     Empty
   Procedure =>
-    Calling to sendEmail function to send attachment
+    Calling to sendEmail function to send mail
 */
 exports.mailText = function(request){
   var promise = new Parse.Promise();
