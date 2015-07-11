@@ -38,7 +38,6 @@ exports.messagecc = function(request, response){
   }).then(function(text){
     response.success(text);
   },function(error){
-    console.log(error);
     response.error(error.code + ": " + error.message);
   });
 }
@@ -79,7 +78,6 @@ exports.samplemessage = function(request, response) {
   }).then(function(text){
     response.success(text);
   },function(error){
-    console.log(error);
     response.error(error.code + ": " + error.message);
   });
 }

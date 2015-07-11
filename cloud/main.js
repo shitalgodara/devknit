@@ -53,9 +53,7 @@ var _ = require('underscore.js');
           return Parse.Promise.as();
         }
       }).then(function(text){
-        console.log(text);
       }, function(error){
-        console.error(error.code + ": " + error.message);
       });
     }
   });
@@ -87,9 +85,7 @@ var _ = require('underscore.js');
           return Parse.Promise.as();
         }
       }).then(function(text){
-        console.log(text);
       }, function(error){
-        console.error(error.code + ": " + error.message);
       });
     } 
     else if(b == "SEND"){
@@ -99,9 +95,7 @@ var _ = require('underscore.js');
         "numbers": numbers,
         "msg": msg
       }).then(function(text){
-        console.log(text);
       }, function(error){
-        console.error(error.code + ": " + error.message);
       });
     }
     else{
@@ -111,9 +105,7 @@ var _ = require('underscore.js');
         "numbers": numbers,
         "msg": msg
       }).then(function(text){
-        console.log(text);
       }, function(error){
-        console.error(error.code + ": " + error.message);
       });
     }
   });

@@ -119,7 +119,6 @@ exports.inviteUsers = function(request, response){
       response.success(true);
     },
     function(error){
-      console.error(error);
       response.error(error.code + ": " + error.message);
     });  
   }
@@ -259,7 +258,6 @@ exports.inviteUsers = function(request, response){
       response.success(true);
     },
     function(error){
-      console.error(error);
       response.error(error.code + ": " + error.message);
     });  
   }

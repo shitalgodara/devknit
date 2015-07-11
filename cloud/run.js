@@ -83,7 +83,6 @@ exports.mailTemplate = function(request){
   }).then(function(httpResponse){
     return Parse.Promise.as();
   }, function(httpResponse){
-    console.error(httpResponse.data);
     var error = {
       "code": httpResponse.data.code,
       "message": httpResponse.data.error
@@ -125,7 +124,6 @@ exports.mailText = function(request){
       promise.resolve();
     },
     error: function(httpResponse){
-      console.error(httpResponse.data);
       var error = {
         "code": httpResponse.data.code,
         "message": httpResponse.data.error
@@ -175,7 +173,6 @@ exports.mailAttachment = function(request){
       promise.resolve();
     },
     error: function(httpResponse){
-      console.error(httpResponse.data);
       var error = {
         "code": httpResponse.data.code,
         "message": httpResponse.data.error
@@ -208,7 +205,6 @@ exports.genRevocableSession = function(request){
   }).then(function(httpResponse){
     return Parse.Promise.as(httpResponse.data.sessionToken);
   }, function(httpResponse){
-    console.error(httpResponse.data);
     var error = {
       "code": httpResponse.data.code,
       "message": httpResponse.data.error

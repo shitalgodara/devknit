@@ -70,7 +70,6 @@ exports.createClass = function(request, response){
   var array = [classcode, classname];
   user.addUnique("Created_groups", array);
   user.save().then(function(user){
-    console.log(user.id);
     var Codegroup = Parse.Object.extend("Codegroup");
     var codegroup = new Codegroup();
     return codegroup.save({
@@ -374,7 +373,6 @@ smsText = function(request){
   }).then(function(httpResponse){
     return Parse.Promise.as(httpResponse.text);
   }, function(httpResponse){
-    console.log(httpResponse.data);
     var error = {
       "code": httpResponse.data.code,
       "message": httpResponse.data.error
@@ -972,14 +970,12 @@ exports.verifyCode = function(request, response){
   if(typeof email != 'undefined'){
     var password = request.params.password;
     Parse.User.logIn(email, password).then(function(user){
-      console.log("Login successful !!");        
       var result = {
         "flag": true,
         "sessionToken": user._sessionToken
       };
       response.success(result);
     }, function(error){
-      console.error(error);
       if(error.code == 101)
         response.error("USER_DOESNOT_EXISTS");
       else
@@ -998,19 +994,16 @@ exports.verifyCode = function(request, response){
     query.greaterThan("createdAt", e);
     query.find().then(function(results){
       if(results.length > 0){
-        console.log("Found !!");
         var user = new Parse.User();
         var name = request.params.name;
         if(typeof name == 'undefined'){ 
           Parse.User.logIn(number, number + "qwerty12345").then(function(user){
-            console.log("Login successful !!");
             var result = {
               "flag": true,
               "sessionToken": user._sessionToken
             };
             response.success(result);
           }, function(error){
-            console.error('Login failed !!');
             if(error.code == 101)
               response.error("USER_DOESNOT_EXISTS");
             else
@@ -1025,14 +1018,12 @@ exports.verifyCode = function(request, response){
           user.set("phone", number);
           user.set("role", request.params.role);
           user.signUp().then(function(user){
-            console.log("SignUp successful !!");
             var result = {
               "flag": true,
               "sessionToken": user._sessionToken
             };
             response.success(result);
           }, function(error){
-            console.error('SignUp failed !!');
             if(error.code == 202)
               response.error("USER_ALREADY_EXISTS");
             else
@@ -1041,7 +1032,6 @@ exports.verifyCode = function(request, response){
         }
       }
       else{
-        console.log("Not Found !!");
         var result = {
           "flag": false,
           "sessionToken": ""
@@ -1049,7 +1039,6 @@ exports.verifyCode = function(request, response){
         response.success(result);
       }
     }, function(error){
-      console.error(error);
       response.error(error.code + ": " + error.message);
     });
   } 
@@ -1159,11 +1148,9 @@ exports.showLatestMessagesWithLimit = function(request, response){
   query.containedIn("code", clarray);
   query.find().then(function(results){
     if(type == 'c'){
-      console.log("1st");
       return Parse.Promise.as(results);
     }
     else if(results.length == 0){
-      console.log("2nd");
       var result = {
         "message": results,
         "states": results
@@ -1171,7 +1158,6 @@ exports.showLatestMessagesWithLimit = function(request, response){
       return Parse.Promise.as(result);
     }
     else{
-      console.log("3rd");
       var messageIds = [];
       for(var i = 0; i < results.length; i++){
         messageIds[i] = results[i].id;

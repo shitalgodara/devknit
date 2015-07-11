@@ -105,7 +105,6 @@ exports.getTodaysFollowUpDetails = function(request, response){
   query.equalTo("nextFollowUpDate", today);
   query.find({
     success: function(results){
-  	  console.log(results.length);
       response.success(results);
     },
     error: function(error){
@@ -335,7 +334,6 @@ exports.KnitDiagram = function(request, response){
   query.limit(1000);
   query.find({
     success: function(results){
-      console.log(results.length);
       for(var i = 0; i < results.length; i++){
         var temp_user = results[i].get("username");
         h.setItem(temp_user, [0,-1]);
@@ -349,7 +347,6 @@ exports.KnitDiagram = function(request, response){
       query.limit(1000);
       query.find({
         success: function(results){
-          console.log(results.length);
           for(var i = 0; i < results.length; i++){
             var item = results[i].get("senderId");
             var temp_array = h.getItem(item);
@@ -369,7 +366,6 @@ exports.KnitDiagram = function(request, response){
           query.limit(1000);
           query.find({
             success: function(results){
-              console.log(results.length);
               for(var i = 0; i < results.length; i++){
                 var item = results[i].get("senderId");
                 var temp_array = h.getItem(item);
@@ -387,7 +383,6 @@ exports.KnitDiagram = function(request, response){
               query.limit(1000);
               query.find({
                 success: function(results){
-                  console.log(results.length);
                   for(var i = 0; i < results.length; i++){
                     var item = results[i].get("senderId");
                     var temp_array = h.getItem(item);
@@ -423,7 +418,6 @@ exports.KnitDiagram = function(request, response){
                       a[4]++;
                     }
                   }
-                  console.log(mm);
                   response.success(mm);
                 },
                 error: function(error){
@@ -463,7 +457,6 @@ exports.getEmailId = function(request, response){
   query.limit(1000);
   query.find({
     success: function(results){
-      console.log(results.length);
       for(var i = 0; i < results.length; i++){
         var temp_user = results[i].get("username");
         h.setItem(temp_user, [0,-1]);
@@ -477,7 +470,6 @@ exports.getEmailId = function(request, response){
       query.limit(1000);
       query.find({
         success: function(results){
-          console.log(results.length);
           for(var i = 0; i < results.length; i++){
             var item = results[i].get("senderId");
             var temp_array = h.getItem(item);
@@ -497,7 +489,6 @@ exports.getEmailId = function(request, response){
           query.limit(1000);
           query.find({
             success: function(results){
-              console.log(results.length);
               for(var i = 0; i < results.length; i++){
                 var item = results[i].get("senderId");
                 var temp_array = h.getItem(item);
@@ -515,7 +506,6 @@ exports.getEmailId = function(request, response){
               query.limit(1000);
               query.find({
                 success: function(results){
-                  console.log(results.length);
                   for(var i = 0; i < results.length; i++){
                     var item = results[i].get("senderId");
                     var temp_array = h.getItem(item);
@@ -538,7 +528,6 @@ exports.getEmailId = function(request, response){
                     else if((msgs < 20) && (lastdate>= four_month_ago)){
                       h.setItem("User"); 
                       a[1]++; 
-                      console.log(keys[i]); 
                       ids.push(keys[i]);
                     }
                     else if((msgs < 20) && (lastdate < four_month_ago)){
@@ -555,11 +544,8 @@ exports.getEmailId = function(request, response){
                     }
                     else{
                       a[5]++; 
-                      console.log(lastdate + "PPP" + msgs);
                     }
                   }
-                  console.log(mm);
-                  console.log(ids);
                   response.success(ids);
                 },
                 error: function(error){

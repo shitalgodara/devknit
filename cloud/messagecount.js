@@ -52,9 +52,7 @@ exports.updateLikeAndConfusionCount = function(request, response){
   query.find().then(function(results){
     var allObjects = [];
     for(var i = 0; i <results.length; i++){ 
-      console.log(results[i].id);
       var temp = input[results[i].id];
-      console.log(temp);
       results[i].increment("like_count", temp[0]);
       results[i].increment("confused_count", temp[1]);
       allObjects.push(results[i]);
@@ -64,7 +62,6 @@ exports.updateLikeAndConfusionCount = function(request, response){
     var promises = [];
     _.each(results, function(result){
       if((input[result.id][0] + input[result.id][1]) == -1){
-        console.log("destroy");
         var query_destroy = new Parse.Query('MessageState');
         query_destroy.equalTo("message_id", result.id);
         query_destroy.equalTo("username", request.user.get("username"));
@@ -75,7 +72,6 @@ exports.updateLikeAndConfusionCount = function(request, response){
         );
       }
       else if((input[result.id][0] + input[result.id][1]) == 0){
-        console.log("update");
         var flag2 = false;
         var flag1 = true;
         if(input[result.id][0] == -1){
@@ -94,7 +90,6 @@ exports.updateLikeAndConfusionCount = function(request, response){
         );
       }
       else if((input[result.id][0] + input[result.id][1]) == 1){
-        console.log("create");
         var flag1 = false;
         var flag2 = true;
         if(input[result.id][0] == 1){

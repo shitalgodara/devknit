@@ -70,7 +70,6 @@ exports.createClass = function(request, response){
   var array = [classcode, classname];
   user.addUnique("Created_groups", array);
   user.save().then(function(user){
-    console.log(user.id);
     var Codegroup = Parse.Object.extend("Codegroup");
     var codegroup = new Codegroup();
     return codegroup.save({

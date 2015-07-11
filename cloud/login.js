@@ -33,7 +33,6 @@ exports.genCode = function(request, response){
   }).then(function(text){
     response.success(true);
   }, function(error){
-    console.error(error);
     response.error(error.code + ": " + error.message);
   }); 
 }
@@ -72,7 +71,6 @@ exports.verifyCod = function(request, response){
   if(typeof email != 'undefined'){
     var password = request.params.password;
     Parse.User.logIn(email, password).then(function(user){
-      console.log("Login successful !!");
       return run.genRevocableSession({
         "sessionToken": user._sessionToken
       });
@@ -83,7 +81,6 @@ exports.verifyCod = function(request, response){
       };
       response.success(result);
     }, function(error){
-      console.log(error);
       if(error.code == 101)
         response.error("USER_DOESNOT_EXISTS");
       else
@@ -102,12 +99,10 @@ exports.verifyCod = function(request, response){
     query.greaterThan("createdAt", e);
     query.find().then(function(results){
       if(results.length > 0){
-        console.log("Found !!");
         var user = new Parse.User();
         var name = request.params.name;
         if(typeof name == 'undefined'){
           return Parse.User.logIn(number, number + "qwerty12345").then(function(user){
-            console.log("Login successful !!");
             return run.genRevocableSession({
               "sessionToken": user._sessionToken
             });
@@ -120,7 +115,6 @@ exports.verifyCod = function(request, response){
           user.set("phone", number);
           user.set("role", request.params.role);
           return user.signUp(null).then(function(user){
-            console.log("SignUp successful !!");
             return run.genRevocableSession({
               "sessionToken": user._sessionToken
             });
@@ -128,7 +122,6 @@ exports.verifyCod = function(request, response){
         }
       }
       else{
-        console.log("Not Found !!");
         var promise = Parse.Promise.as("");
         return promise;
       }
@@ -143,7 +136,6 @@ exports.verifyCod = function(request, response){
         };
         response.success(result);
     }, function(error){
-      console.error(error);
       if(error.code == 101){
         response.error("USER_DOESNOT_EXISTS");
       }
@@ -197,7 +189,6 @@ exports.appInstallation = function(request, response){
   }).then(function(result){
     response.success(result.id);
   }, function(error){
-    console.log(error.message);
     response.error(error);
   });
 }

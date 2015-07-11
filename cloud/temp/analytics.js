@@ -17,8 +17,6 @@ exports.newSignUps = function(request, response){
 	today.setSeconds(0);
 	today = new Date(today);
 	var fourweekbefore = new Date(today.getTime()-2592000000);
-	console.log(today);
-	console.log(fourweekbefore);
   var query = new Parse.Query(Parse.User);  
   query.greaterThan("createdAt", fourweekbefore);
   query.lessThan("createdAt", today);
@@ -26,7 +24,6 @@ exports.newSignUps = function(request, response){
   query.limit(1000);
   query.find({
     success: function(results){
-      console.log(results.length);
   	  var index;
   	  var data = new Array(4);
   	  for(i = 0; i < 4; i++){ 
@@ -119,8 +116,6 @@ exports.newMessageSent = function(request, response){
 	today.setSeconds(0);
 	today = new Date(today);
 	var fourweekbefore = new Date(today.getTime()-2592000000);
-	console.log(today);
-	console.log(fourweekbefore);
 	var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query(GroupDetails);
   query.greaterThan("createdAt",fourweekbefore);
@@ -128,7 +123,6 @@ exports.newMessageSent = function(request, response){
   query.limit(1000);
   query.find({
     success: function(results) {
-    	console.log(results.length);
     	var data = new Array(30);
     	for(var i = 0; i < results.length; i++){
     		var objDate = results[i].createdAt;
@@ -172,8 +166,6 @@ exports.activeMessenger = function(request, response) {
 	today.setSeconds(0);
 	today = new Date(today);
 	var fourweekbefore = new Date(today.getTime()-2592000000);
-	console.log(today);
-	console.log(fourweekbefore);
 	var GroupDetails = Parse.Object.extend("GroupDetails");
   var query = new Parse.Query(GroupDetails);
   query.greaterThan("createdAt",fourweekbefore);
@@ -182,7 +174,6 @@ exports.activeMessenger = function(request, response) {
   query.select("senderId");
   query.find({
     success: function(results){
-      console.log(results.length);
       var data = new Set();
       for( var i = 0; i < results.length; i++)
   		  data.add(results[i].get("senderId"));

@@ -67,7 +67,6 @@ exports.sendTextMessage = function(request, response){
     response.success(result);
   },
   function(error){
-    console.error(error);
     response.error(error.code + ": " + error.message);
   });
 }
@@ -377,11 +376,9 @@ exports.showLatestMessagesWithLimit2 = function(request, response){
   query.containedIn("code", clarray);
   query.find().then(function(results){
     if(type == 'c'){
-      console.log("1st");
       return Parse.Promise.as(results);
     }
     else if(results.length == 0){
-      console.log("2nd");
       var result = {
         "message": results,
         "states": results
@@ -389,7 +386,6 @@ exports.showLatestMessagesWithLimit2 = function(request, response){
       return Parse.Promise.as(result);
     }
     else{
-      console.log("3rd");
       var messageIds = [];
       for(var i = 0; i < results.length; i++){
         messageIds[i] = results[i].id;
