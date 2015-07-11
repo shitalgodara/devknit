@@ -636,7 +636,7 @@ exports.likeCountIncrement = function(request, response){
   }).then(function(likesCount){
     response.success(likesCount);
   }, function(error){
-    response.error(-1);
+    response.error(error.code + ": " + error.message);
   });
 }
  
@@ -670,7 +670,7 @@ exports.likeCountDecrement = function(request, response){
   }).then(function(likesCount){
     response.success(likesCount);
   }, function(error){
-    response.error(-1);
+    response.error(error.code + ": " + error.message);
   });
 }
  
@@ -699,7 +699,7 @@ exports.confusedCountIncrement = function(request, response){
   }).then(function(confusedCount){
     response.success(confusedCount);
   }, function(error){
-    response.error(-1);
+    response.error(error.code + ": " + error.message);
   });
 }
  
@@ -734,7 +734,7 @@ exports.confusedCountDecrement = function(request, response){
   }).then(function(confusedCount){
     response.success(confusedCount);
   }, function(error){
-    response.error(-1);
+    response.error(error.code + ": " + error.message);
   });
 }
  
@@ -763,7 +763,7 @@ exports.seenCountIncrement = function(request, response){
   }).then(function(seenCount){
     response.success(seenCount);
   }, function(error){
-    response.error(-1);
+    response.error(error.code + ": " + error.message);
   });
 }
  
@@ -829,7 +829,7 @@ exports.updateMessageState = function(request, response){
   }).then(function(result){
     response.success(result);
   }, function(error){
-    response.error(-1);
+    response.error(error.code + ": " + error.message);
   });
 }
  
@@ -870,7 +870,7 @@ exports.getLikeConfusedCount = function(request, response){
     };
     response.success(jsonObject)
   }, function(error) {
-    response.error(-1);
+    response.error(error.code + ": " + error.message);
   });
 }
  
@@ -893,7 +893,7 @@ exports.getOutboxMessages = function(request, response){
   query.find().then(function(results){
     response.success(results);
   }, function(error){
-    response.error(-1);
+    response.error(error.code + ": " + error.message);
   });
 }
 
@@ -1103,7 +1103,7 @@ exports.mailInstructions = function(request, response){
   }).then(function(){
     response.success(true);
   }, function(){
-    response.error("Uh oh, something went wrong");
+    response.error(error.code + ": " + error.message);
   });
 }
 

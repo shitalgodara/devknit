@@ -35,6 +35,6 @@ exports.mailPdf = function(request, response){
     response.success(true);
   },
   function(){
-  	response.error(false);
+    response.error(error.code + ": " + error.message);
   });
 }
