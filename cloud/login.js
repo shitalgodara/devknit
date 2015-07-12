@@ -189,7 +189,7 @@ exports.appInstallation = function(request, response){
   }).then(function(result){
     response.success(result.id);
   }, function(error){
-    response.error(error);
+    response.error(error.code + ": " + error.message);
   });
 }
 
