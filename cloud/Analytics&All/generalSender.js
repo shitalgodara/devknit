@@ -25,9 +25,9 @@ exports.SendNotifications = function(request, response) {
 exports.SendSms = function(request, response) {
     var usernames = request.params.usernames;
     var data = request.params.dataa;   
-    run.smsText2({
+    run.bulkSMS({
         "msg": data,
-        "numberList": usernames
+        "numbers": usernames
       }).then(function(httpResponse){
           response.success(true);
       },
@@ -40,9 +40,9 @@ exports.SendSms = function(request, response) {
 exports.SendEmails = function(request, response) {
     var usernames = request.params.usernames;
     var data = request.params.dataa;
-   old.smsText({
+    old.smsText({
         "msg": data,
-        "numberList": usernames
+        "numbers": usernames
       }).then(function(httpResponse){
           response.success(true);
       },

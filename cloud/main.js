@@ -45,7 +45,7 @@ var _ = require('underscore.js');
           var cls = obj.get("name");    
           var numbers = [num];
           var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + cls + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
-          return run.smsText2({
+          return run.bulkSMS({
             "numbers": numbers,
             "msg": msg
           });
@@ -76,7 +76,7 @@ var _ = require('underscore.js');
           return myObject.save().then(function(myObject){
             var msg = "You have been successfully unsubscribed, now you will not recieve any message from your teacher"; 
             var numbers = [num];
-            return run.smsText2({
+            return run.bulkSMS({
               "numbers": numbers,
               "msg": msg
             });
@@ -92,7 +92,7 @@ var _ = require('underscore.js');
     else if(b == "SEND"){
       var msg = "You seems to have forgot to enter student's name, general format to subscribe via sms is '<classCode> <space> <Student Name>'";
       var numbers = [num];
-      run.smsText2({
+      run.bulkSMS({
         "numbers": numbers,
         "msg": msg
       }).then(function(text){
@@ -102,7 +102,7 @@ var _ = require('underscore.js');
     else{
       var msg = "You seems to have entered a wrong Classcode,General format of code is  7 DIGIT CODE,if you don't know code Ask Teacher for code";
       var numbers = [num];
-      run.smsText2({
+      run.bulkSMS({
         "numbers": numbers,
         "msg": msg
       }).then(function(text){
@@ -632,6 +632,10 @@ var _ = require('underscore.js');
 
   Parse.Cloud.define("verifyCod", function(request, response){
     login.verifyCod(request, response);
+  });
+
+  Parse.Cloud.define("verifyCode2", function(request, response){
+    login.verifyCode(request, response);
   });
 
   Parse.Cloud.define("appInstallation", function(request, response){

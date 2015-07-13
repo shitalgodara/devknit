@@ -1,5 +1,43 @@
 /*
-Function to send sms
+Function to send single sms
+  Input =>
+    msg: String
+    number: Array of number 
+  Output =>
+    httpResponse: Parse.Promise
+  Procedure =>
+    Sending a HTTPRequest to smsgupshup API
+*/
+exports.singleSMS = function(request){
+  var msg = request.msg;
+  var number = request.number;
+  return Parse.Cloud.httpRequest({
+     url: 'http://174.143.34.193/MtSendSMS/SingleSMS.aspx',
+     headers: {
+       'Content-Type': 'application/json'
+     },
+     params: {
+       'usr': 'knitapp',
+       'pass': 'knitapp',
+       'msisdn': number,
+       'msg': msg,
+       'sid': 'myKnit',
+       'mt': 9,
+       'encoding': 2
+     }
+   }).then(function(httpResponse){
+     return Parse.Promise.as(httpResponse.text);
+   }, function(httpResponse){
+     var error = {
+       "code": httpResponse.data.code,
+       "message": httpResponse.data.error
+     };
+     return Parse.Promise.error(error);
+   });
+}
+
+/*
+Function to send bulk sms
   Input =>
     msg: String
     numbers: Array of numbers 
@@ -8,7 +46,7 @@ Function to send sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-exports.smsText2 = function(request){
+exports.bulkSMS = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
   numbers = numbers.join();
@@ -18,12 +56,13 @@ exports.smsText2 = function(request){
        'Content-Type': 'application/json'
      },
      params: {
-       'usr': 'knitapp',
-       'pass': 'knitapp',
+       'usr': 'knittrans',
+       'pass': 'knittrans',
        'msisdn': numbers,
        'msg': msg,
        'sid': 'myKnit',
-       'mt': 0
+       'mt': 9,
+       'encoding': 2
      }
    }).then(function(httpResponse){
      return Parse.Promise.as(httpResponse.text);

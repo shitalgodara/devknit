@@ -325,7 +325,7 @@ exports.removeMember = function(request, response){
       return myObject.save(); 
     }).then(function(myObject){
       var numbers = [number];
-      return run.smsText2({
+      return run.bulkSMS({
         "numbers": numbers,
         "msg": "You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher"
       });

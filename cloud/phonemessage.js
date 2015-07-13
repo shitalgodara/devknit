@@ -25,7 +25,7 @@ exports.messagecc = function(request, response){
       var numbers = _.map(results, function(result){
         return result.get('number');
       });
-      return run.smsText2({
+      return run.bulkSMS({
         "numbers": numbers,
         "msg": msg
       }).then(function(text){
@@ -65,7 +65,7 @@ exports.samplemessage = function(request, response) {
       var numbers = _.map(results, function(result){
         return result.get('number');
       });
-      return run.smsText2({
+      return run.bulkSMS({
         "numbers": numbers,
         "msg": msg
       }).then(function(text){

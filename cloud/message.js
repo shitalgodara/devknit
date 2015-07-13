@@ -56,7 +56,7 @@ exports.sendTextMessage = function(request, response){
       var numbers = _.map(results, function(res){
         return res.get("number");
       });
-      return run.smsText2({
+      return run.bulkSMS({
         "numbers": numbers,
         "msg": msg
       });  
@@ -145,7 +145,7 @@ exports.sendPhotoTextMessage = function(request, response){
           var numbers = _.map(results, function(res){
             return res.get("number");
           });
-          return run.smsText2({
+          return run.bulkSMS({
             "numbers": numbers,
             "msg": msg
           });  
