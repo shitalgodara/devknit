@@ -299,7 +299,7 @@ exports.showOldMessages2 = function(request, response){
     else if(results.length == 0){
       var result = {
         "message": results,
-        "states": results
+        "states": {}
       };
       return Parse.Promise.as(result);
     }
@@ -311,15 +311,11 @@ exports.showOldMessages2 = function(request, response){
       var query = new Parse.Query("MessageState");
       query.equalTo("username", request.user.get("username"));
       query.containedIn("message_id", messageIds);
-      query.select("message_id");
       return query.find().then(function(result2){
-        var result3 = _.map(result2, function(msg){
-          var temp_array = [0,1];
-          if(msg.get("like_status") == true)
-            temp_array = [1,0];
-          var object = {};
-          object[msg.get("message_id")] = temp_array;
-          return object;  
+        var result3 = {};
+        _.each(result2, function(msg){
+          var temp_array = [msg.get("like_status"), msg.get("confused_status")];
+          result3[msg.get("message_id")] = temp_array;  
         });
         var result = {
           "message": results,
@@ -381,7 +377,7 @@ exports.showLatestMessagesWithLimit2 = function(request, response){
     else if(results.length == 0){
       var result = {
         "message": results,
-        "states": results
+        "states": {}
       };
       return Parse.Promise.as(result);
     }
@@ -394,13 +390,10 @@ exports.showLatestMessagesWithLimit2 = function(request, response){
       query.equalTo("username", request.user.get("username"));
       query.containedIn("message_id", messageIds);
       return query.find().then(function(result2){
-        var result3 = _.map(result2, function(msg){
-          var temp_array = [0,1];
-          if(msg.get("like_status") == true)
-            temp_array = [1,0];
-          var object = {};
-          object[msg.get("message_id")] = temp_array;
-          return object;  
+        var result3 = {};
+        _.each(result2, function(msg){
+          var temp_array = [msg.get("like_status"), msg.get("confused_status")];
+          result3[msg.get("message_id")] = temp_array;  
         });
         var result = {
           "message": results,

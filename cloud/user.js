@@ -1,3 +1,5 @@
+var _ = require('underscore.js');
+
 /*
 Function to give teachers details mainly pid and name whose class a user has joined
 	Input => 

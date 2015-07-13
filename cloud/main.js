@@ -5,6 +5,7 @@ var _ = require('underscore.js');
 
   /* OLD VERSION */
   var old = require('cloud/oldVersionSupport/old.js');
+  var partial = require('cloud/oldVersionSupport/partial.js');
 
   /* LATEST VERSION */  
   var classes = require('cloud/classes.js');
@@ -577,21 +578,42 @@ var _ = require('underscore.js');
     old.showSubscribers(request, response);
   });
 
-/* NEW VERSION */
-/*----------------------------------------------- CLASSES.JS -------------------------------------------------------*/
+/*----------------------------------------------- PARTIAL.JS -------------------------------------------------------*/
   Parse.Cloud.define("createClass2", function(request, response){
-    classes.createClass(request, response);
-  });
-
-  Parse.Cloud.define("joinClass2", function(request, response){
-    classes.joinClass(request, response);
+    partial.createClass(request, response);
   });
 
   Parse.Cloud.define("deleteClass2", function(request, response){
-    classes.deleteClass(request, response);
+    partial.deleteClass(request, response);
+  });
+
+  Parse.Cloud.define("joinClass2", function(request, response){
+    partial.joinClass(request, response);
   });
 
   Parse.Cloud.define("leaveClass2", function(request, response){
+    partial.leaveClass(request, response);
+  });
+
+  Parse.Cloud.define("changeAssociateName2", function(request, response){
+    partial.changeAssociateName(request, response);
+  });
+
+/* NEW VERSION */
+/*----------------------------------------------- CLASSES.JS -------------------------------------------------------*/
+  Parse.Cloud.define("createClass3", function(request, response){
+    classes.createClass(request, response);
+  });
+
+  Parse.Cloud.define("joinClass3", function(request, response){
+    classes.joinClass(request, response);
+  });
+
+  Parse.Cloud.define("deleteClass3", function(request, response){
+    classes.deleteClass(request, response);
+  });
+
+  Parse.Cloud.define("leaveClass3", function(request, response){
     classes.leaveClass(request, response);
   });
 
@@ -679,7 +701,7 @@ var _ = require('underscore.js');
   });
 
 /*----------------------------------------------- SUBSCRIBERS.JS ---------------------------------------------------*/
-  Parse.Cloud.define("changeAssociateName2", function(request, response){
+  Parse.Cloud.define("changeAssociateName3", function(request, response){
     subscriber.changeAssociateName(request, response);
   });
 
