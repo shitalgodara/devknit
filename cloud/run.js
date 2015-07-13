@@ -12,28 +12,28 @@ exports.singleSMS = function(request){
   var msg = request.msg;
   var number = request.number;
   return Parse.Cloud.httpRequest({
-     url: 'http://174.143.34.193/MtSendSMS/SingleSMS.aspx',
-     headers: {
-       'Content-Type': 'application/json'
-     },
-     params: {
-       'usr': 'knitapp',
-       'pass': 'knitapp',
-       'msisdn': number,
-       'msg': msg,
-       'sid': 'myKnit',
-       'mt': 9,
-       'encoding': 2
-     }
-   }).then(function(httpResponse){
-     return Parse.Promise.as(httpResponse.text);
-   }, function(httpResponse){
-     var error = {
-       "code": httpResponse.data.code,
-       "message": httpResponse.data.error
-     };
-     return Parse.Promise.error(error);
-   });
+    url: 'http://174.143.34.193/MtSendSMS/SingleSMSUnicode.aspx',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    params: {
+      'usr': 'knitapp',
+      'pass': 'knitapp',
+      'msisdn': number,
+      'msg': msg,
+      'sid': 'myKnit',
+      'mt': 9,
+      'encoding': 0
+    }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.text);
+  }, function(httpResponse){
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
+  });
 }
 
 /*
@@ -51,28 +51,28 @@ exports.bulkSMS = function(request){
   var numbers = request.numbers;
   numbers = numbers.join();
   return Parse.Cloud.httpRequest({
-     url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
-     headers: {
-       'Content-Type': 'application/json'
-     },
-     params: {
-       'usr': 'knittrans',
-       'pass': 'knittrans',
-       'msisdn': numbers,
-       'msg': msg,
-       'sid': 'myKnit',
-       'mt': 9,
-       'encoding': 2
-     }
-   }).then(function(httpResponse){
-     return Parse.Promise.as(httpResponse.text);
-   }, function(httpResponse){
-     var error = {
-       "code": httpResponse.data.code,
-       "message": httpResponse.data.error
-     };
-     return Parse.Promise.error(error);
-   });
+    url: 'http://174.143.34.193/MtSendSMS/BulkSMSUnicode.aspx',
+    headers: {
+     'Content-Type': 'application/json'
+    },
+    params: {
+     'usr': 'knittrans',
+     'pass': 'knittrans',
+     'msisdn': numbers,
+     'msg': msg,
+     'sid': 'myKnit',
+     'mt': 9,
+     'encoding': 0
+    }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.text);
+  }, function(httpResponse){
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
+  });
 }
 
 /*
