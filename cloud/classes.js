@@ -7,9 +7,7 @@ Function for creating class
     classname: String
   Output =>
     JSON Object{
-      user : Parse Object{
-        Created_groups: Array
-      }
+      Created_groups: Array
       codegroup: Parse Object
     }
   Procedure =>
@@ -84,15 +82,11 @@ exports.createClass = function(request, response){
 			sex: sex
     });
   }).then(function(codegroup){
-    var query = new Parse.Query(Parse.User);
-    query.select("Created_groups");
-    return query.get(user.id).then(function(object){
-      var output = {
-        "user": object,
-        "codegroup": codegroup
-      };
-      return Parse.Promise.as(output);
-    });
+    var output = {
+      "Created_groups": user.get("Created_groups"),
+      "codegroup": codegroup
+    };
+    return Parse.Promise.as(output);
   }).then(function(output){
     response.success(output);
   }, function(error){
@@ -105,9 +99,7 @@ Function to delete user's created class
   Input =>
     classcode: String 
   Output =>
-    user: Parse Object{
-      Created_groups: Array
-    }
+    Created_groups: Array
   Procedure =>
     * Deleted class entry in Created_groups 
     * Made classExist entry of Codegroup class false,
@@ -169,11 +161,7 @@ exports.deleteClass = function(request, response){
       });
     });
   }).then(function(){
-    var query = new Parse.Query(Parse.User);
-    query.select("Created_groups");
-    return query.get(user.id);
-  }).then(function(user){
-    response.success(user);
+    response.success(user.get("Created_groups"));
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
@@ -343,9 +331,7 @@ Function for user to leave a class
     classcode: String
     installationObjectId: String
   Output =>
-    user: Parse Object{
-      joined_groups: Array
-    }
+    joined_groups: Array
   Procedure =>
     * Changed entry in joined group
     * Clear classcode from channels entry in Installation class 
@@ -388,11 +374,7 @@ exports.leaveClass = function(request, response){
     object.remove("channels", clcode);  
     return object.save();
   }).then(function(object){
-    var query = new Parse.Query(Parse.User);
-    query.select("joined_groups");
-    return query.get(user.id);
-  }).then(function(user){
-    response.success(user);
+    response.success(user.get("joined_groups"));
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
@@ -406,9 +388,7 @@ Function to join a class
     installationObjectId: String
   Output =>
     JSON Object{ 
-		  user: Parse Object{
-        joined_groups: Array
-      }
+      joined_groups: Array
       codegroup: Parse Object
 		  messages: Array // 5 atmost
 	  }
@@ -463,16 +443,12 @@ exports.joinClass = function(request, response){
         query.limit(5);
         return query.find();
       }).then(function(results){
-        var query = new Parse.Query(Parse.User);
-        query.select("joined_groups");
-        return query.get(user.id).then(function(object){
-          var output = {
-            "user": object,
-            "messages": results,
-            "codegroup": result
-          };
-          return Parse.Promise.as(output);
-        });
+        var output = {
+          "joined_groups": user.get("joined_groups"),
+          "messages": results,
+          "codegroup": result
+        };
+        return Parse.Promise.as(output);
       }).then(function(output){
         response.success(output);
       }, function(error){

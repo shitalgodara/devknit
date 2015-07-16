@@ -4,9 +4,7 @@ Function to change assoicate name of joined class
     classCode: String
     childName: String
   Output =>
-    user: Parse Object{
-      joined_groups: Array
-    }
+    joined_groups: Array
   Procedure =>
     Changed entry in GroupMembers and in users joined_groups
 */
@@ -39,11 +37,7 @@ exports.changeAssociateName = function(request, response){
     user.set("joined_groups", clarray);
     return user.save();
   }).then(function(user){
-    var query = new Parse.Query(Parse.User);
-    query.select("joined_groups");
-    return query.get(user.id);
-  }).then(function(user){
-    response.success(user);
+    response.success(user.get("joined_groups"));
   }, function(error){
     response.error(error.code + ": " + error.message);
   });  

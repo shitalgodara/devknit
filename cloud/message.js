@@ -61,7 +61,7 @@ exports.sendTextMessage = function(request, response){
         "msg": msg
       });  
     }).then(function(){
-      return result;
+      return Parse.Promise.as(result);
     });
   }).then(function(result){
     response.success(result);

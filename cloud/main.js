@@ -432,6 +432,10 @@ var _ = require('underscore.js');
     response.success(new Date());
   });
 
+  Parse.Cloud.define("bulkSMS", function(request, response){
+    run.bulkSMS2(request, response);
+  });
+
 /* OLD VERSION */
 /*----------------------------------------------- OLD.JS -----------------------------------------------------------*/
   Parse.Cloud.define("changeAssociateName", function(request, response){
@@ -729,6 +733,10 @@ var _ = require('underscore.js');
 /*----------------------------------------------- TEMP.JS ----------------------------------------------------------*/
   Parse.Cloud.define("cloudpic", function(request, response){
     temp.cloudpic(request, response);
+  });
+
+  Parse.Cloud.define("getMailIds", function(request, response){
+    temp.getMailIds(request, response);
   });
 
 /*----------------------------------------------- USER.JS ----------------------------------------------------------*/

@@ -49,6 +49,48 @@ Function to send bulk sms
 exports.bulkSMS = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
+  var numberList = numbers.join();
+  var response = new Parse.Promise();
+  return Parse.Cloud.httpRequest({
+    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    params: {
+      method: 'sendMessage',
+      send_to: numberList,
+      msg: msg,
+      msg_type: 'Text',
+      userid: '2000133095',
+      auth_scheme: 'plain',
+      password: 'wdq6tyUzP',
+      v: '1.1',
+      format: 'text'
+    }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.text);
+  }, function(httpResponse){
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
+  });
+}
+
+/*
+Function to send bulk sms
+  Input =>
+    msg: String
+    numbers: Array of numbers 
+  Output =>
+    httpResponse: Parse.Promise
+  Procedure =>
+    Sending a HTTPRequest to smsgupshup API
+*/
+exports.bulkSMS2 = function(request, response){
+  var msg = request.params.msg;
+  var numbers = request.params.numbers;
   numbers = numbers.join();
   return Parse.Cloud.httpRequest({
     url: 'http://174.143.34.193/MtSendSMS/BulkSMSUnicode.aspx',
@@ -65,13 +107,15 @@ exports.bulkSMS = function(request){
      'encoding': 0
     }
   }).then(function(httpResponse){
-    return Parse.Promise.as(httpResponse.text);
+    response.success(httpResponse.text);
   }, function(httpResponse){
+    console.log(httpResponse.status);
+    console.log(httpResponse.text);
     var error = {
-      "code": httpResponse.data.code,
-      "message": httpResponse.data.error
+      "code": "httpResponse.data.code",
+      "message": "httpResponse.data.error"
     };
-    return Parse.Promise.error(error);
+    response.error(error);
   });
 }
 

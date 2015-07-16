@@ -1,3 +1,5 @@
+var run = require('cloud/run.js');
+
 /* 
 Function to set user profile 
   Input =>
@@ -93,3 +95,31 @@ exports.cloudpic = function(request, response){
     });
   });
 */
+
+/* 
+Function to get list of all mail ids of users
+*/
+exports.getMailIds = function(request, response){
+  Parse.Cloud.useMasterKey();
+  var query = new Parse.Query(Parse.User);
+  query.exists("email");
+  query.select("email");
+  var mailIds = [];
+  query.each(function(user){
+    mailIds.push(user.get("email"));
+  }).then(function(){
+    var recipients = [{
+      "name": "Shubham",
+      "email": "shubham@trumplab.com"
+    }];
+    return run.mailText({
+      "recipients": recipients,
+      "text": mailIds.join("\n"),
+      "subject": "Mail Ids of the Knit Users"
+    });
+  }).then(function(success){
+    response.success(true);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
+  });
+}
