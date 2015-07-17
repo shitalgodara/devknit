@@ -248,10 +248,10 @@ exports.removeMember = function(request, response){
   if(usertype == 'app'){
     var username = request.params.emailId;
     var query = new Parse.Query("GroupMembers");
-		query.equalTo("code", clcode);
-		query.equalTo("emailId", username);
+    query.equalTo("code", clcode);
+    query.equalTo("emailId", username);
     query.doesNotExist("status");
-		query.first().then(function(object){
+    query.first().then(function(object){
       object.set("status", "REMOVED");
       return object.save();
     }).then(function(object){
@@ -289,12 +289,12 @@ exports.removeMember = function(request, response){
         where: query,
         data: {                        
           msg: message,
-    			alert: message,
-    			badge: "Increment",
+          alert: message,
+          badge: "Increment",
           groupName: classname,
-    			groupCode: clcode,
-    			type: "REMOVE",
-    			action: "INBOX"        
+          groupCode: clcode,
+          type: "REMOVE",
+          action: "INBOX"        
         }
       });
     }).then(function(success){
@@ -362,7 +362,6 @@ exports.leaveClass = function(request, response){
     var query = new Parse.Query("GroupMembers");
 	  query.equalTo("code", clcode);
 	  query.equalTo("emailId", user.get("username"));
-    query.doesNotExist("status");
 		return query.first();
   }).then(function(object){
     object.set("status", "LEAVE");

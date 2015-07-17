@@ -744,6 +744,10 @@ var _ = require('underscore.js');
     user.getUpdatesUserDetail(request, response);
   });   
 
+  Parse.Cloud.define("getUserDetails", function(request, response){
+    user.getUserDetails(request, response);
+  });  
+
   Parse.Cloud.define("updateProfilePic", function(request, response){
     user.updateProfilePic(request, response);
   }); 

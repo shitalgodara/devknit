@@ -33,6 +33,16 @@ exports.getUpdatesUserDetail = function(request, response){
 	});
 }
 
+exports.getUserDetails = function(request, response){
+	var user = request.user;
+	var details = request.params.details;
+	var object = {};
+	_.each(details,function(detail){
+		object[detail] = user.get(detail);
+	});
+	response.success(object);
+}
+
 /* 
 Function to edit profile picture of user 
 	Input =>
