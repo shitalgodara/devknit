@@ -123,3 +123,45 @@ exports.getMailIds = function(request, response){
     response.error(error.code + ": " + error.message);
   });
 }
+
+/*
+Function to send bulk sms
+  Input =>
+    msg: String
+    numbers: Array of numbers 
+  Output =>
+    httpResponse: Parse.Promise
+  Procedure =>
+    Sending a HTTPRequest to smsgupshup API
+*/
+exports.bulkSMS = function(request, response){
+  var msg = request.params.msg;
+  var numbers = request.params.numbers;
+  numbers = numbers.join();
+  return Parse.Cloud.httpRequest({
+    url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
+    followRedirects: true,
+    headers: {
+     'Content-Type': 'application/json'
+    },
+    params: {
+     'usr': 'knittrans',
+     'pass': 'knittrans',
+     'msisdn': numbers,
+     'msg': msg,
+     'sid': 'myKnit',
+     'mt': 9,
+     'encoding': 2
+    }
+  }).then(function(httpResponse){
+    console.log(httpResponse);
+    response.success(httpResponse.text);
+  }, function(httpResponse){
+    console.log(httpResponse);
+    var error = {
+      "code": "httpResponse.data.code",
+      "message": "httpResponse.data.error"
+    };
+    response.error(error);
+  });
+}

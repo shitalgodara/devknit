@@ -191,10 +191,10 @@ exports.giveClassesDetails = function(request, response){
     response.success([]);
   else{
     var clarray = [];
-    var i;
+    var i = 0;
     if(typeof clarray1 != 'undefined'){
-      for (i = 0; i < clarray1.length; i++){
-        clarray[i] = clarray1[i][0];
+      for (var j = 0; j < clarray1.length; j++){
+        clarray[i] = clarray1[j][0];
       }
     }
     if(typeof clarray2 != 'undefined'){

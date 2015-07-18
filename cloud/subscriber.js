@@ -72,11 +72,13 @@ exports.showAllSubscribers = function(request, response){
     query.containedIn("code", clarray);
     query.select("name", "children_names", "code", "status", "emailId");
     query.limit(limit);
+    query.ascending("updatedAt");
     query.find().then(function(results1){
       var query = new Parse.Query("Messageneeders");
       query.containedIn("cod", clarray);
       query.greaterThan("updatedAt", date);
       query.select("subscriber", "number", "cod", "status");
+      query.ascending("updatedAt");
       query.limit(limit);
       return query.find().then(function(results2){
         var result = {

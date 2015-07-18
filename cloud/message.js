@@ -22,12 +22,12 @@ exports.sendTextMessage = function(request, response){
   var GroupDetails = Parse.Object.extend("GroupDetails");
   var groupdetails = new GroupDetails();
   groupdetails.save({
-      Creator: name,
-      name: classname,
-      title: message,
-      senderId: email,
-      code: clcode
-  }).then(function(obj){
+    Creator: name,
+    name: classname,
+    title: message,
+    senderId: email,
+    code: clcode
+  }).then(function(groupdetails){
     return Parse.Push.send({
       channels: [clcode],
       data: {
@@ -38,30 +38,32 @@ exports.sendTextMessage = function(request, response){
 		    type: "NORMAL",
 		    action: "INBOX"
       }
-    });
-  }).then(function(){
-    var result = {
-      messageId: groupdetails.id,
-      createdAt: groupdetails.createdAt
-    };
-    var c = clcode;
-    var msg = message;
-    msg = classname + ": " + msg;
-    var Messageneeders = Parse.Object.extend("Messageneeders");
-    var query = new Parse.Query(Messageneeders);
-    msg = msg.substr(0, 330);
-    query.equalTo("cod", c);
-    query.doesNotExist("status");
-    return query.find().then(function(results){
-      var numbers = _.map(results, function(res){
-        return res.get("number");
-      });
-      return run.bulkSMS({
-        "numbers": numbers,
-        "msg": msg
-      });  
     }).then(function(){
-      return Parse.Promise.as(result);
+      var groupDetailsId = groupdetails.id;
+      var result = {
+        messageId: groupDetailsId,
+        createdAt: groupdetails.createdAt
+      };
+      var c = clcode;
+      var msg = message;
+      msg = classname + ": " + msg;
+      var Messageneeders = Parse.Object.extend("Messageneeders");
+      var query = new Parse.Query(Messageneeders);
+      msg = msg.substr(0, 330);
+      query.equalTo("cod", c);
+      query.doesNotExist("status");
+      return query.find().then(function(results){
+        var numbers = _.map(results, function(res){
+          return res.get("number");
+        });
+        return run.bulkMultilingualSMS({
+          "numbers": numbers,
+          "msg": msg,
+          "groupDetailsId": groupDetailsId
+        });  
+      }).then(function(){
+        return Parse.Promise.as(result);
+      });
     });
   }).then(function(result){
     response.success(result);
@@ -122,8 +124,9 @@ exports.sendPhotoTextMessage = function(request, response){
 		    action: "INBOX"
       }
     }).then(function(){
+      var groupDetailsId = groupdetails.id;
       var result = {
-        messageId: groupdetails.id,
+        messageId: groupDetailsId,
         createdAt: groupdetails.createdAt
       };
       var c = clcode;
@@ -145,9 +148,10 @@ exports.sendPhotoTextMessage = function(request, response){
           var numbers = _.map(results, function(res){
             return res.get("number");
           });
-          return run.bulkSMS({
+          return run.bulkMultilingualSMS({
             "numbers": numbers,
-            "msg": msg
+            "msg": msg,
+            "groupDetailsId": groupDetailsId
           });  
         }).then(function(){
           return Parse.Promise.as(result);

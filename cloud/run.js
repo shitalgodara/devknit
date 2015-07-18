@@ -1,3 +1,5 @@
+var _ = require('underscore.js');
+
 /*
 Function to send single sms
   Input =>
@@ -12,7 +14,7 @@ exports.singleSMS = function(request){
   var msg = request.msg;
   var number = request.number;
   return Parse.Cloud.httpRequest({
-    url: 'http://174.143.34.193/MtSendSMS/SingleSMSUnicode.aspx',
+    url: 'http://174.143.34.193/MtSendSMS/SingleSMS.aspx',
     headers: {
       'Content-Type': 'application/json'
     },
@@ -46,26 +48,23 @@ Function to send bulk sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-exports.bulkSMS = function(request){
+exports.bulkSMS = function(request, response){
   var msg = request.msg;
   var numbers = request.numbers;
-  var numberList = numbers.join();
-  var response = new Parse.Promise();
+  numbers = numbers.join();
   return Parse.Cloud.httpRequest({
-    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
+    url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
     headers: {
-      'Content-Type': 'application/json'
+     'Content-Type': 'application/json'
     },
     params: {
-      method: 'sendMessage',
-      send_to: numberList,
-      msg: msg,
-      msg_type: 'Text',
-      userid: '2000133095',
-      auth_scheme: 'plain',
-      password: 'wdq6tyUzP',
-      v: '1.1',
-      format: 'text'
+     'usr': 'knittrans',
+     'pass': 'knittrans',
+     'msisdn': numbers,
+     'msg': msg,
+     'sid': 'myKnit',
+     'mt': 9,
+     'encoding': 0
     }
   }).then(function(httpResponse){
     return Parse.Promise.as(httpResponse.text);
@@ -88,12 +87,14 @@ Function to send bulk sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-exports.bulkSMS2 = function(request, response){
-  var msg = request.params.msg;
-  var numbers = request.params.numbers;
+exports.bulkMultilingualSMS = function(request, response){
+  var msg = request.msg;
+  var numbers = request.numbers;
+  var groupDetailsId = request.groupDetailsId;
   numbers = numbers.join();
   return Parse.Cloud.httpRequest({
-    url: 'http://174.143.34.193/MtSendSMS/BulkSMSUnicode.aspx',
+    url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
+    followRedirects: true,
     headers: {
      'Content-Type': 'application/json'
     },
@@ -104,18 +105,39 @@ exports.bulkSMS2 = function(request, response){
      'msg': msg,
      'sid': 'myKnit',
      'mt': 9,
-     'encoding': 0
+     'encoding': 2
     }
   }).then(function(httpResponse){
-    response.success(httpResponse.text);
+    var responses = httpResponse.text.split(',');
+    var prev = "";
+    var msgIds = [];
+    for(var i = 0; i < responses.length; i++){
+      if(prev.split('-')[0] != responses[i].split('-')[0]){
+        msgIds.push(responses[i]);
+      }
+      prev = responses[i];
+    }
+    var SMSReport = Parse.Object.extend("SMSReport");
+    var promise = Parse.Promise.as();
+    _.each(msgIds, function(msgId){
+      var smsReport = new SMSReport();
+      smsReport.set("msgId", msgId);
+      smsReport.set("groupDetailsId", groupDetailsId);
+      promise = promise.then(function(){
+        return smsReport.save();
+      }); 
+    });
+    promise.then(function(){
+      return Parse.Promise.as(true);
+    }, function(error){
+      return Parse.Promise.error(error);
+    });
   }, function(httpResponse){
-    console.log(httpResponse.status);
-    console.log(httpResponse.text);
     var error = {
-      "code": "httpResponse.data.code",
-      "message": "httpResponse.data.error"
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
     };
-    response.error(error);
+    return Parse.Promise.error(error);
   });
 }
 
@@ -295,29 +317,3 @@ exports.genRevocableSession = function(request){
     return Parse.Promise.error(error);
   });
 }
-
-var delayUntil;
-var delayPromise;
-
-var _delay = function (){
-  if (Date.now() >= delayUntil){
-    delayPromise.resolve();
-    return;
-  } 
-  else{
-    process.nextTick(_delay);
-  }
-} 
-
-/*
-Function to delay 
-  Input =>
-    millis: Number
-*/
-exports.delay = function(request) {
-  var millis = request.millis;
-  delayUntil = Date.now() + millis;
-  delayPromise = new Parse.Promise();
-  _delay();
-  return delayPromise;
-};

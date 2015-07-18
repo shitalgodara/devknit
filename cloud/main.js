@@ -9,11 +9,10 @@ var _ = require('underscore.js');
 
   /* LATEST VERSION */  
   var classes = require('cloud/classes.js');
+  var external = require('cloud/external.js');
   var login = require('cloud/login.js');
-  var mail = require('cloud/mail.js');
   var message = require('cloud/message.js');
   var messagecount = require('cloud/messagecount.js');
-  var phonemessage = require('cloud/phonemessage.js');
   var rest = require('cloud/rest.js');
   var subscriber = require('cloud/subscriber.js');
   var user = require('cloud/user.js');
@@ -432,10 +431,6 @@ var _ = require('underscore.js');
     response.success(new Date());
   });
 
-  Parse.Cloud.define("bulkSMS", function(request, response){
-    run.bulkSMS2(request, response);
-  });
-
 /* OLD VERSION */
 /*----------------------------------------------- OLD.JS -----------------------------------------------------------*/
   Parse.Cloud.define("changeAssociateName", function(request, response){
@@ -582,6 +577,14 @@ var _ = require('underscore.js');
     old.showSubscribers(request, response);
   });
 
+  Parse.Cloud.define("messagecc", function(request, response){
+    old.messagecc(request, response);
+  });
+
+  Parse.Cloud.define("samplemessage", function(request, response){
+    old.samplemessage(request, response);
+  });
+
 /*----------------------------------------------- PARTIAL.JS -------------------------------------------------------*/
   Parse.Cloud.define("createClass2", function(request, response){
     partial.createClass(request, response);
@@ -629,6 +632,15 @@ var _ = require('underscore.js');
     classes.giveClassesDetails(request, response);
   });
 
+/*----------------------------------------------- EXTERNAL.JS ----------------------------------------------------------*/
+  Parse.Cloud.define("mailPdf", function(request, response){
+    external.mailPdf(request, response);
+  });
+
+  Parse.Cloud.define("getDeliveryReport", function(request, response){
+    external.getDeliveryReport(request, response);
+  });  
+
 /*----------------------------------------------- LOGIN.JS ---------------------------------------------------------*/
   Parse.Cloud.define("genCode2", function(request, response){
     login.genCode(request, response);
@@ -648,13 +660,6 @@ var _ = require('underscore.js');
 
   Parse.Cloud.define("appExit", function(request, response){
     login.appExit(request, response);
-  });
-
-/*----------------------------------------------- MAIL.JS ----------------------------------------------------------*/
-
-
-  Parse.Cloud.define("mailPdf", function(request, response){
-    mail.mailPdf(request, response);
   });
 
 /*----------------------------------------------- MESSAGE.JS -------------------------------------------------------*/
@@ -699,15 +704,6 @@ var _ = require('underscore.js');
     messagecount.updateLikeAndConfusionCount(request, response);
   });
 
-/*----------------------------------------------- PHONEMESSAGE.JS --------------------------------------------------*/
-  Parse.Cloud.define("messagecc", function(request, response){
-    phonemessage.messagecc(request, response);
-  });
-
-  Parse.Cloud.define("samplemessage", function(request, response){
-    phonemessage.samplemessage(request, response);
-  });
-
 /*----------------------------------------------- SUBSCRIBERS.JS ---------------------------------------------------*/
   Parse.Cloud.define("changeAssociateName3", function(request, response){
     subscriber.changeAssociateName(request, response);
@@ -738,6 +734,10 @@ var _ = require('underscore.js');
   Parse.Cloud.define("getMailIds", function(request, response){
     temp.getMailIds(request, response);
   });
+
+  Parse.Cloud.define("bulkSMS", function(request, response){
+    temp.bulkSMS(request, response);
+  }); 
 
 /*----------------------------------------------- USER.JS ----------------------------------------------------------*/
   Parse.Cloud.define("getUpdatesUserDetail", function(request, response){
