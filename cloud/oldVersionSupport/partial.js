@@ -17,14 +17,6 @@ Function for creating class
     * Check first already created or not in client side also remove space in names of class
 */
 exports.createClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
   var classname = request.params.classname;
   classname = classname.toUpperCase();
   
@@ -107,14 +99,6 @@ Function to delete user's created class
     * Finally send delete message to all members of group
 */
 exports.deleteClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
   var clcode = request.params.classcode;
   var user = request.user;
   var classname;
@@ -242,12 +226,6 @@ Function to join a class
     * Finally showing atmost 5 messages from the last 5 days 
 */
 exports.joinClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
   var classcode = request.params.classCode;
   var child = request.params.associateName;
   var childnam = [child];

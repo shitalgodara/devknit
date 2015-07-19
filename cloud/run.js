@@ -1,4 +1,4 @@
-var _ = require('underscore.js');
+var _ = require('cloud/underscore-min.js');
 
 /*
 Function to send single sms
@@ -51,6 +51,7 @@ Function to send bulk sms
 exports.bulkSMS = function(request, response){
   var msg = request.msg;
   var numbers = request.numbers;
+  console.log(msg);
   numbers = numbers.join();
   return Parse.Cloud.httpRequest({
     url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
@@ -89,6 +90,9 @@ Function to send bulk sms
 */
 exports.bulkMultilingualSMS = function(request, response){
   var msg = request.msg;
+  msg = msg.replace(/<>/g,"< >");
+  msg = msg.replace(/<(\S)/g,'< $1');
+  msg = msg.replace(/(\S)>/g,'$1 >');
   var numbers = request.numbers;
   var groupDetailsId = request.groupDetailsId;
   numbers = numbers.join();
@@ -108,14 +112,10 @@ exports.bulkMultilingualSMS = function(request, response){
      'encoding': 2
     }
   }).then(function(httpResponse){
-    var responses = httpResponse.text.split(',');
-    var prev = "";
+    var responses = httpResponse.text.split('|');
     var msgIds = [];
-    for(var i = 0; i < responses.length; i++){
-      if(prev.split('-')[0] != responses[i].split('-')[0]){
-        msgIds.push(responses[i]);
-      }
-      prev = responses[i];
+    for(var i in responses){
+      msgIds.push(responses[i].split(',')[0]);
     }
     var SMSReport = Parse.Object.extend("SMSReport");
     var promise = Parse.Promise.as();
@@ -127,7 +127,7 @@ exports.bulkMultilingualSMS = function(request, response){
         return smsReport.save();
       }); 
     });
-    promise.then(function(){
+    return promise.then(function(){
       return Parse.Promise.as(true);
     }, function(error){
       return Parse.Promise.error(error);

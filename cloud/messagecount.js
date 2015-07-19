@@ -1,3 +1,5 @@
+var _ = require('cloud/underscore-min.js'); 
+
 /*
 Function to update seen_count of messages
   Input =>
@@ -42,9 +44,7 @@ Function to update like and confused count of messages
     A simple query on GroupDetails and MessageState
 */
 exports.updateLikeAndConfusionCount = function(request, response){
-  var _ = require('underscore.js');
   var input = request.params.input;
-  var msg_array = Object.keys(input);
   var msgarray = request.params.array;
   var query = new Parse.Query("GroupDetails");
   query.containedIn("objectId", msgarray);

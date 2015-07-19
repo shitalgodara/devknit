@@ -1,4 +1,4 @@
-var _ = require('underscore.js');
+var _ = require('cloud/underscore-min.js');
 
 /*
 Function to give teachers details mainly pid and name whose class a user has joined

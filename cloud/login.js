@@ -182,6 +182,7 @@ exports.verifyCode = function(request, response){
   if(typeof email != 'undefined'){
     var password = request.params.password;
     Parse.User.logIn(email, password).then(function(user){
+      Parse.Cloud.useMasterKey();
       var query = Parse.Query(Parse.Session);
       query.equalTo("user", user);
       return query.each(function(session){

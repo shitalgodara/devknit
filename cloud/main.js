@@ -1,6 +1,6 @@
-var _ = require('underscore.js');
 /*----------------------------------------------- FILE INCLUDES ----------------------------------------------------*/
   /* HELPER FILE */
+  var _ = require('cloud/underscore-min.js');
   var run = require('cloud/run.js');
 
   /* OLD VERSION */
@@ -275,7 +275,6 @@ var _ = require('underscore.js');
     var intervalTime = 14400000;
     var date = new Date();
     var currentTime = date.getTime();
-    var currentHours = date.getHours();
     var dateLowerBound = new Date(currentTime - 6 * intervalTime);
     var newMembers = [];
     var query1 = new Parse.Query("GroupMembers");

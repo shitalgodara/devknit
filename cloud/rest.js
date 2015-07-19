@@ -1,4 +1,4 @@
-var _ = require('underscore.js');
+var _ = require('cloud/underscore-min.js');
 var run = require('cloud/run.js');
 
 /*
@@ -87,19 +87,19 @@ exports.inviteUsers = function(request, response){
         break;
       case 2:
         var groups = request.user.get("Created_groups");
-        var groupDetails = _.filter(groups, function(group){
+        var groupDetail = _.find(groups, function(group){
           return group[0] === classCode;
-        })[0];
-        var className = groupDetails[1];
+        });
+        var className = groupDetail[1];
         text = "Hi! I have recently started using 'Knit Messaging' app to send updates for my " + className + " class. Download the app from http://goo.gl/bnJtyu and use code " + classCode + " to join my class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080\n-- " + name;
         break;
       case 3:
         var teacherName = request.params.teacherName;
         var groups = request.user.get("joined_groups");
-        var groupDetails = _.filter(groups, function(group){
+        var groupDetail = _.find(groups, function(group){
           return group[0] === classCode;
-        })[0];
-        var className = groupDetails[1];
+        });
+        var className = groupDetail[1];
         text = "Hi! I just joined " + className + " class of " + teacherName + " on 'Knit Messaging' app. Download the app from http://goo.gl/tNRmsb and use " + classCode + " to join this class. To join via SMS, send '" + classCode + " <Student's Name>' to 9243000080\n-- " + name;
         break;
       case 4:
@@ -167,10 +167,10 @@ exports.inviteUsers = function(request, response){
         break;
       case 2:
         var groups = request.user.get("Created_groups");
-        var groupDetails = _.filter(groups, function(group){
+        var groupDetail = _.find(groups, function(group){
           return group[0] === classCode;
-        })[0];
-        var className = groupDetails[1];
+        });
+        var className = groupDetail[1];
         template_name = "t2p";
         template_content = [
           {
@@ -194,10 +194,10 @@ exports.inviteUsers = function(request, response){
       case 3:
         var teacherName = request.params.teacherName;
         var groups = request.user.get("joined_groups");
-        var groupDetails = _.filter(groups, function(group){
+        var groupDetail = _.find(groups, function(group){
           return group[0] === classCode;
-        })[0];
-        var className = groupDetails[1];
+        });
+        var className = groupDetail[1];
         template_name = "p2p";
         template_content = [
           {

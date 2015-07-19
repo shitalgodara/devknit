@@ -1,5 +1,5 @@
 var run = require('cloud/run.js');
-var _ = require('underscore.js');
+var _ = require('cloud/underscore-min.js');
 
 /*
 Function for creating class  
@@ -16,17 +16,9 @@ Function for creating class
     procedure first create code ,then add in user created_groups,then in codegroup entry
 */
 exports.createClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
   var classname = request.params.classname;
   classname = classname.toUpperCase();
-  
+ 
   var name = request.user.get("name");
   name = name.split(" ");
   if(name.length > 1)
@@ -62,7 +54,6 @@ exports.createClass = function(request, response){
   classname = classname.toUpperCase();
   classname = classname.replace(/[''""]/g, ' ');
   var user = request.user;
-  var clarray = user.get("Created_groups");
   var currentname = user.get("name");
   var username = user.get("username");
   var pid = user.get("pid");
@@ -101,14 +92,6 @@ Function to delete user's created class
     * Finally send delete message to all members of group
 */
 exports.deleteClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
   var clcode = request.params.classcode;
   var user = request.user;
   var classname;
@@ -175,14 +158,6 @@ Function for user to leave a class
     * Set status entry to LEAVE in Groupmember class
 */
 exports.leaveClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
   Parse.Cloud.useMasterKey();
   var clcode = request.params.classcode;
   var ID = request.params.installationObjectId;
@@ -233,12 +208,7 @@ Function to join a class
     * Finally showing atmost 5 messages from the last 5 days 
 */
 exports.joinClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
+  Parse.Cloud.useMasterKey();
   var classcode = request.params.classCode;
   var child = request.params.associateName;
   var childnam = [child];
@@ -353,7 +323,6 @@ smsText = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
   var numberList = numbers.join();
-  var response = new Parse.Promise();
   return Parse.Cloud.httpRequest({
     url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
     headers: {
@@ -492,14 +461,6 @@ Function for returning list of classes as a suggestion for parent to join
     Use of compound query on codegroup to compute suggestion whose class exits and removed groups that are already joined, created and removed
 */
 exports.suggestClasses = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
   var groups = request.params.input;
   var date = request.params.date;
   if(groups.length == 0)
@@ -564,14 +525,6 @@ Function for returning list of classes as a suggest for parent to join
     Use of compound query on codegroup to compute suggestion whose class exits and removed groups that are already joined/created or removed
 */
 exports.suggestClass = function(request, response){
-  var echannel;
-  var eplatform = request.user.get("OS");
-  var emodal = request.user.get("MODAL");
-  var eusr = request.user.get("name");
-  if((eplatform == 'IOS') || (eplatform == 'ANDROID') || (eplatform == 'WEB'))
-    echannel = eplatform;
-  else
-    echannel = 'UNKNOWN';
   var school = request.params.school;
   var standard = request.params.standard;
   var division = request.params.division;
@@ -714,7 +667,6 @@ Function to decrement confused count of given message
     * Finally save updated count back to server and return this count to user. 
 */
 exports.confusedCountDecrement = function(request, response){
-  var objectid = request.params.objectId;
   var objectid = request.params.objectId;
   var query = new Parse.Query("GroupDetails");
   query.get(objectid).then(function(object){
@@ -886,7 +838,6 @@ Function to get outbox messages for teacher
 */
 exports.getOutboxMessages = function(request, response){
   var senderId = request.params.senderId;
-  var limit = request.params.limit;
   var query = new Parse.Query("GroupDetails");
   query.limit(100);
   query.equalTo("senderId", senderId);
@@ -994,7 +945,6 @@ exports.verifyCode = function(request, response){
     query.greaterThan("createdAt", e);
     query.find().then(function(results){
       if(results.length > 0){
-        var user = new Parse.User();
         var name = request.params.name;
         if(typeof name == 'undefined'){ 
           Parse.User.logIn(number, number + "qwerty12345").then(function(user){
@@ -1102,7 +1052,7 @@ exports.mailInstructions = function(request, response){
     "attachments": attachments
   }).then(function(){
     response.success(true);
-  }, function(){
+  }, function(error){
     response.error(error.code + ": " + error.message);
   });
 }
@@ -1569,8 +1519,7 @@ Function to get count of members subscribed to that class via app and sms
 */ 
 exports.showclassstrength = function(request, response){
   var clcode = request.params.classcode;
-  var GroupMembers = Parse.Object.extend("GroupMembers");
-  var query = new Parse.Query(GroupMembers);
+  var query = new Parse.Query("GroupMembers");
   query.equalTo("code", clcode);
   query.count().then(function(count1){
     var query = new Parse.Query("Messageneeders");

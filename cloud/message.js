@@ -1,5 +1,5 @@
 var run = require('cloud/run.js');
-var _ = require('underscore.js');
+var _ = require('cloud/underscore-min.js');
 
 /*
 Function to send text messages
@@ -14,63 +14,72 @@ Function to send text messages
     Save entry in groupdetail and send push to app user and send sms to message user
 */
 exports.sendTextMessage = function(request, response){
-  var clcode = request.params.classcode;
-  var classname = request.params.classname;
-  var name = request.user.get("name");
-  var email = request.user.get("username");
-  var message = request.params.message;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
-  var groupdetails = new GroupDetails();
-  groupdetails.save({
-    Creator: name,
-    name: classname,
-    title: message,
-    senderId: email,
-    code: clcode
-  }).then(function(groupdetails){
-    return Parse.Push.send({
-      channels: [clcode],
-      data: {
-        msg: message,
-		    alert: message,
-        badge: "Increment",
-        groupName: classname,
-		    type: "NORMAL",
-		    action: "INBOX"
-      }
-    }).then(function(){
-      var groupDetailsId = groupdetails.id;
-      var result = {
-        messageId: groupDetailsId,
-        createdAt: groupdetails.createdAt
-      };
-      var c = clcode;
-      var msg = message;
-      msg = classname + ": " + msg;
-      var Messageneeders = Parse.Object.extend("Messageneeders");
-      var query = new Parse.Query(Messageneeders);
-      msg = msg.substr(0, 330);
-      query.equalTo("cod", c);
-      query.doesNotExist("status");
-      return query.find().then(function(results){
-        var numbers = _.map(results, function(res){
-          return res.get("number");
-        });
-        return run.bulkMultilingualSMS({
-          "numbers": numbers,
-          "msg": msg,
-          "groupDetailsId": groupDetailsId
-        });  
-      }).then(function(){
-        return Parse.Promise.as(result);
-      });
-    });
-  }).then(function(result){
-    response.success(result);
-  },
-  function(error){
-    response.error(error.code + ": " + error.message);
+  var classcode = request.params.classcode;
+  var user = request.user;
+  var created_groups = user.get("Created_groups");
+  var index = _.findIndex(created_groups, function(created_group){
+    return created_group[0] == classcode;
   });
+  if(index >= 0){
+    var classname = request.params.classname;
+    var name = user.get("name");
+    var username = user.get("username");
+    var message = request.params.message;
+    var GroupDetails = Parse.Object.extend("GroupDetails");
+    var groupdetails = new GroupDetails();
+    groupdetails.save({
+      Creator: name,
+      name: classname,
+      title: message,
+      senderId: username,
+      code: classcode
+    }).then(function(groupdetails){
+      return Parse.Push.send({
+        channels: [classcode],
+        data: {
+          msg: message,
+  		    alert: message,
+          badge: "Increment",
+          groupName: classname,
+  		    type: "NORMAL",
+  		    action: "INBOX"
+        }
+      }).then(function(){
+        var groupDetailsId = groupdetails.id;
+        var result = {
+          messageId: groupDetailsId,
+          createdAt: groupdetails.createdAt
+        };
+        var msg = message;
+        msg = classname + ": " + msg;
+        var Messageneeders = Parse.Object.extend("Messageneeders");
+        var query = new Parse.Query(Messageneeders);
+        msg = msg.substr(0, 330);
+        query.equalTo("cod", classcode);
+        query.doesNotExist("status");
+        return query.find().then(function(results){
+          var numbers = _.map(results, function(res){
+            return res.get("number");
+          });
+          return run.bulkMultilingualSMS({
+            "numbers": numbers,
+            "msg": msg,
+            "groupDetailsId": groupDetailsId
+          });  
+        }).then(function(){
+          return Parse.Promise.as(result);
+        });
+      });
+    }).then(function(result){
+      response.success(result);
+    },
+    function(error){
+      response.error(error.code + ": " + error.message);
+    });
+  }
+  else{
+    response.success("CLASS_DOESNOT_EXISTS");
+  }
 }
 
 /*
@@ -88,89 +97,97 @@ Function to send photo text messages
     Save entry in groupdetail and send push to app user and send sms to message user
 */
 exports.sendPhotoTextMessage = function(request, response){
-  var clcode = request.params.classcode;
-  var classname = request.params.classname;
-  var name = request.user.get("name");
-  var email = request.user.get("username");
-  var parsefile = request.params.parsefile;
-  var filename = request.params.filename;
-  var message = request.params.message;
-  var msg;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
-  var groupdetails = new GroupDetails();
-  var url;
-  groupdetails.save({
-    Creator: name,
-    name: classname,
-    title: message,
-    senderId: email,
-    code: clcode,
-    attachment: parsefile,
-    attachment_name: filename
-  }).then(function(groupdetails){
-    if (message == "") 
-      msg = "You have received an Image";
-    else
-      msg = message;
-    url = groupdetails.get('attachment').url();
-    return Parse.Push.send({
-      channels: [clcode],
-      data: {
-        msg: msg,
-		    alert: msg,
-        badge: "Increment",
-        groupName: classname,
-		    type: "NORMAL",
-		    action: "INBOX"
-      }
-    }).then(function(){
-      var groupDetailsId = groupdetails.id;
-      var result = {
-        messageId: groupDetailsId,
-        createdAt: groupdetails.createdAt
-      };
-      var c = clcode;
-      var username = name;
-      msg = classname + ": " + msg;
-      msg = msg + ", Your Teacher " + username + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
-      msg = msg + " you can view image at ";
-      return Parse.Cloud.httpRequest({
-        url: 'http://tinyurl.com/api-create.php',
-        params: {
-          url : url
+  var classcode = request.params.classcode;
+  var user = request.user;
+  var created_groups = user.get("Created_groups");
+  var index = _.findIndex(created_groups, function(created_group){
+    return created_group[0] == classcode;
+  });
+  if(index >= 0){
+    var classname = request.params.classname;
+    var name = user.get("name");
+    var username = user.get("username");
+    var parsefile = request.params.parsefile;
+    var filename = request.params.filename;
+    var message = request.params.message;
+    var msg;
+    var GroupDetails = Parse.Object.extend("GroupDetails");
+    var groupdetails = new GroupDetails();
+    var url;
+    groupdetails.save({
+      Creator: name,
+      name: classname,
+      title: message,
+      senderId: username,
+      code: classcode,
+      attachment: parsefile,
+      attachment_name: filename
+    }).then(function(groupdetails){
+      if (message == "") 
+        msg = "You have received an Image";
+      else
+        msg = message;
+      url = groupdetails.get('attachment').url();
+      return Parse.Push.send({
+        channels: [classcode],
+        data: {
+          msg: msg,
+  		    alert: msg,
+          badge: "Increment",
+          groupName: classname,
+  		    type: "NORMAL",
+  		    action: "INBOX"
         }
-      }).then(function(httpResponse){
-        msg = msg + httpResponse.text;
-        var query = new Parse.Query("Messageneeders");
-        query.equalTo("cod", c);
-        query.doesNotExist("status");
-        return query.find().then(function(results){
-          var numbers = _.map(results, function(res){
-            return res.get("number");
+      }).then(function(){
+        var groupDetailsId = groupdetails.id;
+        var result = {
+          messageId: groupDetailsId,
+          createdAt: groupdetails.createdAt
+        };
+        msg = classname + ": " + msg;
+        msg = msg + ", Your Teacher " + name + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
+        msg = msg + " you can view image at ";
+        return Parse.Cloud.httpRequest({
+          url: 'http://tinyurl.com/api-create.php',
+          params: {
+            url : url
+          }
+        }).then(function(httpResponse){
+          msg = msg + httpResponse.text;
+          var query = new Parse.Query("Messageneeders");
+          query.equalTo("cod", classcode);
+          query.doesNotExist("status");
+          return query.find().then(function(results){
+            var numbers = _.map(results, function(res){
+              return res.get("number");
+            });
+            return run.bulkMultilingualSMS({
+              "numbers": numbers,
+              "msg": msg,
+              "groupDetailsId": groupDetailsId
+            });  
+          }).then(function(){
+            return Parse.Promise.as(result);
+          }, function(error){
+            return Parse.Promise.error(error);
           });
-          return run.bulkMultilingualSMS({
-            "numbers": numbers,
-            "msg": msg,
-            "groupDetailsId": groupDetailsId
-          });  
-        }).then(function(){
-          return Parse.Promise.as(result);
-        }, function(error){
+        }, function(httpResponse){
+          var error = {
+            "code": httpResponse.data.code,
+            "message": httpResponse.data.error
+          };
           return Parse.Promise.error(error);
         });
-      }, function(httpResponse){
-        var error = {
-          "code": httpResponse.data.code,
-          "message": httpResponse.data.error
-        };
-        return Parse.Promise.error(error);
       });
+    }).then(function(result){
+      response.success(result);
+    }, function(error){
+      response.error(error.code + ": " + error.message);
     });
-  }).then(function(result){
-    response.success(result);
-  }, function(error){
-    response.error(error.code + ": " + error.message);
-  });
+  }
+  else{
+    response.success("CLASS_DOESNOT_EXISTS");
+  }
 }
 
 /*
@@ -184,10 +201,10 @@ Function to show class messages within a limit in webbrowser
     Simple query on groupdetail
 */
 exports.showClassMessages = function(request, response){
-  var clcode = request.params.classcode;
+  var classcode = request.params.classcode;
   var limit = request.params.limit;
   var query = new Parse.Query("GroupDetails");
-  query.equalTo("code", clcode);
+  query.equalTo("code", classcode);
   query.descending("createdAt");
   query.limit(limit);
   query.find().then(function(results){
