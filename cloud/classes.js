@@ -80,7 +80,7 @@ exports.createClass = function(request, response){
       var Codegroup = Parse.Object.extend("Codegroup");
       var codegroup = new Codegroup();
       return codegroup.save({
-        name: name,
+        name: classname,
         code: classcode,
         Creator: name,
         classExist: true,
@@ -413,9 +413,10 @@ exports.joinClass = function(request, response){
   classcode = classcode.trim();
   classcode = classcode.toUpperCase();
   var query = new Parse.Query("Codegroup");
-  query.equalTo("code", classcode);  
+  query.equalTo("code", classcode);
+  query.equalTo("classExist", true);  
   query.first().then(function(codegroup){
-    if(codegroup.length > 0){
+    if(codegroup){
       var joined_groups = user.get("joined_groups");
       var index = _.findIndex(joined_groups, function(joined_group){
         return joined_group[0] == classcode;
