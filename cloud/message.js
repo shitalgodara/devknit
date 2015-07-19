@@ -78,7 +78,7 @@ exports.sendTextMessage = function(request, response){
     });
   }
   else{
-    response.success("CLASS_DOESNOT_EXISTS");
+    response.error("CLASS_DOESNOT_EXISTS");
   }
 }
 
@@ -186,7 +186,7 @@ exports.sendPhotoTextMessage = function(request, response){
     });
   }
   else{
-    response.success("CLASS_DOESNOT_EXISTS");
+    response.error("CLASS_DOESNOT_EXISTS");
   }
 }
 
