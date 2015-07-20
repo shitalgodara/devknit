@@ -33,17 +33,18 @@
 
 /*----------------------------------------------- WEBHOOKS ---------------------------------------------------------*/
   Parse.Cloud.afterSave("Messageneeders", function(request){
-    var num = request.object.get("number");
-    var code = request.object.get("cod");
-    if((request.object.get("status") != "LEAVE") && (request.object.get("status") != "REMOVED")){
+    var msgnd = request.object;
+    var number = msgnd.get("number");
+    var code = msgnd.get("cod");
+    if((msgnd.get("status") != "LEAVE") && (msgnd.get("status") != "REMOVED")){
       var query = new Parse.Query("Codegroup");
       query.equalTo("code", code);
-      query.first().then(function(obj){
-        if(obj){
-          var teacher = obj.get("Creator");
-          var cls = obj.get("name");    
-          var numbers = [num];
-          var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + cls + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
+      query.first().then(function(codegroup){
+        if(codegroup){
+          var teacher = codegroup.get("Creator");
+          var classname = codegroup.get("name");    
+          var numbers = [number];
+          var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + classname + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
           return run.bulkSMS({
             "numbers": numbers,
             "msg": msg
@@ -59,8 +60,9 @@
   });
       
   Parse.Cloud.afterSave("wrong", function(request){
-    var num = request.object.get("number");
-    var code = request.object.get("cod");
+    var wrong = request.object;
+    var number = wrong.get("number");
+    var code = wrong.get("cod");
     var a = code;
     var b = a.substr(0,4);
     if(b == "STOP"){
@@ -68,44 +70,35 @@
       var Messageneeders = Parse.Object.extend("Messageneeders");
       var query = new Parse.Query(Messageneeders);
       query.equalTo("cod", cod);
-      query.equalTo("number", num);
-      query.first().then(function(myObject){
-        if (myObject){
-          myObject.set("status", "LEAVE");
-          return myObject.save().then(function(myObject){
+      query.equalTo("number", number);
+      query.first().then(function(msgnd){
+        if (msgnd){
+          msgnd.set("status", "LEAVE");
+          msgnd.save().then(function(msgnd){
             var msg = "You have been successfully unsubscribed, now you will not recieve any message from your teacher"; 
-            var numbers = [num];
-            return run.bulkSMS({
+            var numbers = [number];
+            run.bulkSMS({
               "numbers": numbers,
               "msg": msg
             });
           });  
         }
-        else{
-          return Parse.Promise.as();
-        }
-      }).then(function(text){
-      }, function(error){
       });
     } 
     else if(b == "SEND"){
-      var msg = "You seems to have forgot to enter student's name, general format to subscribe via sms is '<classCode> <space> <Student Name>'";
-      var numbers = [num];
+      var msg = "You seems to have forgot to enter studentname, general format to subscribe via sms is 'classcode <space> studentname'";
+      var numbers = [number];
       run.bulkSMS({
         "numbers": numbers,
         "msg": msg
-      }).then(function(text){
-      }, function(error){
       });
     }
     else{
-      var msg = "You seems to have entered a wrong Classcode,General format of code is  7 DIGIT CODE,if you don't know code Ask Teacher for code";
-      var numbers = [num];
+      var msg = "You seems to have entered a wrong classcode, general format of code is 7 DIGIT CODE, you can ask teacher for code";
+      var numbers = [number];
       run.bulkSMS({
         "numbers": numbers,
         "msg": msg
-      }).then(function(text){
-      }, function(error){
       });
     }
   });
@@ -149,38 +142,35 @@
     query1.lessThan("createdAt", dateUpperBound);
     query1.greaterThan("like_count", 0);
     query1.select("objectId", "name", "title", "like_count", "senderId");
-    query1.find().then(function(results){
-      var promise = Parse.Promise.as();
-      _.each(results, function(result){
-        Parse.Cloud.useMasterKey();
-        var query2 = new Parse.Query(Parse.Installation);
-        var username = result.get("senderId");
-        var post = result.get('title');
-        if(post.length > 15){
-          post = post.substr(0,12);
-          post = post + "...";
+    Parse.Cloud.useMasterKey();
+    query1.each(function(groupdetail){
+      var query2 = new Parse.Query(Parse.Installation);
+      var username = groupdetail.get("senderId");
+      var post = groupdetail.get("title");
+      var like_count = groupdetail.get("like_count");
+      var classname = groupdetail.get("name");
+      var id = groupdetail.id;
+      if(post.length > 15){
+        post = post.substr(0,12);
+        post = post + "...";
+      }
+      if(post.length > 0){
+        post = ' "' + post + '"';
+      } 
+      var msg = like_count + " people like your post" + post;
+      query2.equalTo("username", username); 
+      return Parse.Push.send({
+        where: query2, 
+        data: {
+          msg: msg,
+          alert: msg,
+          badge: "Increment",
+          groupName: classname,
+          type: "TRANSITION",
+          action: "LIKE",
+          id: id
         }
-        if(post.length > 0){
-          post = ' "' + post + '"';
-        } 
-        var msg = result.get("like_count") + " people like your post" + post;
-        query2.equalTo("username", username); 
-        promise = promise.then(function(){
-          return Parse.Push.send({
-            where: query2, 
-            data: {
-              msg: msg,
-              alert: msg,
-              badge: "Increment",
-              groupName: result.get("name"),
-              type: "TRANSITION",
-              action: "LIKE",
-              id: result.id
-            }
-          });
-        });
       });
-      return promise;
     }).then(function(){
       status.success("Successfully sent like notifications to all teachers !!");
     }, function(error){
@@ -225,43 +215,40 @@
     query1.lessThan("createdAt", dateUpperBound);
     query1.greaterThan("confused_count", 0);
     query1.select("objectId", "name", "title", "confused_count", "senderId");
-      query1.find().then(function(results){
-        var promise = Parse.Promise.as();
-        _.each(results, function(result){
-          Parse.Cloud.useMasterKey();
-          var query2 = new Parse.Query(Parse.Installation);
-          var username = result.get("senderId");
-          var post = result.get('title');
-          if(post.length > 15){
-            post = post.substr(0,12);
-            post = post + "...";
-          }
-          if(post.length > 0){
-            post = ' "' + post + '"';
-          } 
-          var msg = result.get("confused_count") + " people seems to be confused by your post" + post;
-          query2.equalTo("username", username); 
-          promise = promise.then(function(){
-            return Parse.Push.send({
-              where: query2, 
-              data: {
-                msg: msg,
-                alert: msg,
-                badge: "Increment",
-                groupName: result.get("name"),
-                type: "TRANSITION",
-                action: "CONFUSE",
-                id: result.id
-              }
-            });
-          });
-        });
-        return promise;
-      }).then(function(){
-        status.success("Successfully sent confused notifications to all teachers !!");
-      }, function(error){
-        status.error(error.message);
+    Parse.Cloud.useMasterKey();
+    query1.each(function(groupdetail){
+      var query2 = new Parse.Query(Parse.Installation);
+      var username = groupdetail.get("senderId");
+      var post = groupdetail.get("title");
+      var confused_count = groupdetail.get("confused_count");
+      var classname = groupdetail.get("name");
+      var groupdetailId = groupdetail.id;
+      if(post.length > 15){
+      post = post.substr(0,12);
+      post = post + "...";
+      }
+      if(post.length > 0){
+        post = ' "' + post + '"';
+      } 
+      var msg = confused_count + " people seems to be confused by your post" + post;
+      query2.equalTo("username", username); 
+      return Parse.Push.send({
+      where: query2, 
+      data: {
+        msg: msg,
+        alert: msg,
+        badge: "Increment",
+        groupName: classname,
+        type: "TRANSITION",
+        action: "CONFUSE",
+        id: groupdetailId
+      }
       });
+    }).then(function(){
+      status.success("Successfully sent confused notifications to all teachers !!");
+    }, function(error){
+      status.error(error.message);
+    });
   });
 
   /*
@@ -281,39 +268,40 @@
     query1.greaterThanOrEqualTo("createdAt", dateLowerBound);
     query1.doesNotExist("status");
     query1.select("code");
-    query1.each(function(result){
-      var classCode = result.get("code");
-      if(newMembers[classCode])
-        newMembers[classCode]++;
+    query1.each(function(groupmember){
+      var classcode = groupmember.get("code");
+      if(newMembers[classcode])
+        newMembers[classcode]++;
       else
-        newMembers[classCode] = 1;
+        newMembers[classcode] = 1;
       return Parse.Promise.as();
     }).then(function(success){
       var query2 = new Parse.Query("Messageneeders");
       query2.doesNotExist("status");
       query2.greaterThanOrEqualTo("createdAt", dateLowerBound); 
       query2.select("cod");
-      return query2.each(function(result){
-        var classCode = result.get("cod");
-        if(newMembers[classCode])
-          newMembers[classCode]++;
+      return query2.each(function(msgnd){
+        var classcode = msgnd.get("cod");
+        if(newMembers[classcode])
+          newMembers[classcode]++;
         else
-          newMembers[classCode] = 1;
+          newMembers[classcode] = 1;
         return Parse.Promise.as();
       });
     }).then(function(success){
-      var codes = _.keys(newMembers);
+      var classcodes = _.keys(newMembers);
       var query = new Parse.Query("Codegroup");
       query.equalTo("classExist", true);
-      query.containedIn("code", codes);
+      query.containedIn("code", classcodes);
       query.select("code", "senderId", "name");
-      return query.each(function(group){
-        var username = group.get("senderId");
-        var classCode = group.get("code");
-        var className = group.get("name");  
-        var count = newMembers[classCode];
+      Parse.Cloud.useMasterKey();
+      return query.each(function(codegroup){
+        var username = codegroup.get("senderId");
+        var classcode = codegroup.get("code");
+        var classname = codegroup.get("name");  
+        var count = newMembers[classcode];
         if(count > 0){
-          var msg = count + " new subscribers added to the class " + className;
+          var msg = count + " new subscribers added to the class " + classname;
           var query3 = new Parse.Query(Parse.Installation);
           query3.equalTo("username", username);
           return Parse.Push.send({
@@ -322,8 +310,8 @@
               msg: msg,
               alert: msg,
               badge: "Increment",
-              groupName: className,
-              groupCode: classCode,
+              groupName: classname,
+              groupCode: classcode,
               type: "TRANSITION",
               action: "MEMBER"
             }
@@ -403,19 +391,19 @@
     var query = new Parse.Query(Parse.User);
     query.select("joined_groups");
     query.each(function(user){
-      var groups = user.get("joined_groups");
+      var joined_groups = user.get("joined_groups");
       var promise = Parse.Promise.as();
-      if(groups){
-        for(var i = 0; i < groups.length; i++){
-          if(groups[i][1] == "MR. KIO"){
-            groups.splice(i,1);
-            user.set("joined_groups", groups);
-            promise = promise.then(function(){
-              return user.save();
-            });
-            break;
-          }
+      if(typeof joined_groups != 'undefined'){
+        var index = _.findIndex(joined_groups, function(joined_group){
+          return joined_group[1] == "MR. KIO";
+        });
+        if(index >= 0){
+          joined_groups.splice(index, 1);
         }
+        user.set("joined_groups", joined_groups);
+        promise = promise.then(function(){
+          return user.save();
+        });
       }
     }).then(function(){
       status.success("Successfully removed KIO from joined groups");

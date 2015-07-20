@@ -17,13 +17,11 @@ exports.cloudpic = function(request, response){
   query.equalTo("Creator", request.params.name);
   var pname = request.params.pname;
   var pfile = request.params.pfile;
-  query.find().then(function(results) {
-    for (var i = 0; i < results.length; i++) {
-      var object = results[i];
-      object.set("senderPic", pfile);
-      object.set("picName", pname);
-      object.save();
-    }
+  query.each(function(codegroup){
+    codegroup.set("senderPic", pfile);
+    codegroup.set("picName", pname);
+    return codegroup.save();
+  }).then(function(codegroup){
     response.success('ok');
   }, function(error) {
     response.error(error.code + ": " + error.message);

@@ -1,4 +1,5 @@
 var run = require('cloud/run.js');
+var _ = require('cloud/underscore-min.js');
 
 /*
 Function to genrate OTP 
@@ -74,11 +75,11 @@ exports.verifyCod = function(request, response){
         "sessionToken": user._sessionToken
       });
     }).then(function(sessionToken){
-      var result = {
+      var output = {
         "flag": true,
         "sessionToken": sessionToken
       };
-      response.success(result);
+      response.success(output);
     }, function(error){
       if(error.code == 101)
         response.error("USER_DOESNOT_EXISTS");
@@ -91,13 +92,12 @@ exports.verifyCod = function(request, response){
     var code = request.params.code;
     var d = new Date();
     var e = new Date(d.getTime() - 300000);
-    var Temp = Parse.Object.extend("Temp");
-    var query = new Parse.Query(Temp); 
+    var query = new Parse.Query("Temp"); 
     query.equalTo("code", code);
     query.equalTo("phoneNumber", number);
     query.greaterThan("createdAt", e);
-    query.find().then(function(results){
-      if(results.length > 0){
+    query.first().then(function(temp){
+      if(temp){
         var user = new Parse.User();
         var name = request.params.name;
         if(typeof name == 'undefined'){
@@ -108,12 +108,15 @@ exports.verifyCod = function(request, response){
           });
         }
         else{
+          var role = request.params.role;
+          var emailId = request.params.emailId;
           user.set("username", number);
           user.set("password", number + "qwerty12345");
-          user.set("name", request.params.name);
+          user.set("name", name);
           user.set("phone", number);
-          user.set("role", request.params.role);
-          return user.signUp(null).then(function(user){
+          user.set("role", role);
+          user.set("email", emailId);
+          return user.signUp().then(function(user){
             return run.genRevocableSession({
               "sessionToken": user._sessionToken
             });
@@ -129,11 +132,11 @@ exports.verifyCod = function(request, response){
         if(sessionToken != ""){
           flag = true;
         }
-        var result = {
+        var output = {
           "flag": flag,
           "sessionToken": sessionToken
         };
-        response.success(result);
+        response.success(output);
     }, function(error){
       if(error.code == 101){
         response.error("USER_DOESNOT_EXISTS");
@@ -193,11 +196,11 @@ exports.verifyCode = function(request, response){
         });
       });
     }).then(function(sessionToken){
-      var result = {
+      var output = {
         "flag": true,
         "sessionToken": sessionToken
       };
-      response.success(result);
+      response.success(output);
     }, function(error){
       if(error.code == 101)
         response.error("USER_DOESNOT_EXISTS");
@@ -210,13 +213,12 @@ exports.verifyCode = function(request, response){
     var code = request.params.code;
     var d = new Date();
     var e = new Date(d.getTime() - 300000);
-    var Temp = Parse.Object.extend("Temp");
-    var query = new Parse.Query(Temp); 
+    var query = new Parse.Query("Temp"); 
     query.equalTo("code", code);
     query.equalTo("phoneNumber", number);
     query.greaterThan("createdAt", e);
-    query.find().then(function(results){
-      if(results.length > 0){
+    query.first().then(function(temp){
+      if(temp){
         var user = new Parse.User();
         var name = request.params.name;
         if(typeof name == 'undefined'){
@@ -233,12 +235,15 @@ exports.verifyCode = function(request, response){
           });
         }
         else{
+          var role = request.params.role;
+          var emailId = request.params.emailId;
           user.set("username", number);
           user.set("password", number + "qwerty12345");
-          user.set("name", request.params.name);
+          user.set("name", name);
           user.set("phone", number);
-          user.set("role", request.params.role);
-          return user.signUp(null).then(function(user){
+          user.set("role", role);
+          user.set("email", emailId);
+          return user.signUp().then(function(user){
             return run.genRevocableSession({
               "sessionToken": user._sessionToken
             });
@@ -254,11 +259,11 @@ exports.verifyCode = function(request, response){
         if(sessionToken != ""){
           flag = true;
         }
-        var result = {
+        var output = {
           "flag": flag,
           "sessionToken": sessionToken
         };
-        response.success(result);
+        response.success(output);
     }, function(error){
       if(error.code == 101){
         response.error("USER_DOESNOT_EXISTS");
@@ -284,34 +289,32 @@ Function to save installation id in cloud
     Procedure simply save query on installation table
 */
 exports.appInstallation = function(request, response){
-  var username = request.user.get("username");
+  var user = request.user;
+  var username = user.get("username");
   var installationId = request.params.installationId;
   var deviceType = request.params.deviceType;
-  var clarray1 = request.user.get("joined_groups");
-  var clarray = [];
-  var i;
-  if(typeof clarray1 !='undefined'){
-    for (i = 0; i < clarray1.length; i++) {
-      clarray[i] = clarray1[i][0];  // Retreiving class codes of the joined groups 
-    }
+  var joined_groups = user.get("joined_groups");
+  var classcodes = [];
+  if(typeof joined_groups !='undefined'){
+    classcodes = _.map(joined_groups, function(joined_group){
+      return joined_group[0];
+    });
   }
+  Parse.Cloud.useMasterKey();
   var query = new Parse.Query(Parse.Installation);
   query.equalTo("installationId", installationId);
-  query.find().then(function(results){
-    if(results.length > 0){
-      inst = results[0];
+  query.first().then(function(installation){
+    if(!installation){
+      var Installation = Parse.Object.extend("_Installation");
+      installation = new Installation();
     }
-    else{
-      var Inst = Parse.Object.extend("_Installation");
-      var inst = new Inst();
-    }
-    inst.set("username", username);
-    inst.set("installationId", installationId);
-    inst.set("deviceType", deviceType);
-    inst.set("channels", clarray);
-    return inst.save(null);
-  }).then(function(result){
-    response.success(result.id);
+    installation.set("username", username);
+    installation.set("installationId", installationId);
+    installation.set("deviceType", deviceType);
+    installation.set("channels", classcodes);
+    return installation.save();
+  }).then(function(installation){
+    response.success(installation.id);
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
@@ -327,14 +330,14 @@ Function to logout from the app given installationId
     Procedure simple clear entry of channels on installation table
 */
 exports.appExit = function(request, response){
-  var id = request.params.installationId;
+  var installationId = request.params.installationId;
   Parse.Cloud.useMasterKey();
   var query = new Parse.Query(Parse.Installation);
-  query.equalTo("installationId", id);
-  query.each(function(result){
-    result.set("channels", []);
-    return result.save();
-  }).then(function(result){
+  query.equalTo("installationId", installationId);
+  query.first().then(function(installation){
+    installation.set("channels", []);
+    return installation.save();
+  }).then(function(installation){
     response.success(true);
   }, function(error){
     response.error(error.code + ": " + error.message);

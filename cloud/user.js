@@ -20,14 +20,14 @@ exports.getUpdatesUserDetail = function(request, response){
 	query.equalTo("role", "teacher");
 	query.containedIn("username", clarray);
 	query.find().then(function(users){
-		var results = _.map(users, function(user){
+		var output = _.map(users, function(user){
 			return {
 				username: user.get("username"),
 				pid: user.get("pid"),
 				name: user.get("name")
 			};
 		});
-		response.success(results);                            
+		response.success(output);                            
 	}, function(error){
 		response.error(error.code + ": " + error.message);
 	});
@@ -36,11 +36,11 @@ exports.getUpdatesUserDetail = function(request, response){
 exports.getUserDetails = function(request, response){
 	var user = request.user;
 	var details = request.params.details;
-	var object = {};
+	var output = {};
 	_.each(details,function(detail){
-		object[detail] = user.get(detail);
+		output[detail] = user.get(detail);
 	});
-	response.success(object);
+	response.success(output);
 }
 
 /* 

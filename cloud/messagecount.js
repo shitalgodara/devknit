@@ -14,14 +14,13 @@ exports.updateSeenCount = function(request, response){
   var query = new Parse.Query("GroupDetails");
   query.containedIn("objectId", array);
   query.select("seen_count");
-  query.find().then(function(results){
-    var allObjects = [];
-    for(var i = 0; i < results.length; i++){ 
-      results[i].increment("seen_count");
-      allObjects.push(results[i]);
-    }
-    return Parse.Object.saveAll(allObjects); 
-  }).then(function(objs){
+  query.find().then(function(groupdetails){
+    groupdetails = _.map(groupdetails, function(groupdetail){ 
+      groupdetail.increment("seen_count");
+      return groupdetail;
+    });
+    return Parse.Object.saveAll(groupdetails); 
+  }).then(function(groupdetails){
     response.success(true);
   }, function(error){
     response.error(error.code + ": " + error.message);
@@ -49,59 +48,58 @@ exports.updateLikeAndConfusionCount = function(request, response){
   var query = new Parse.Query("GroupDetails");
   query.containedIn("objectId", msgarray);
   query.select("confused_count", "like_count");
-  query.find().then(function(results){
-    var allObjects = [];
-    for(var i = 0; i <results.length; i++){ 
-      var temp = input[results[i].id];
-      results[i].increment("like_count", temp[0]);
-      results[i].increment("confused_count", temp[1]);
-      allObjects.push(results[i]);
-    }
-    return Parse.Object.saveAll(allObjects);
-  }).then(function(results){
+  query.find().then(function(groupdetails){
+    groupdetails = _.map(groupdetails, function(groupdetail){
+      var temp = input[groupdetail.id];
+      groupdetail.increment("like_count", temp[0]);
+      groupdetail.increment("confused_count", temp[1]);
+      return groupdetail;
+    });
+    return Parse.Object.saveAll(groupdetails);
+  }).then(function(groupdetails){
     var promises = [];
-    _.each(results, function(result){
-      if((input[result.id][0] + input[result.id][1]) == -1){
+    _.each(groupdetails, function(groupdetail){
+      if((input[groupdetail.id][0] + input[groupdetail.id][1]) == -1){
         var query_destroy = new Parse.Query('MessageState');
-        query_destroy.equalTo("message_id", result.id);
+        query_destroy.equalTo("message_id", groupdetail.id);
         query_destroy.equalTo("username", request.user.get("username"));
         promises.push(
-          query_destroy.first().then(function(object){
-            return object.destroy();
+          query_destroy.first().then(function(msgstate){
+            return msgstate.destroy();
           })
         );
       }
-      else if((input[result.id][0] + input[result.id][1]) == 0){
+      else if((input[groupdetail.id][0] + input[groupdetail.id][1]) == 0){
         var flag2 = false;
         var flag1 = true;
-        if(input[result.id][0] == -1){
+        if(input[groupdetail.id][0] == -1){
           flag1 = false;
           flag2 = true;
         }
         var query_update = new Parse.Query('MessageState');
-        query_update.equalTo("message_id",result.id);
+        query_update.equalTo("message_id",groupdetail.id);
         query_update.equalTo("username",request.user.get("username"));
         promises.push(
-          query_update.first().then(function(object){
-            object.set('like_status', flag1 );
-            object.set('confused_status', flag2);
-            return object.save();  
+          query_update.first().then(function(msgstate){
+            msgstate.set('like_status', flag1 );
+            msgstate.set('confused_status', flag2);
+            return msgstate.save();  
           })
         );
       }
-      else if((input[result.id][0] + input[result.id][1]) == 1){
+      else if((input[groupdetail.id][0] + input[groupdetail.id][1]) == 1){
         var flag1 = false;
         var flag2 = true;
-        if(input[result.id][0] == 1){
+        if(input[groupdetail.id][0] == 1){
           flag1 = true;
           flag2 = false;
         }
-        var messagestates = Parse.Object.extend("MessageState");
-        var query_create = new messagestates();
+        var MessageState = Parse.Object.extend("MessageState");
+        var msgstate = new MessageState();
         promises.push(
-          query_create.save({
+          msgstate.save({
             "username": request.user.get("username"),
-            "message_id": result.id,
+            "message_id": groupdetail.id,
             "like_status": flag1,
             "confused_status": flag2
           })
@@ -133,22 +131,22 @@ exports.updateCount2 = function(request, response){
   var array = request.params.array;
   query.select("seen_count", "like_count","confused_count");
   query.containedIn("objectId", array);
-  query.find().then(function(results){
-    var result = {};
-    for(var i = 0; i < results.length; i++){
+  query.find().then(function(groupdetails){
+    var output = {};
+    _.each(groupdetails, function(groupdetail){
       var x = 0;
       var y = 0;
       var z = 0;
-      if(typeof results[i].get("seen_count") != 'undefined')
-        x = results[i].get("seen_count");
-      if(typeof results[i].get("like_count") != 'undefined')
-        y = results[i].get("like_count");
-      if(typeof results[i].get("confused_count") != 'undefined')
-        z = results[i].get("confused_count");
-      var temp_array = [x, y, z];
-      result[results[i].id] = temp_array;
-    }
-    response.success(result);
+      if(typeof groupdetail.get("seen_count") != 'undefined')
+        x = groupdetail.get("seen_count");
+      if(typeof groupdetail.get("like_count") != 'undefined')
+        y = groupdetail.get("like_count");
+      if(typeof groupdetail.get("confused_count") != 'undefined')
+        z = groupdetail.get("confused_count");
+      var temp = [x, y, z];
+      output[groupdetail.id] = temp;
+    });
+    response.success(output);
   }, function(error){
     response.error(error.code + ": " + error.message);
   });

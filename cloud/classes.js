@@ -41,12 +41,8 @@ exports.createClass = function(request, response){
   else{
     var name = user.get("name");
     var classcode = name.split(" ");
-    if(classcode.length > 1)
-      classcode = classcode[1];
-    else
-      classcode = classcode[0];
-    classcode = classcode.substr(0,3);
     classcode = classcode.replace(/\W/g, ''); // removing non-alphanumeric characters
+    classcode = classcode.substr(0,3);
     classcode = classcode.toUpperCase();
     if(classcode[0] >= 0) // In case first character of classcode is number
       classcode = 'Y' + classcode.substr(1);
@@ -130,8 +126,7 @@ exports.deleteClass = function(request, response){
     promise = promise.then(function(){
       return user.save();
     }).then(function(user){
-      var Codegroup = Parse.Object.extend("Codegroup");
-      var query = new Parse.Query(Codegroup);
+      var query = new Parse.Query("Codegroup");
       query.equalTo("code", classcode);
       return query.first();
     }).then(function(codegroup){
@@ -143,14 +138,14 @@ exports.deleteClass = function(request, response){
       var username = user.get("username");
       var message = "Your Teacher " + name + " has deleted his class " + classname;
       var GroupDetails = Parse.Object.extend("GroupDetails");
-      var groupdetails = new GroupDetails();
-      return groupdetails.save({
+      var groupdetail = new GroupDetails();
+      return groupdetail.save({
         Creator: name, 
         name: classname,
         title: message,
         senderId: username,
         code: classcode
-      }).then(function(groupdetails){
+      }).then(function(groupdetail){
         return Parse.Push.send({
           channels: [classcode],
           data: {
@@ -465,10 +460,10 @@ exports.joinClass = function(request, response){
         query.descending("createdAt");
         query.limit(5);
         return query.find();
-      }).then(function(results){
+      }).then(function(groupdetails){
         var output = {
           "joined_groups": joined_groups,
-          "messages": results,
+          "messages": groupdetails,
           "codegroup": codegroup
         };
         response.success(output);

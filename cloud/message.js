@@ -26,14 +26,14 @@ exports.sendTextMessage = function(request, response){
     var username = user.get("username");
     var message = request.params.message;
     var GroupDetails = Parse.Object.extend("GroupDetails");
-    var groupdetails = new GroupDetails();
-    groupdetails.save({
+    var groupdetail = new GroupDetails();
+    groupdetail.save({
       Creator: name,
       name: classname,
       title: message,
       senderId: username,
       code: classcode
-    }).then(function(groupdetails){
+    }).then(function(groupdetail){
       return Parse.Push.send({
         channels: [classcode],
         data: {
@@ -45,26 +45,25 @@ exports.sendTextMessage = function(request, response){
   		    action: "INBOX"
         }
       }).then(function(){
-        var groupDetailsId = groupdetails.id;
+        var groupdetailId = groupdetail.id;
         var result = {
-          messageId: groupDetailsId,
-          createdAt: groupdetails.createdAt
+          messageId: groupdetailId,
+          createdAt: groupdetail.createdAt
         };
         var msg = message;
         msg = classname + ": " + msg;
-        var Messageneeders = Parse.Object.extend("Messageneeders");
-        var query = new Parse.Query(Messageneeders);
+        var query = new Parse.Query("Messageneeders");
         msg = msg.substr(0, 330);
         query.equalTo("cod", classcode);
         query.doesNotExist("status");
-        return query.find().then(function(results){
-          var numbers = _.map(results, function(res){
-            return res.get("number");
+        return query.find().then(function(msgnds){
+          var numbers = _.map(msgnds, function(msgnd){
+            return msgnd.get("number");
           });
           return run.bulkMultilingualSMS({
             "numbers": numbers,
             "msg": msg,
-            "groupDetailsId": groupDetailsId
+            "groupdetailId": groupdetailId
           });  
         }).then(function(){
           return Parse.Promise.as(result);
@@ -112,9 +111,9 @@ exports.sendPhotoTextMessage = function(request, response){
     var message = request.params.message;
     var msg;
     var GroupDetails = Parse.Object.extend("GroupDetails");
-    var groupdetails = new GroupDetails();
+    var groupdetail = new GroupDetails();
     var url;
-    groupdetails.save({
+    groupdetail.save({
       Creator: name,
       name: classname,
       title: message,
@@ -122,12 +121,12 @@ exports.sendPhotoTextMessage = function(request, response){
       code: classcode,
       attachment: parsefile,
       attachment_name: filename
-    }).then(function(groupdetails){
+    }).then(function(groupdetail){
       if (message == "") 
         msg = "You have received an Image";
       else
         msg = message;
-      url = groupdetails.get('attachment').url();
+      url = groupdetail.get('attachment').url();
       return Parse.Push.send({
         channels: [classcode],
         data: {
@@ -139,10 +138,10 @@ exports.sendPhotoTextMessage = function(request, response){
   		    action: "INBOX"
         }
       }).then(function(){
-        var groupDetailsId = groupdetails.id;
-        var result = {
-          messageId: groupDetailsId,
-          createdAt: groupdetails.createdAt
+        var groupdetailId = groupdetail.id;
+        var output = {
+          messageId: groupdetailId,
+          createdAt: groupdetail.createdAt
         };
         msg = classname + ": " + msg;
         msg = msg + ", Your Teacher " + name + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
@@ -157,17 +156,17 @@ exports.sendPhotoTextMessage = function(request, response){
           var query = new Parse.Query("Messageneeders");
           query.equalTo("cod", classcode);
           query.doesNotExist("status");
-          return query.find().then(function(results){
-            var numbers = _.map(results, function(res){
-              return res.get("number");
+          return query.find().then(function(msgnds){
+            var numbers = _.map(msgnds, function(msgnd){
+              return msgnd.get("number");
             });
             return run.bulkMultilingualSMS({
               "numbers": numbers,
               "msg": msg,
-              "groupDetailsId": groupDetailsId
+              "groupdetailId": groupdetailId
             });  
           }).then(function(){
-            return Parse.Promise.as(result);
+            return Parse.Promise.as(output);
           }, function(error){
             return Parse.Promise.error(error);
           });
@@ -207,8 +206,8 @@ exports.showClassMessages = function(request, response){
   query.equalTo("code", classcode);
   query.descending("createdAt");
   query.limit(limit);
-  query.find().then(function(results){
-    response.success(results);
+  query.find().then(function(groupdetails){
+    response.success(groupdetails);
   }, function(error) {
     response.error(error.code + ": " + error.message);
   });
@@ -224,21 +223,20 @@ Function to get latest messages of all joined classes
     Simple query on groupdetail
 */
 exports.showLatestMessages = function(request, response){
-  var clarray1 = request.user.get("joined_groups");
-  if(typeof clarray1 == 'undefined')
+  var joined_groups = request.user.get("joined_groups");
+  if(typeof joined_groups == 'undefined')
     response.success([]);
   else{
-    var clarray = [];
-    for(var i = 0; i < clarray1.length; i++){
-      clarray[i] = clarray1[i][0];
-    }
+    var classcodes = _.map(joined_groups, function(joined_group){
+      return joined_group[0];
+    });
     var date = request.params.date;
     var query = new Parse.Query("GroupDetails");
     query.greaterThan("createdAt", date);
-    query.containedIn("code", clarray);
+    query.containedIn("code", classcodes);
     query.descending("createdAt");   
-    query.find().then(function(results){
-      response.success(results);
+    query.find().then(function(groupdetails){
+      response.success(groupdetails);
     }, function(error){
       response.error(error.code + ": " + error.message);
     });
@@ -258,13 +256,13 @@ Function to subscribe from web for sms subscription
 */
 exports.smsSubscribe = function(request, response){
   var classcode = request.params.classcode;
-  var child = request.params.subscriber;
-  var phno = request.params.number;
+  var subscriber = request.params.subscriber;
+  var number = request.params.number;
   var Messageneeders = Parse.Object.extend("Messageneeders");
   var msgnd = new Messageneeders();
   msgnd.set("cod", classcode);
-  msgnd.set("subscriber", child);
-  msgnd.set("number", "91" + phno.substr(phno.length - 10));
+  msgnd.set("subscriber", subscriber);
+  msgnd.set("number", "91" + number.substr(number.length - 10));
   msgnd.save().then(function(msgnd){
     response.success(true);
   }, function(error){
@@ -291,58 +289,60 @@ Function for getting old message of all joined classes after a given time
     * if message > 0 and type = 'j' then query on MessageState too 
 */
 exports.showOldMessages2 = function(request, response){
-  var query = new Parse.Query("GroupDetails");
+  var user = request.user;
   var limit = request.params.limit;
   var date = request.params.date;
+  var query = new Parse.Query("GroupDetails");
   query.lessThan("createdAt", date);
   query.limit(limit);
   query.descending("createdAt");
   var type = request.params.classtype;
-  var clarray = [];
+  var classcodes = [];
   if(type == 'c'){
-    var clarray1 = request.user.get("Created_groups");
-    if(typeof clarray1 != 'undefined'){
-      for(var i = 0; i < clarray1.length; i++)
-      clarray[i] = clarray1[i][0];
+    var created_groups = user.get("Created_groups");
+    if(typeof created_groups != 'undefined'){
+      classcodes = _.map(created_groups, function(created_group){
+        return created_group[0];
+      });
     }
   }
   else if(type =='j'){
-    var clarray1 = request.user.get("joined_groups");
-    if(typeof clarray1 != 'undefined'){
-      for(var i = 0; i < clarray1.length; i++)
-        clarray[i] = clarray1[i][0];
+    var joined_groups = user.get("joined_groups");
+    if(typeof joined_groups != 'undefined'){
+      classcodes = _.map(joined_groups, function(joined_group){
+        return joined_group[0];
+      });
     }
   }
-  query.containedIn("code", clarray);
-  query.find().then(function(results){
+  query.containedIn("code", classcodes);
+  query.find().then(function(groupdetails){
     if(type == 'c')
-      return Parse.Promise.as(results);
-    else if(results.length == 0){
-      var result = {
-        "message": results,
+      return Parse.Promise.as(groupdetails);
+    else if(groupdetails.length == 0){
+      var output = {
+        "message": groupdetails,
         "states": {}
       };
-      return Parse.Promise.as(result);
+      return Parse.Promise.as(output);
     }
     else{
-      var messageIds = [];
-      for(var i = 0; i < results.length; i++){
-        messageIds[i] = results[i].id;
-      }
+      var messageIds = _.map(groupdetails, function(groupdetail){
+        return groupdetail.id;
+      });
       var query = new Parse.Query("MessageState");
       query.equalTo("username", request.user.get("username"));
       query.containedIn("message_id", messageIds);
-      return query.find().then(function(result2){
-        var result3 = {};
-        _.each(result2, function(msg){
-          var temp_array = [msg.get("like_status"), msg.get("confused_status")];
-          result3[msg.get("message_id")] = temp_array;  
+      return query.find().then(function(msgstates){
+        var states = {};
+        _.each(msgstates, function(msgstate){
+          var temp_array = [msgstate.get("like_status"), msgstate.get("confused_status")];
+          states[msgstate.get("message_id")] = temp_array;  
         });
-        var result = {
-          "message": results,
-          "states": result3
+        var output = {
+          "message": groupdetails,
+          "states": states
         };
-        return Parse.Promise.as(result);
+        return Parse.Promise.as(output);
       });
     }
   }).then(function(result){
@@ -375,52 +375,53 @@ exports.showLatestMessagesWithLimit2 = function(request, response){
   var query = new Parse.Query("GroupDetails");
   query.descending("createdAt");
   query.limit(limit);
-  var clarray = [];
+  var classcodes = [];
   if(type == 'c'){
-    var clarray1 = request.user.get("Created_groups");
-    if(typeof clarray1 != 'undefined'){
-      for(var i = 0; i < clarray1.length; i++)
-      clarray[i] = clarray1[i][0];
+    var created_groups = request.user.get("Created_groups");
+    if(typeof created_groups != 'undefined'){
+      classcodes = _.map(created_groups, function(created_group){
+        return created_group[0];
+      });
     }
   }
   else if(type == 'j'){
-    var clarray1 = request.user.get("joined_groups");
-    if(typeof clarray1 != 'undefined'){
-      for(var i = 0; i < clarray1.length; i++)
-        clarray[i] = clarray1[i][0];
+    var joined_groups = request.user.get("joined_groups");
+    if(typeof joined_groups != 'undefined'){
+      classcodes = _.map(joined_groups, function(joined_group){
+        return joined_group[0];
+      })
     }
   }
-  query.containedIn("code", clarray);
-  query.find().then(function(results){
+  query.containedIn("code", classcodes);
+  query.find().then(function(groupdetails){
     if(type == 'c'){
-      return Parse.Promise.as(results);
+      return Parse.Promise.as(groupdetails);
     }
-    else if(results.length == 0){
-      var result = {
-        "message": results,
+    else if(groupdetails.length == 0){
+      var output = {
+        "message": groupdetails,
         "states": {}
       };
-      return Parse.Promise.as(result);
+      return Parse.Promise.as(output);
     }
     else{
-      var messageIds = [];
-      for(var i = 0; i < results.length; i++){
-        messageIds[i] = results[i].id;
-      }
+      var messageIds = _.map(groupdetails, function(groupdetail){
+        return groupdetail.id;
+      });      
       var query = new Parse.Query("MessageState");
       query.equalTo("username", request.user.get("username"));
       query.containedIn("message_id", messageIds);
-      return query.find().then(function(result2){
-        var result3 = {};
-        _.each(result2, function(msg){
-          var temp_array = [msg.get("like_status"), msg.get("confused_status")];
-          result3[msg.get("message_id")] = temp_array;  
+      return query.find().then(function(msgstates){
+        var states = {};
+        _.each(msgstates, function(msgstate){
+          var temp_array = [msgstate.get("like_status"), msgstate.get("confused_status")];
+          states[msgstate.get("message_id")] = temp_array;  
         });
-        var result = {
-          "message": results,
-          "states": result3
+        var output = {
+          "message": groupdetails,
+          "states": states
         };
-        return Parse.Promise.as(result);
+        return Parse.Promise.as(output);
       });
     }
   }).then(function(result){

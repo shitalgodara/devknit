@@ -1,3 +1,5 @@
+var _ = require('cloud/underscore-min.js');
+
 /*
 Function to change assoicate name of joined class
   Input =>
@@ -10,31 +12,24 @@ Function to change assoicate name of joined class
 */
 exports.changeAssociateName = function(request, response){
   var classcode = request.params.classCode;
-  var newchild = request.params.childName;
-  var child = [newchild];
+  var childName = request.params.childName;
+  var children_names = [childName];
   var emailId = request.user.get("username");
-  classcode = classcode.toUpperCase();
   var query = new Parse.Query("GroupMembers");
   query.equalTo("emailId", emailId);
   query.equalTo("code", classcode);
   query.doesNotExist("status");
-  query.first().then(function(object){
-    object.set("children_names", child);
-    return object.save();
-  }).then(function(object){
+  query.first().then(function(groupmember){
+    groupmember.set("children_names", children_names);
+    return groupmember.save();
+  }).then(function(groupmember){
     var user = request.user;
-    var classname = "";
-    var clarray = user.get("joined_groups");
-    for(var i = 0; i < clarray.length; i++){
-      if(clarray[i][0] == classcode){
-        classname = clarray[i][1];
-        clarray.splice(i, 1);
-        break;
-      }
-    }
-    var clelement = [classcode, classname, newchild];
-    clarray.push(clelement);
-    user.set("joined_groups", clarray);
+    var joined_groups = user.get("joined_groups");
+    var index = _.findIndex(joined_groups, function(joined_group){
+      return joined_group[0] == classcode;
+    });
+    joined_groups[index][2] = childName;
+    user.set("joined_groups", joined_groups);
     return user.save();
   }).then(function(user){
     response.success(user.get("joined_groups"));
@@ -53,39 +48,39 @@ Function to show all latest subscribers of all created classes (Max. 1000 => 500
     A simple query on GroupMembers and Messageneeders table 
 */
 exports.showAllSubscribers = function(request, response){
-  var clarray1 = request.user.get("Created_groups");
-  if(typeof clarray1 == 'undefined'){
+  var user = request.user;
+  var created_groups = user.get("Created_groups");
+  if(typeof created_groups == 'undefined'){
     response.success({
       "app": [],
       "sms": []
     });
   }
   else{
-    var clarray = [];
-    for (var i = 0; i < clarray1.length; i++){
-      clarray[i] = clarray1[i][0];
-	  }
+    var classcodes = _.map(created_groups, function(created_group){
+      return created_group[0];
+    });
     var limit = 500;
     var date = request.params.date;
     var query = new Parse.Query("GroupMembers");
     query.greaterThan("updatedAt", date);
-    query.containedIn("code", clarray);
+    query.containedIn("code", classcodes);
     query.select("name", "children_names", "code", "status", "emailId");
     query.limit(limit);
     query.ascending("updatedAt");
-    query.find().then(function(results1){
+    query.find().then(function(groupmembers){
       var query = new Parse.Query("Messageneeders");
-      query.containedIn("cod", clarray);
+      query.containedIn("cod", classcodes);
       query.greaterThan("updatedAt", date);
       query.select("subscriber", "number", "cod", "status");
       query.ascending("updatedAt");
       query.limit(limit);
-      return query.find().then(function(results2){
-        var result = {
-          "app": results1,
-          "sms": results2
+      return query.find().then(function(msgnds){
+        var output = {
+          "app": groupmembers,
+          "sms": msgnds
         };
-        return Parse.Promise.as(result);
+        return Parse.Promise.as(output);
       });
     }).then(function(result){
       response.success(result);

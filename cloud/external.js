@@ -60,11 +60,11 @@ exports.getDeliveryReport = function(request, response){
     var msgId = request.params.msgId;
     var query = new Parse.Query("SMSReport");
     query.equalTo("msgId", msgId);
-    query.first().then(function(smsReport){
-      if(smsReport){
-        var groupDetailsId = smsReport.get("groupDetailsId");
+    query.first().then(function(smsreport){
+      if(smsreport){
+        var groupdetailId = smsreport.get("groupdetailId");
         var query1 = new Parse.Query("GroupDetails");
-        query1.equalTo("objectId", groupDetailsId);
+        query1.equalTo("objectId", groupdetailId);
         return query1.first().then(function(groupdetail){
           groupdetail.increment("seen_count");
           return groupdetail.save();

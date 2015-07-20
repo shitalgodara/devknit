@@ -51,7 +51,6 @@ Function to send bulk sms
 exports.bulkSMS = function(request, response){
   var msg = request.msg;
   var numbers = request.numbers;
-  console.log(msg);
   numbers = numbers.join();
   return Parse.Cloud.httpRequest({
     url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
@@ -94,7 +93,7 @@ exports.bulkMultilingualSMS = function(request, response){
   msg = msg.replace(/<(\S)/g,'< $1');
   msg = msg.replace(/(\S)>/g,'$1 >');
   var numbers = request.numbers;
-  var groupDetailsId = request.groupDetailsId;
+  var groupdetailId = request.groupdetailId;
   numbers = numbers.join();
   return Parse.Cloud.httpRequest({
     url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
@@ -122,7 +121,7 @@ exports.bulkMultilingualSMS = function(request, response){
     _.each(msgIds, function(msgId){
       var smsReport = new SMSReport();
       smsReport.set("msgId", msgId);
-      smsReport.set("groupDetailsId", groupDetailsId);
+      smsReport.set("groupdetailId", groupdetailId);
       promise = promise.then(function(){
         return smsReport.save();
       }); 
