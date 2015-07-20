@@ -46,7 +46,7 @@ exports.sendTextMessage = function(request, response){
         }
       }).then(function(){
         var groupdetailId = groupdetail.id;
-        var result = {
+        var output = {
           messageId: groupdetailId,
           createdAt: groupdetail.createdAt
         };
@@ -66,7 +66,7 @@ exports.sendTextMessage = function(request, response){
             "groupdetailId": groupdetailId
           });  
         }).then(function(){
-          return Parse.Promise.as(result);
+          return Parse.Promise.as(output);
         });
       });
     }).then(function(result){
@@ -77,7 +77,10 @@ exports.sendTextMessage = function(request, response){
     });
   }
   else{
-    response.error("CLASS_DOESNOT_EXISTS");
+    var output = {
+      Created_groups: created_groups
+    };
+    response.success(output);
   }
 }
 
@@ -185,7 +188,10 @@ exports.sendPhotoTextMessage = function(request, response){
     });
   }
   else{
-    response.error("CLASS_DOESNOT_EXISTS");
+    var output = {
+      Created_groups: created_groups
+    };
+    response.success(output);
   }
 }
 
