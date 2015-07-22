@@ -27,10 +27,15 @@ exports.createClass = function(request, response){
   classname = classname.replace(/[''""]/g, ' ');
 
   var created_groups = user.get("Created_groups");
-  var index = _.findIndex(created_groups, function(created_group){
-    return created_group[1] == classname;
-  });
-
+  var index = -1;
+  if(typeof created_groups != 'undefined'){
+    index = _.findIndex(created_groups, function(created_group){
+      return created_group[1] == classname;
+    });
+  }
+  else{
+    created_groups = [];
+  }
   var promise;
   if(index >= 0){
     var query = new Parse.Query("Codegroup");
@@ -40,7 +45,7 @@ exports.createClass = function(request, response){
   }
   else{
     var name = user.get("name");
-    var classcode = name.split(" ");
+    var classcode = name;
     classcode = classcode.replace(/\W/g, ''); // removing non-alphanumeric characters
     classcode = classcode.substr(0,3);
     classcode = classcode.toUpperCase();
@@ -68,7 +73,6 @@ exports.createClass = function(request, response){
 
     var pid = user.get("pid");
     var sex = user.get("sex");
-
     var array = [classcode, classname];
     created_groups.push(array);
     user.set("Created_groups", created_groups);
@@ -413,9 +417,15 @@ exports.joinClass = function(request, response){
   query.first().then(function(codegroup){
     if(codegroup){
       var joined_groups = user.get("joined_groups");
-      var index = _.findIndex(joined_groups, function(joined_group){
-        return joined_group[0] == classcode;
-      });
+      var index = -1;
+      if(typeof joined_groups != 'undefined'){
+        index = _.findIndex(joined_groups, function(joined_group){
+          return joined_group[0] == classcode;
+        });
+      }
+      else{
+        joined_groups = [];
+      }
       var promise = Parse.Promise.as();
       if(index < 0){
         var child = request.params.associateName;
@@ -428,13 +438,13 @@ exports.joinClass = function(request, response){
           return user.save();
         }).then(function(user){
           var GroupMembers = Parse.Object.extend("GroupMembers");
-          var groupmembers = new GroupMembers();
-          groupmembers.set("name", user.get("name"));
-          groupmembers.set("code", classcode);
-          groupmembers.set("children_names", children_names);
-          groupmembers.set("emailId", username);
-          return groupmembers.save();
-        }).then(function(groupmembers){
+          var groupmember = new GroupMembers();
+          groupmember.set("name", user.get("name"));
+          groupmember.set("code", classcode);
+          groupmember.set("children_names", children_names);
+          groupmember.set("emailId", username);
+          return groupmember.save();
+        }).then(function(groupmember){
           Parse.Cloud.useMasterKey();
           var query = new Parse.Query(Parse.Installation);
           var installationObjectId = request.params.installationObjectId;

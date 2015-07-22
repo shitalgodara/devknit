@@ -287,6 +287,133 @@ exports.mailAttachment = function(request){
   return promise;
 }
 
+/*
+Function to verify OTP
+  Input => 
+    code: Number
+    number: String
+  Output =>
+    flag: Bool // true in case of success
+*/
+exports.verifyOTP = function(request){
+  var code = request.code;
+  var number = request.number;
+  var query = new Parse.Query("Temp");
+  var currentDate = new Date();
+  var genCodeDate = new Date(currentDate.getTime() - 300000);
+  var query = new Parse.Query("Temp"); 
+  query.equalTo("code", code);
+  query.equalTo("phoneNumber", number);
+  query.greaterThan("createdAt", genCodeDate);
+  return query.first();
+}
+
+/* 
+Function to set user 
+  Input => 
+    number: String
+    role: String
+    name: String
+    email: String
+    < Social Login >
+      username: String
+      authdata: String
+  Output =>
+    user: Parse User Object
+  Procedure =>
+    A simple signUp query on user table
+*/
+exports.createUser = function(request){
+  var user = new Parse.User();
+  var role = request.role;
+  var email = request.email;
+  var number = request.number;
+  var name = request.name;
+  var username = request.username;
+  var authData = request.authData;
+  var password = number + "qwerty12345";
+  if(!username){
+    username = number;
+  }
+  user.set("username", username);
+  user.set("password", password);
+  user.set("name", name);
+  user.set("phone", number);
+  user.set("role", role);
+  user.set("email", email);
+  user.set("authData", authData);
+  return user.signUp().then(function(user){
+    return Parse.Promise.as(user);
+  }, function(error){
+    if(error.code == 203){
+      user.unset("email");
+      return user.signUp();
+    }
+    return Parse.Promise.error(error);  
+  });
+}
+
+/*
+Function to save installation id in cloud
+  Input =>
+    installationId: String
+    deviceType: String
+    user: Parse User Object
+  Output =>
+    installation: Parse Installation Object
+  Description =>
+    Procedure simply save query on installation table
+*/
+exports.setInstallation = function(request){
+  var user = request.user;
+  var username = user.get("username");
+  var installationId = request.installationId;
+  var deviceType = request.deviceType;
+  var joined_groups = user.get("joined_groups");
+  var classcodes = [];
+  if(typeof joined_groups !='undefined'){
+    classcodes = _.map(joined_groups, function(joined_group){
+      return joined_group[0];
+    });
+  }
+  Parse.Cloud.useMasterKey();
+  var query = new Parse.Query(Parse.Installation);
+  query.equalTo("installationId", installationId);
+  return query.first().then(function(installation){
+    if(!installation){
+      var Installation = Parse.Object.extend("_Installation");
+      installation = new Installation();
+    }
+    installation.set("username", username);
+    installation.set("installationId", installationId);
+    installation.set("deviceType", deviceType);
+    installation.set("channels", classcodes);
+    return installation.save();
+  });
+}
+
+/*
+Function to destroy old sessions of user
+  Input =>
+    user: Parse User Object
+  Output =>
+    flag: Bool // true in case of success
+  Procedure =>
+    Simple query on session table
+*/
+exports.removeSessions = function(request){
+  var user = request.user;
+  Parse.Cloud.useMasterKey();
+  var query = new Parse.Query(Parse.Session);
+  query.equalTo("user", user);
+  query.equalTo("isRevocable", true);
+  return query.each(function(session){
+    return session.destroy();
+  }).then(function(){
+    return Parse.Promise.as(true);
+  });
+}
+
 /* 
 Function to generate Revocable Session Token 
   Input =>
@@ -296,7 +423,7 @@ Function to generate Revocable Session Token
   Procedure =>
     Post request on upgradeToRevocableSession
 */
-exports.genRevocableSession = function(request){
+exports.createSession = function(request){
   return Parse.Cloud.httpRequest({
     method: "POST",
     url: "https://api.parse.com/1/upgradeToRevocableSession",
@@ -314,5 +441,40 @@ exports.genRevocableSession = function(request){
       "message": httpResponse.data.error
     };
     return Parse.Promise.error(error);
+  });
+}
+
+/*
+Function to save session extra parameters in cloud
+  Input =>
+    model: String
+    os: String
+    lat: Number
+    long: Number
+    role: String
+    user: Parse User Object
+  Output =>
+    session: Parse Session Object
+  Description =>
+    Procedure simply save query on session table
+*/
+exports.setSession = function(request){
+  var model = request.model;
+  var os = request.os;
+  var lat = request.lat;
+  var long = request.long;
+  var role = request.role;
+  var user = request.user;
+  Parse.Cloud.useMasterKey();
+  var query = new Parse.Query(Parse.Session);
+  query.equalTo("user", user);
+  return query.first().then(function(session){
+    session.set("model", model);
+    session.set("os", os);
+    session.set("lat", lat);
+    session.set("long", long);
+    session.set("role", role);
+    session.set("isRevocable", true);
+    return session.save();
   });
 }

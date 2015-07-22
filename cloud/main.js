@@ -53,8 +53,6 @@
         else{
           return Parse.Promise.as();
         }
-      }).then(function(text){
-      }, function(error){
       });
     }
   });
@@ -420,6 +418,10 @@
 
 /* OLD VERSION */
 /*----------------------------------------------- OLD.JS -----------------------------------------------------------*/
+  Parse.Cloud.define("appInstallation", function(request, response){
+    old.appInstallation(request, response);
+  });
+
   Parse.Cloud.define("changeAssociateName", function(request, response){
     old.changeAssociateName(request, response);
   });
@@ -498,6 +500,10 @@
 
   Parse.Cloud.define("verifyCode", function(request, response){
     old.verifyCode(request, response);
+  });
+
+  Parse.Cloud.define("verifyCod", function(request, response){
+    old.verifyCod(request, response);
   });
 
   Parse.Cloud.define("appLogout", function(request, response){
@@ -633,16 +639,8 @@
     login.genCode(request, response);
   });
 
-  Parse.Cloud.define("verifyCod", function(request, response){
-    login.verifyCod(request, response);
-  });
-
-  Parse.Cloud.define("verifyCode2", function(request, response){
-    login.verifyCode(request, response);
-  });
-
-  Parse.Cloud.define("appInstallation", function(request, response){
-    login.appInstallation(request, response);
+  Parse.Cloud.define("appEnter", function(request, response){
+    login.appEnter(request, response);
   });
 
   Parse.Cloud.define("appExit", function(request, response){
