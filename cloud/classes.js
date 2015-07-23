@@ -267,6 +267,7 @@ exports.removeMember = function(request, response){
             return installation.save();
           });
         }).then(function(){
+          Parse.Cloud.useMasterKey();
           var query = new Parse.Query(Parse.Installation);
           var message = "You have been removed from " + classname + " class, you won't receive any notification from this class from now onwards";
           query.equalTo("username", username);

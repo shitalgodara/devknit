@@ -295,7 +295,7 @@ Function to verify OTP
   Output =>
     flag: Bool // true in case of success
 */
-exports.verifyOTP = function(request){
+exports.verifyCode = function(request){
   var code = request.code;
   var number = request.number;
   var query = new Parse.Query("Temp");
@@ -311,13 +311,14 @@ exports.verifyOTP = function(request){
 /* 
 Function to set user 
   Input => 
-    number: String
     role: String
     name: String
     email: String
+    < OTP Login >
+      number: String
     < Social Login >
       username: String
-      authdata: String
+      sex: String
   Output =>
     user: Parse User Object
   Procedure =>
@@ -330,7 +331,7 @@ exports.createUser = function(request){
   var number = request.number;
   var name = request.name;
   var username = request.username;
-  var authData = request.authData;
+  var sex = request.sex;
   var password = number + "qwerty12345";
   if(!username){
     username = number;
@@ -341,7 +342,7 @@ exports.createUser = function(request){
   user.set("phone", number);
   user.set("role", role);
   user.set("email", email);
-  user.set("authData", authData);
+  user.set("sex", sex);
   return user.signUp().then(function(user){
     return Parse.Promise.as(user);
   }, function(error){
@@ -350,6 +351,42 @@ exports.createUser = function(request){
       return user.signUp();
     }
     return Parse.Promise.error(error);  
+  });
+}
+
+/* 
+Function to get facebook user info
+  Input =>
+    token: String
+  Output =>
+    user: JSON Object{
+      id: String
+      name: String
+    }
+  Procedure =>
+    Simple sending a httpRequest on Graph Facebook API
+  TODO =>
+    Check for appsecret_proof parameter requirement in case of website user
+*/
+exports.getFacebookUserInfo = function(request){
+  var token = request.token;
+  return Parse.Cloud.httpRequest({
+    url: 'https://graph.facebook.com/me',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    params: {
+      'access_token': token,
+      'fields': 'id,name,gender,email' 
+    }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.data);
+  }, function(httpResponse){
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
   });
 }
 

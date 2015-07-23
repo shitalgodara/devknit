@@ -138,7 +138,6 @@ exports.bulkSMS = function(request, response){
   numbers = numbers.join();
   return Parse.Cloud.httpRequest({
     url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
-    followRedirects: true,
     headers: {
      'Content-Type': 'application/json'
     },
@@ -149,16 +148,14 @@ exports.bulkSMS = function(request, response){
      'msg': msg,
      'sid': 'myKnit',
      'mt': 9,
-     'encoding': 2
+     'encoding': 0
     }
   }).then(function(httpResponse){
-    console.log(httpResponse);
     response.success(httpResponse.text);
   }, function(httpResponse){
-    console.log(httpResponse);
     var error = {
-      "code": "httpResponse.data.code",
-      "message": "httpResponse.data.error"
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
     };
     response.error(error);
   });

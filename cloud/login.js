@@ -80,13 +80,14 @@ exports.appEnter = function(request, response){
   var email = request.params.email;
   var number = request.params.number;
   var name = request.params.name;
+  var token = request.params.token;
   var promise;
   var output = {
     "flag": false,
     "sessionToken": ""
   };
   if(code){
-    promise = run.verifyOTP({
+    promise = run.verifyCode({
       "code": code,
       "number": number
     });
@@ -107,18 +108,42 @@ exports.appEnter = function(request, response){
       return Parse.Promise.as();
     });
   }
-  else if(email){ 
-    var password = request.params.password;
-    promise = Parse.User.logIn(email, password);
-  }
-  else{
-    var username = request.params.username;
-    var authData = request.params.authData;
-    return run.createUser({
-      "username": username,
-      "authData": authData
+  else if(token){
+    promise = run.getFacebookUserInfo({
+      "token": token
+    });
+    promise = promise.then(function(user){
+      var username = user.id;
+      var sex = user.gender;
+      name = user.name;
+      email = user.email;
+      if(role){
+        var query = new Parse.Query(Parse.User);
+        query.equalTo("username", username);
+        return query.first().then(function(user){
+          if(user){
+            return Parse.Promise.as(user);
+          }
+          else{
+            return run.createUser({
+              "username": username,
+              "name": name,
+              "role": role,
+              "sex": sex,
+              "email": email
+            });
+          }
+        });
+      }
+      else{
+        return Parse.User.logIn(username, username + "qwerty12345");
+      }
     });
   }
+  else{ 
+    var password = request.params.password;
+    promise = Parse.User.logIn(email, password);
+  }  
   promise = promise.then(function(user){
     if(user){
       role = user.get("role");
@@ -145,8 +170,8 @@ exports.appEnter = function(request, response){
           "sessionToken": user._sessionToken
         });
       }).then(function(sessionToken){
-        output["sessionToken"] = sessionToken;
-        output["flag"] = true;
+        output.sessionToken = sessionToken;
+        output.flag = true;
         return Parse.Promise.as(user);
       });
     }
