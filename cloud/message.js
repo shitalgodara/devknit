@@ -8,67 +8,32 @@ Function to send text messages
     classname: String
     message: String
   Output =>
-    messageId: String
-    createdAt: String // groupDetail entry
+    <Valid class code>
+      messageId: String
+      createdAt: String // groupDetail entry
+    <Invalid class code>
+      Created_groups: Array 
   Procedure =>
     Save entry in groupdetail and send push to app user and send sms to message user
 */
 exports.sendTextMessage = function(request, response){
   var classcode = request.params.classcode;
+  var classname = request.params.classname;
+  var message = request.params.message;
   var user = request.user;
+  var name = user.get("name");
+  var username = user.get("username");  
   var created_groups = user.get("Created_groups");
   var index = _.findIndex(created_groups, function(created_group){
     return created_group[0] == classcode;
   });
   if(index >= 0){
-    var classname = request.params.classname;
-    var name = user.get("name");
-    var username = user.get("username");
-    var message = request.params.message;
-    var GroupDetails = Parse.Object.extend("GroupDetails");
-    var groupdetail = new GroupDetails();
-    groupdetail.save({
-      Creator: name,
-      name: classname,
-      title: message,
-      senderId: username,
-      code: classcode
-    }).then(function(groupdetail){
-      return Parse.Push.send({
-        channels: [classcode],
-        data: {
-          msg: message,
-  		    alert: message,
-          badge: "Increment",
-          groupName: classname,
-  		    type: "NORMAL",
-  		    action: "INBOX"
-        }
-      }).then(function(){
-        var groupdetailId = groupdetail.id;
-        var output = {
-          messageId: groupdetailId,
-          createdAt: groupdetail.createdAt
-        };
-        var msg = message;
-        msg = classname + ": " + msg;
-        var query = new Parse.Query("Messageneeders");
-        msg = msg.substr(0, 330);
-        query.equalTo("cod", classcode);
-        query.doesNotExist("status");
-        return query.find().then(function(msgnds){
-          var numbers = _.map(msgnds, function(msgnd){
-            return msgnd.get("number");
-          });
-          return run.bulkMultilingualSMS({
-            "numbers": numbers,
-            "msg": msg,
-            "groupdetailId": groupdetailId
-          });  
-        }).then(function(){
-          return Parse.Promise.as(output);
-        });
-      });
+    run.sendTextMessage({
+      "classcode": classcode,
+      "classname": classname,
+      "message": message,
+      "username": username,
+      "name": name
     }).then(function(result){
       response.success(result);
     },
@@ -93,94 +58,36 @@ Function to send photo text messages
     filename: String
     message: String
   Output =>
-    messageId: String
-    createdAt: String // groupdetail entry
+    <Valid class code>
+      messageId: String
+      createdAt: String // groupdetail entry
+    <Invalid class code>
+      Created_groups: Array
   Procedure =>
     Save entry in groupdetail and send push to app user and send sms to message user
 */
 exports.sendPhotoTextMessage = function(request, response){
   var classcode = request.params.classcode;
+  var classname = request.params.classname;
+  var parsefile = request.params.parsefile;
+  var filename = request.params.filename;
+  var message = request.params.message;
   var user = request.user;
+  var name = user.get("name");
+  var username = user.get("username");
   var created_groups = user.get("Created_groups");
   var index = _.findIndex(created_groups, function(created_group){
     return created_group[0] == classcode;
   });
   if(index >= 0){
-    var classname = request.params.classname;
-    var name = user.get("name");
-    var username = user.get("username");
-    var parsefile = request.params.parsefile;
-    var filename = request.params.filename;
-    var message = request.params.message;
-    var msg;
-    var GroupDetails = Parse.Object.extend("GroupDetails");
-    var groupdetail = new GroupDetails();
-    var url;
-    groupdetail.save({
-      Creator: name,
-      name: classname,
-      title: message,
-      senderId: username,
-      code: classcode,
-      attachment: parsefile,
-      attachment_name: filename
-    }).then(function(groupdetail){
-      if (message == "") 
-        msg = "You have received an Image";
-      else
-        msg = message;
-      url = groupdetail.get('attachment').url();
-      return Parse.Push.send({
-        channels: [classcode],
-        data: {
-          msg: msg,
-  		    alert: msg,
-          badge: "Increment",
-          groupName: classname,
-  		    type: "NORMAL",
-  		    action: "INBOX"
-        }
-      }).then(function(){
-        var groupdetailId = groupdetail.id;
-        var output = {
-          messageId: groupdetailId,
-          createdAt: groupdetail.createdAt
-        };
-        msg = classname + ": " + msg;
-        msg = msg + ", Your Teacher " + name + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
-        msg = msg + " you can view image at ";
-        return Parse.Cloud.httpRequest({
-          url: 'http://tinyurl.com/api-create.php',
-          params: {
-            url : url
-          }
-        }).then(function(httpResponse){
-          msg = msg + httpResponse.text;
-          var query = new Parse.Query("Messageneeders");
-          query.equalTo("cod", classcode);
-          query.doesNotExist("status");
-          return query.find().then(function(msgnds){
-            var numbers = _.map(msgnds, function(msgnd){
-              return msgnd.get("number");
-            });
-            return run.bulkMultilingualSMS({
-              "numbers": numbers,
-              "msg": msg,
-              "groupdetailId": groupdetailId
-            });  
-          }).then(function(){
-            return Parse.Promise.as(output);
-          }, function(error){
-            return Parse.Promise.error(error);
-          });
-        }, function(httpResponse){
-          var error = {
-            "code": httpResponse.data.code,
-            "message": httpResponse.data.error
-          };
-          return Parse.Promise.error(error);
-        });
-      });
+    run.sendPhotoTextMessage({
+      "classcode": classcode,
+      "classname": classname,
+      "parsefile": parsefile,
+      "filename": filename,
+      "message": message,
+      "name": name,
+      "username": username
     }).then(function(result){
       response.success(result);
     }, function(error){
@@ -193,6 +100,154 @@ exports.sendPhotoTextMessage = function(request, response){
     };
     response.success(output);
   }
+}
+
+/*
+Function to send text messages
+  Input =>
+    classcode: Array
+    classname: Array
+    message: String
+  Output =>
+    <Valid class code>
+      messageId: Array
+      createdAt: Array // groupDetail entry
+     <Any invalid class code>
+       Created_Groups: Array
+  Procedure =>
+    Save entry in groupdetail and send push to app user and send sms to message user
+*/
+exports.sendMultiTextMessage = function(request, response){
+  var classcodes = request.params.classcode;
+  var classnames = request.params.classname;
+  var message = request.params.message;
+  var user = request.user;
+  var created_groups = user.get("Created_groups");
+  var username = user.get("username");
+  var name = user.get("name");
+  var promise = Parse.Promise.as();
+  var messageIds = [];
+  var createdAts = [];
+  var flag = true;
+  for(var i = 0; i < classcodes.length; i++){
+    var classcode = classcodes[i];
+    var classname = classnames[i];
+    var index = _.findIndex(created_groups, function(created_group){
+      return created_group[0] == classcode;
+    });
+    if(index >= 0){
+      promise = promise.then(function(){
+        return run.sendTextMessage({
+          "classcode": classcode,
+          "classname": classname,
+          "message": message,
+          "username": username,
+          "name": name
+        }).then(function(result){
+          messageIds.push(result.messageId);
+          createdAts.push(result.createdAt);
+          return Parse.Promise.as();
+        });
+      });
+    }
+    else{
+      flag = false;
+      promise = promise.then(function(){
+        messageIds.push("");
+        createdAts.push({});
+        return Parse.Promise.as();
+      });
+    }
+  }
+  promise.then(function(){
+    var output = {
+      "messageId": messageIds,
+      "createdAt": createdAts
+    };
+    if(flag == false){
+      output["Created_groups"] = created_groups;
+    }
+    response.success(output);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
+  });
+}
+
+/*
+Function to send photo text messages
+  Input =>
+    classcode: Array
+    classname: Array
+    parsefile: File pointer
+    filename: String
+    message: String
+  Output =>
+    <Valid class code>
+      messageId: Array
+      createdAt: Array // groupDetail entry
+    <Any invalid class code>
+      Created_Groups: Array
+  Procedure =>
+    Save entry in groupdetail and send push to app user and send sms to message user
+*/
+exports.sendMultiPhotoTextMessage = function(request, response){
+  var classcodes = request.params.classcode;
+  var classnames = request.params.classname;
+  var parsefile = request.params.parsefile;
+  var filename = request.params.filename;
+  var message = request.params.message;
+  var user = request.user;
+  var name = user.get("name");
+  var username = user.get("username");
+  var created_groups = user.get("Created_groups");
+  var promise = Parse.Promise.as();
+  var messageIds = [];
+  var createdAts = [];
+  var flag = true;
+  for(var i = 0; i < classcodes.length; i++){
+    var classcode = classcodes[i];
+    var classname = classnames[i];
+    var index = _.findIndex(created_groups, function(created_group){
+      return created_group[0] == classcode;
+    });
+    if(index >= 0){
+      promise = promise.then(function(){
+        return run.sendPhotoTextMessage({
+          "classcode": classcode,
+          "classname": classname,
+          "parsefile": parsefile,
+          "filename": filename,
+          "message": message,
+          "name": name,
+          "username": username
+        }).then(function(result){
+          messageIds.push(result.messageId);
+          createdAts.push(result.createdAt);
+          return Parse.Promise.as();
+        });
+      }); 
+    }
+    else{
+      flag = false;
+      promise = promise.then(function(){
+        messageIds.push("");
+        createdAts.push({});
+        return Parse.Promise.as();
+      });
+    }  
+  }
+  promise.then(function(){
+    var output = {
+      "messageId": messageIds,
+      "createdAt": createdAts
+    };
+    if(flag == false){
+      output["Created_groups"] = created_groups;
+    }
+    response.success(output);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
+  });
 }
 
 /*

@@ -656,6 +656,14 @@
     message.sendPhotoTextMessage(request, response);
   });
 
+  Parse.Cloud.define("sendMultiTextMessage", function(request, response){
+    message.sendMultiTextMessage(request, response);
+  });
+
+  Parse.Cloud.define("sendMultiPhotoTextMessage", function(request, response){
+    message.sendMultiPhotoTextMessage(request, response);
+  });
+
   Parse.Cloud.define("showClassMessages", function(request, response){
     message.showClassMessages(request, response);
   });

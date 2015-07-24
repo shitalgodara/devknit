@@ -122,7 +122,8 @@ exports.appEnter = function(request, response){
         query.equalTo("username", username);
         return query.first().then(function(user){
           if(user){
-            return Parse.Promise.as(user);
+            username = user.get("username");
+            return Parse.User.logIn(username, username + "qwerty12345");
           }
           else{
             return run.createUser({
