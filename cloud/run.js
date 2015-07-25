@@ -93,51 +93,56 @@ bulkMultilingualSMS = function(request, response){
   msg = msg.replace(/<(\S)/g,'< $1');
   msg = msg.replace(/(\S)>/g,'$1 >');
   var numbers = request.numbers;
-  var groupdetailId = request.groupdetailId;
-  numbers = numbers.join();
-  return Parse.Cloud.httpRequest({
-    url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
-    followRedirects: true,
-    headers: {
-     'Content-Type': 'application/json'
-    },
-    params: {
-     'usr': 'knittrans',
-     'pass': 'knittrans',
-     'msisdn': numbers,
-     'msg': msg,
-     'sid': 'myKnit',
-     'mt': 9,
-     'encoding': 2
-    }
-  }).then(function(httpResponse){
-    var responses = httpResponse.text.split('|');
-    var msgIds = [];
-    for(var i in responses){
-      msgIds.push(responses[i].split(',')[0]);
-    }
-    var SMSReport = Parse.Object.extend("SMSReport");
-    var promise = Parse.Promise.as();
-    _.each(msgIds, function(msgId){
-      var smsReport = new SMSReport();
-      smsReport.set("msgId", msgId);
-      smsReport.set("groupdetailId", groupdetailId);
-      promise = promise.then(function(){
-        return smsReport.save();
-      }); 
-    });
-    return promise.then(function(){
-      return Parse.Promise.as(true);
-    }, function(error){
+  if(numbers.length > 0){
+    var groupdetailId = request.groupdetailId;
+    numbers = numbers.join();
+    return Parse.Cloud.httpRequest({
+      url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
+      followRedirects: true,
+      headers: {
+       'Content-Type': 'application/json'
+      },
+      params: {
+       'usr': 'knittrans',
+       'pass': 'knittrans',
+       'msisdn': numbers,
+       'msg': msg,
+       'sid': 'myKnit',
+       'mt': 9,
+       'encoding': 2
+      }
+    }).then(function(httpResponse){
+      var responses = httpResponse.text.split('|');
+      var msgIds = [];
+      for(var i in responses){
+        msgIds.push(responses[i].split(',')[0]);
+      }
+      var SMSReport = Parse.Object.extend("SMSReport");
+      var promise = Parse.Promise.as();
+      _.each(msgIds, function(msgId){
+        var smsReport = new SMSReport();
+        smsReport.set("msgId", msgId);
+        smsReport.set("groupdetailId", groupdetailId);
+        promise = promise.then(function(){
+          return smsReport.save();
+        }); 
+      });
+      return promise.then(function(){
+        return Parse.Promise.as(true);
+      }, function(error){
+        return Parse.Promise.error(error);
+      });
+    }, function(httpResponse){
+      var error = {
+        "code": httpResponse.data.code,
+        "message": httpResponse.data.error
+      };
       return Parse.Promise.error(error);
     });
-  }, function(httpResponse){
-    var error = {
-      "code": httpResponse.data.code,
-      "message": httpResponse.data.error
-    };
-    return Parse.Promise.error(error);
-  });
+  }
+  else{
+    return Parse.Promise.as(true);
+  }
 }
 
 /*

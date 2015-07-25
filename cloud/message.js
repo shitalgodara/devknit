@@ -130,34 +130,36 @@ exports.sendMultiTextMessage = function(request, response){
   var createdAts = [];
   var flag = true;
   for(var i = 0; i < classcodes.length; i++){
-    var classcode = classcodes[i];
-    var classname = classnames[i];
-    var index = _.findIndex(created_groups, function(created_group){
-      return created_group[0] == classcode;
-    });
-    if(index >= 0){
-      promise = promise.then(function(){
-        return run.sendTextMessage({
-          "classcode": classcode,
-          "classname": classname,
-          "message": message,
-          "username": username,
-          "name": name
-        }).then(function(result){
-          messageIds.push(result.messageId);
-          createdAts.push(result.createdAt);
+    (function(i){
+      var classcode = classcodes[i];
+      var classname = classnames[i];
+      var index = _.findIndex(created_groups, function(created_group){
+        return created_group[0] == classcode;
+      });
+      if(index >= 0){
+        promise = promise.then(function(){
+          return run.sendTextMessage({
+            "classcode": classcode,
+            "classname": classname,
+            "message": message,
+            "username": username,
+            "name": name
+          }).then(function(result){
+            messageIds.push(result.messageId);
+            createdAts.push(result.createdAt);
+            return Parse.Promise.as();
+          });
+        });
+      }
+      else{
+        flag = false;
+        promise = promise.then(function(){
+          messageIds.push("");
+          createdAts.push({});
           return Parse.Promise.as();
         });
-      });
-    }
-    else{
-      flag = false;
-      promise = promise.then(function(){
-        messageIds.push("");
-        createdAts.push({});
-        return Parse.Promise.as();
-      });
-    }
+      }
+    }(i));
   }
   promise.then(function(){
     var output = {
@@ -205,36 +207,38 @@ exports.sendMultiPhotoTextMessage = function(request, response){
   var createdAts = [];
   var flag = true;
   for(var i = 0; i < classcodes.length; i++){
-    var classcode = classcodes[i];
-    var classname = classnames[i];
-    var index = _.findIndex(created_groups, function(created_group){
-      return created_group[0] == classcode;
-    });
-    if(index >= 0){
-      promise = promise.then(function(){
-        return run.sendPhotoTextMessage({
-          "classcode": classcode,
-          "classname": classname,
-          "parsefile": parsefile,
-          "filename": filename,
-          "message": message,
-          "name": name,
-          "username": username
-        }).then(function(result){
-          messageIds.push(result.messageId);
-          createdAts.push(result.createdAt);
+    (function(i){
+      var classcode = classcodes[i];
+      var classname = classnames[i];
+      var index = _.findIndex(created_groups, function(created_group){
+        return created_group[0] == classcode;
+      });
+      if(index >= 0){
+        promise = promise.then(function(){
+          return run.sendPhotoTextMessage({
+            "classcode": classcode,
+            "classname": classname,
+            "parsefile": parsefile,
+            "filename": filename,
+            "message": message,
+            "name": name,
+            "username": username
+          }).then(function(result){
+            messageIds.push(result.messageId);
+            createdAts.push(result.createdAt);
+            return Parse.Promise.as();
+          });
+        }); 
+      }
+      else{
+        flag = false;
+        promise = promise.then(function(){
+          messageIds.push("");
+          createdAts.push({});
           return Parse.Promise.as();
         });
-      }); 
-    }
-    else{
-      flag = false;
-      promise = promise.then(function(){
-        messageIds.push("");
-        createdAts.push({});
-        return Parse.Promise.as();
-      });
-    }  
+      }
+    }(i));
   }
   promise.then(function(){
     var output = {

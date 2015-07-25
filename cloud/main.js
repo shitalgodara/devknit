@@ -629,11 +629,7 @@
   Parse.Cloud.define("mailPdf", function(request, response){
     external.mailPdf(request, response);
   });
-
-  Parse.Cloud.define("getDeliveryReport", function(request, response){
-    external.getDeliveryReport(request, response);
-  });  
-
+  
 /*----------------------------------------------- LOGIN.JS ---------------------------------------------------------*/
   Parse.Cloud.define("genCode2", function(request, response){
     login.genCode(request, response);
