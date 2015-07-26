@@ -337,10 +337,10 @@ exports.createUser = function(request){
   var name = request.name;
   var username = request.username;
   var sex = request.sex;
-  var password = number + "qwerty12345";
   if(!username){
     username = number;
   }
+  var password = username + "qwerty12345";
   user.set("username", username);
   user.set("password", password);
   user.set("name", name);

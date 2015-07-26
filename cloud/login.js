@@ -60,7 +60,7 @@ Function to login the app after verifying the code
   Output =>
     < Success >
       JSON object{ 
-        flag: Bool // True if atleast one entry found otherwise false 
+        flag: logIn or signUp
         sessionToken: String // revocable session Token of user signed in
       }
     < Error >
@@ -83,7 +83,6 @@ exports.appEnter = function(request, response){
   var token = request.params.token;
   var promise;
   var output = {
-    "flag": false,
     "sessionToken": ""
   };
   if(code){
@@ -94,6 +93,7 @@ exports.appEnter = function(request, response){
     promise = promise.then(function(temp){
       if(temp){
         if(role){
+          output.flag = "signUp";
           return run.createUser({
             "number": number,
             "name": name,
@@ -102,6 +102,7 @@ exports.appEnter = function(request, response){
           });
         }
         else{
+          output.flag = "logIn";
           return Parse.User.logIn(number, number + "qwerty12345");
         }
       }
@@ -122,10 +123,12 @@ exports.appEnter = function(request, response){
         query.equalTo("username", username);
         return query.first().then(function(user){
           if(user){
+            output.flag = "logIn";
             username = user.get("username");
             return Parse.User.logIn(username, username + "qwerty12345");
           }
           else{
+            output.flag = "signUp";
             return run.createUser({
               "username": username,
               "name": name,
@@ -137,12 +140,14 @@ exports.appEnter = function(request, response){
         });
       }
       else{
+        output.flag = "logIn";
         return Parse.User.logIn(username, username + "qwerty12345");
       }
     });
   }
   else{ 
     var password = request.params.password;
+    output.flag = "logIn";
     promise = Parse.User.logIn(email, password);
   }  
   promise = promise.then(function(user){
@@ -172,7 +177,6 @@ exports.appEnter = function(request, response){
         });
       }).then(function(sessionToken){
         output.sessionToken = sessionToken;
-        output.flag = true;
         return Parse.Promise.as(user);
       });
     }
