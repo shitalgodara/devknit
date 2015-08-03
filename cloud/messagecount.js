@@ -65,7 +65,12 @@ exports.updateLikeAndConfusionCount = function(request, response){
         query_destroy.equalTo("username", request.user.get("username"));
         promises.push(
           query_destroy.first().then(function(msgstate){
-            return msgstate.destroy();
+            if(msgstate){
+              return msgstate.destroy();
+            }
+            else{
+              return Parse.Promise.as();
+            }
           })
         );
       }
