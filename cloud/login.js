@@ -100,24 +100,31 @@ exports.appEnter = function(request, response){
     promise = promise.then(function(temp){
       if(temp){
         if(role){
-          var query = new Parse.Query(Parse.User);
-          query.equalTo("username", number);
-          return query.first().then(function(user){
-            if(user){
+          return run.createUser({
+            "number": number,
+            "name": name,
+            "role": role,
+            "email": email
+          }).then(function(user){
+            output.flag = "signUp";
+            return Parse.Promise.as(user);
+          }, function(error){
+            if(error.code == 202){
               output.flag = "logIn";
               return Parse.User.logIn(number, number + "qwerty12345");
             }
-            else{
+            else if(error.code == 203){
               output.flag = "signUp";
               return run.createUser({
                 "number": number,
                 "name": name,
-                "role": role,
-                "email": email
+                "role": role
               });
             }
+            else{
+              return Parse.Promise.error(error);
+            }
           });
-          output.flag = "signUp";
         }
         else{
           output.flag = "logIn";
@@ -145,22 +152,31 @@ exports.appEnter = function(request, response){
       name = user.name;
       email = user.email;
       if(role){
-        var query = new Parse.Query(Parse.User);
-        query.equalTo("username", username);
-        return query.first().then(function(user){
-          if(user){
+        return run.createUser({
+          "username": username,
+          "name": name,
+          "role": role,
+          "sex": sex,
+          "email": email
+        }).then(function(user){
+          output.flag = "signUp";
+          return Parse.Promise.as(user);
+        }, function(error){
+          if(error.code == 202){
             output.flag = "logIn";
             return Parse.User.logIn(username, username + "qwerty12345");
           }
-          else{
+          else if(error.code == 203){
             output.flag = "signUp";
             return run.createUser({
               "username": username,
               "name": name,
               "role": role,
-              "sex": sex,
-              "email": email
+              "sex": sex
             });
+          }
+          else{
+            return Parse.Promise.error(error);
           }
         });
       }

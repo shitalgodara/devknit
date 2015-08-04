@@ -348,15 +348,7 @@ exports.createUser = function(request){
   user.set("role", role);
   user.set("email", email);
   user.set("sex", sex);
-  return user.signUp().then(function(user){
-    return Parse.Promise.as(user);
-  }, function(error){
-    if(error.code == 203){
-      user.unset("email");
-      return user.signUp();
-    }
-    return Parse.Promise.error(error);  
-  });
+  return user.signUp();
 }
 
 /* 

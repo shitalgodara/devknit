@@ -72,7 +72,6 @@ exports.createClass = function(request, response){
     classcode = classcode + num;
 
     var pid = user.get("pid");
-    var sex = user.get("sex");
     var array = [classcode, classname];
     created_groups.push(array);
     user.set("Created_groups", created_groups);
@@ -85,8 +84,7 @@ exports.createClass = function(request, response){
         Creator: name,
         classExist: true,
         senderId: username,
-        senderPic: pid,
-			 sex: sex
+        senderPic: pid
       });
     });
   };
