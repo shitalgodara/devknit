@@ -18,7 +18,6 @@
 //all- active = in active teacher then detail
 //all base return username to notify use 
 //get email and number for advance
-
 exports.allUsers = function(request, response) {
   var n = request.params.nval;
   var result = [];
