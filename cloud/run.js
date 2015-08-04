@@ -323,7 +323,6 @@ Function to set user
       number: String
     < Social Login >
       username: String
-      sex: String
   Output =>
     user: Parse User Object
   Procedure =>
@@ -336,7 +335,6 @@ exports.createUser = function(request){
   var number = request.number;
   var name = request.name;
   var username = request.username;
-  var sex = request.sex;
   if(!username){
     username = number;
   }
