@@ -50,6 +50,11 @@ Function to login the app after verifying the code
         name: String
         role: String // Parent or Teacher
         email: String
+    < Facebook Social Login >
+      accessToken: String
+    < Google Social Login >
+      accessToken: String
+      idToken: String
     <Optional>
       installationId: String
       deviceType: String
@@ -80,8 +85,10 @@ exports.appEnter = function(request, response){
   var email = request.params.email;
   var number = request.params.number;
   var name = request.params.name;
-  var token = request.params.token;
+  var accessToken = request.params.accessToken;
+  var idToken = request.params.idToken;
   var promise;
+  Parse.Cloud.useMasterKey();
   var output = {
     "sessionToken": ""
   };
@@ -93,13 +100,24 @@ exports.appEnter = function(request, response){
     promise = promise.then(function(temp){
       if(temp){
         if(role){
-          output.flag = "signUp";
-          return run.createUser({
-            "number": number,
-            "name": name,
-            "role": role,
-            "email": email
+          var query = new Parse.Query(Parse.User);
+          query.equalTo("username", number);
+          return query.first().then(function(user){
+            if(user){
+              output.flag = "logIn";
+              return Parse.User.logIn(number, number + "qwerty12345");
+            }
+            else{
+              output.flag = "signUp";
+              return run.createUser({
+                "number": number,
+                "name": name,
+                "role": role,
+                "email": email
+              });
+            }
           });
+          output.flag = "signUp";
         }
         else{
           output.flag = "logIn";
@@ -109,13 +127,21 @@ exports.appEnter = function(request, response){
       return Parse.Promise.as();
     });
   }
-  else if(token){
-    promise = run.getFacebookUserInfo({
-      "token": token
-    });
+  else if(accessToken){
+    if(idToken){
+      promise = run.getGoogleUserInfo({
+        "idToken": idToken,
+        "accessToken": accessToken
+      });
+    }
+    else{
+      promise = run.getFacebookUserInfo({
+        "accessToken": accessToken
+      });
+    }
     promise = promise.then(function(user){
-      var username = user.id;
-      var sex = user.gender;
+      var username = user.username;
+      var sex = user.sex;
       name = user.name;
       email = user.email;
       if(role){
@@ -124,7 +150,6 @@ exports.appEnter = function(request, response){
         return query.first().then(function(user){
           if(user){
             output.flag = "logIn";
-            username = user.get("username");
             return Parse.User.logIn(username, username + "qwerty12345");
           }
           else{
@@ -197,15 +222,18 @@ exports.appEnter = function(request, response){
   }).then(function(success){
     response.success(output);
   }, function(error){
-    if(error.code == 101){
-      response.error("USER_DOESNOT_EXISTS");
-    }
-    else if(error.code == 202){
-      response.error("USER_ALREADY_EXISTS");
-    }
-    else{
-      response.error(error.code + ": " + error.message);
-    }
+    var code = error.code;
+    switch(code){
+      case 101:
+        response.error("USER_DOESNOT_EXISTS");
+        break;
+      case 1001:
+        response.error(error.message);
+        break;
+      default:
+        response.error(error.code + ": " + error.message);
+        break;
+    }  
   }); 
 }
 

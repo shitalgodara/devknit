@@ -169,7 +169,6 @@ exports.deleteClass = function(request, response){
   });
 } 
 
-
 /* 
 Function to return all details related to joined or created classes through codegroup table
   Input => 
@@ -197,6 +196,7 @@ exports.giveClassesDetails = function(request, response){
   if(classcodes.length > 0){
     var query = new Parse.Query("Codegroup");
     query.containedIn("code", classcodes);
+    query.limit(classcodes.length);
     promise = promise.then(function(){
       return query.find();
     });
@@ -235,6 +235,7 @@ exports.removeMember = function(request, response){
   var usertype = request.params.usertype;
   var promise = Parse.Promise.as();
   if(usertype == 'app'){
+    Parse.Cloud.useMasterKey();
     var username = request.params.emailId;
     promise = promise.then(function(){
       var query = new Parse.Query("GroupMembers");
@@ -257,7 +258,6 @@ exports.removeMember = function(request, response){
           user.set("joined_groups", joined_groups);
           return user.save();
         }).then(function(user){
-          Parse.Cloud.useMasterKey();
           var query = new Parse.Query(Parse.Installation);
           query.equalTo("username", username);
           return query.each(function(installation){  
@@ -265,7 +265,6 @@ exports.removeMember = function(request, response){
             return installation.save();
           });
         }).then(function(){
-          Parse.Cloud.useMasterKey();
           var query = new Parse.Query(Parse.Installation);
           var message = "You have been removed from " + classname + " class, you won't receive any notification from this class from now onwards";
           query.equalTo("username", username);

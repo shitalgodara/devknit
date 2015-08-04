@@ -359,11 +359,13 @@ exports.createUser = function(request){
 /* 
 Function to get facebook user info
   Input =>
-    token: String
+    accessToken: String
   Output =>
     user: JSON Object{
       id: String
       name: String
+      gender: String
+      email: String
     }
   Procedure =>
     Simple sending a httpRequest on Graph Facebook API
@@ -371,18 +373,25 @@ Function to get facebook user info
     Check for appsecret_proof parameter requirement in case of website user
 */
 exports.getFacebookUserInfo = function(request){
-  var token = request.token;
+  var accessToken = request.accessToken;
   return Parse.Cloud.httpRequest({
     url: 'https://graph.facebook.com/me',
     headers: {
       'Content-Type': 'application/json'
     },
     params: {
-      'access_token': token,
+      'access_token': accessToken,
       'fields': 'id,name,gender,email' 
     }
   }).then(function(httpResponse){
-    return Parse.Promise.as(httpResponse.data);
+    var data = httpResponse.data;
+    var user = {
+      "username": data.id,
+      "sex": data.gender, 
+      "name": data.name,
+      "email": data.email
+    }
+    return Parse.Promise.as(user);
   }, function(httpResponse){
     var error = {
       "code": httpResponse.data.code,
@@ -390,6 +399,64 @@ exports.getFacebookUserInfo = function(request){
     };
     return Parse.Promise.error(error);
   });
+}
+
+/* 
+Function to get google user info
+  Input =>
+    idToken: String
+    accessToken: String
+  Output =>
+    user: JSON Object{
+      id: String
+      name: String
+      gender: String
+      email: String
+    }
+  Procedure =>
+    * First verify Id Token
+    * Simple sending a httpRequest on Google API to get User Info
+*/
+exports.getGoogleUserInfo = function(request, response){
+  var Buffer = require('buffer').Buffer;
+  var idToken = request.idToken;
+  var accessToken = request.accessToken;
+  var parts = idToken.split('.');
+  var bodyBuf = new Buffer(parts[1], 'base64');  
+  var body = JSON.parse(bodyBuf.toString());
+  if (body.aud !== '838906570879-nujge366mj36s29elltobjnehh9e1a5j.apps.googleusercontent.com' || body.iss !== 'accounts.google.com'){
+    var error = {
+      "code": 1001,
+      "message": "INVALID_ID_TOKEN" 
+    }
+    return Parse.Promise.error(error);
+  }
+  else{
+    return Parse.Cloud.httpRequest({
+      url: 'https://www.googleapis.com/oauth2/v3/userinfo',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      params: {
+        'access_token': accessToken
+      }
+    }).then(function(httpResponse){
+      var data = httpResponse.data;
+      var user = {
+        "username": data.sub,
+        "sex": data.gender, 
+        "name": data.name,
+        "email": data.email
+      }
+      return Parse.Promise.as(user);
+    }, function(httpResponse){
+      var error = {
+        "code": httpResponse.data.code,
+        "message": httpResponse.data.error
+      };
+      return Parse.Promise.error(error);    
+    });
+  } 
 }
 
 /*
@@ -515,6 +582,32 @@ exports.setSession = function(request){
     session.set("role", role);
     session.set("isRevocable", true);
     return session.save();
+  });
+}
+
+/*
+Function to get count of members subscribed to that class via app and sms
+  Input =>
+    code: String
+  Output =>
+    count: Number // Number of users subscribed to a class via app and sms 
+  Procedure =>
+    A simple query on GroupMembers and MessageNeeders
+*/ 
+exports.getClassStrength = function(request){
+  var code = request.code;
+  var query = new Parse.Query("GroupMembers");
+  query.equalTo("code", code);
+  query.doesNotExist("status");
+  return query.count().then(function(count1){
+    var query = new Parse.Query("Messageneeders");
+    query.equalTo("cod", code);
+    query.doesNotExist("status");
+    return query.count().then(function(count2){
+      return Parse.Promise.as(count1 + count2);
+    });
+  }, function(error){
+    return Parse.Promise.error(error.code + ": " + error.message);
   });
 }
 

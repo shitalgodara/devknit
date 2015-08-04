@@ -61,10 +61,11 @@
     var wrong = request.object;
     var number = wrong.get("number");
     var code = wrong.get("cod");
-    var a = code;
+    var a = code.toUpperCase();
     var b = a.substr(0,4);
     if(b == "STOP"){
       var cod = a.substr(4);
+      cod = cod.trim();
       var Messageneeders = Parse.Object.extend("Messageneeders");
       var query = new Parse.Query(Messageneeders);
       query.equalTo("cod", cod);
@@ -73,7 +74,7 @@
         if (msgnd){
           msgnd.set("status", "LEAVE");
           msgnd.save().then(function(msgnd){
-            var msg = "You have been successfully unsubscribed, now you will not recieve any message from your teacher"; 
+            var msg = "You have been successfully unsubscribed, now you will not receive any messages from your teacher"; 
             var numbers = [number];
             run.bulkSMS({
               "numbers": numbers,
@@ -261,9 +262,11 @@
     var date = new Date();
     var currentTime = date.getTime();
     var dateLowerBound = new Date(currentTime - 6 * intervalTime);
+    var dateUpperBound = new Date(currentTime - 5 * intervalTime);
     var newMembers = [];
     var query1 = new Parse.Query("GroupMembers");
     query1.greaterThanOrEqualTo("createdAt", dateLowerBound);
+    query1.lessThan("createdAt", dateUpperBound);
     query1.doesNotExist("status");
     query1.select("code");
     query1.each(function(groupmember){
@@ -277,6 +280,7 @@
       var query2 = new Parse.Query("Messageneeders");
       query2.doesNotExist("status");
       query2.greaterThanOrEqualTo("createdAt", dateLowerBound); 
+      query2.lessThan("createdAt", dateUpperBound);
       query2.select("cod");
       return query2.each(function(msgnd){
         var classcode = msgnd.get("cod");
@@ -723,11 +727,7 @@
   Parse.Cloud.define("getMailIds", function(request, response){
     temp.getMailIds(request, response);
   });
-
-  Parse.Cloud.define("bulkSMS", function(request, response){
-    temp.bulkSMS(request, response);
-  }); 
-
+    
 /*----------------------------------------------- USER.JS ----------------------------------------------------------*/
   Parse.Cloud.define("getUpdatesUserDetail", function(request, response){
     user.getUpdatesUserDetail(request, response);
