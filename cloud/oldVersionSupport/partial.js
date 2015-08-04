@@ -58,7 +58,6 @@ exports.createClass = function(request, response){
   var currentname = user.get("name");
   var username = user.get("username");
   var pid = user.get("pid");
-  var sex = user.get("sex");
   var array = [classcode, classname];
   user.addUnique("Created_groups", array);
   user.save().then(function(user){
@@ -70,8 +69,7 @@ exports.createClass = function(request, response){
       Creator: currentname,
       classExist: true,
       senderId: username,
-      senderPic: pid,
-			sex: sex
+      senderPic: pid
     });
   }).then(function(codegroup){
     var output = {
