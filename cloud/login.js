@@ -148,7 +148,6 @@ exports.appEnter = function(request, response){
     }
     promise = promise.then(function(user){
       var username = user.username;
-      var sex = user.sex;
       name = user.name;
       email = user.email;
       if(role){
@@ -156,7 +155,6 @@ exports.appEnter = function(request, response){
           "username": username,
           "name": name,
           "role": role,
-          "sex": sex,
           "email": email
         }).then(function(user){
           output.flag = "signUp";

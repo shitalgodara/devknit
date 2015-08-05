@@ -345,7 +345,6 @@ exports.createUser = function(request){
   user.set("phone", number);
   user.set("role", role);
   user.set("email", email);
-  user.set("sex", sex);
   return user.signUp();
 }
 
@@ -374,13 +373,12 @@ exports.getFacebookUserInfo = function(request){
     },
     params: {
       'access_token': accessToken,
-      'fields': 'id,name,gender,email' 
+      'fields': 'id,name,email' 
     }
   }).then(function(httpResponse){
     var data = httpResponse.data;
     var user = {
       "username": data.id,
-      "sex": data.gender, 
       "name": data.name,
       "email": data.email
     }
@@ -437,7 +435,6 @@ exports.getGoogleUserInfo = function(request, response){
       var data = httpResponse.data;
       var user = {
         "username": data.sub,
-        "sex": data.gender, 
         "name": data.name,
         "email": data.email
       }
