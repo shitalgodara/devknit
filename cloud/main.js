@@ -579,6 +579,14 @@
     old.samplemessage(request, response);
   });
 
+  Parse.Cloud.define("sendTextMessage", function(request, response){
+    old.sendTextMessage(request, response);
+  });
+      
+  Parse.Cloud.define("sendPhotoTextMessage", function(request, response){
+    old.sendPhotoTextMessage(request, response);
+  });
+
 /*----------------------------------------------- PARTIAL.JS -------------------------------------------------------*/
   Parse.Cloud.define("createClass2", function(request, response){
     partial.createClass(request, response);
@@ -645,14 +653,6 @@
   });
 
 /*----------------------------------------------- MESSAGE.JS -------------------------------------------------------*/
-  Parse.Cloud.define("sendTextMessage", function(request, response){
-    message.sendTextMessage(request, response);
-  });
-      
-  Parse.Cloud.define("sendPhotoTextMessage", function(request, response){
-    message.sendPhotoTextMessage(request, response);
-  });
-
   Parse.Cloud.define("sendMultiTextMessage", function(request, response){
     message.sendMultiTextMessage(request, response);
   });
@@ -670,15 +670,11 @@
   });
 
   Parse.Cloud.define("showLatestMessagesWithLimit2", function(request, response){
-    message.showLatestMessagesWithLimit2(request, response);
+    message.showLatestMessagesWithLimit(request, response);
   });
 
   Parse.Cloud.define("showOldMessages2", function(request, response){
-    message.showOldMessages2(request, response);
-  });
-
-  Parse.Cloud.define("smsSubscribe", function(request, response){
-    message.smsSubscribe(request, response);
+    message.showOldMessages(request, response);
   });
 
 /*----------------------------------------------- MESSAGECOUNT.JS --------------------------------------------------*/
@@ -695,6 +691,10 @@
   });
 
 /*----------------------------------------------- SUBSCRIBERS.JS ---------------------------------------------------*/
+  Parse.Cloud.define("smsSubscribe", function(request, response){
+    subscriber.smsSubscribe(request, response);
+  });
+
   Parse.Cloud.define("changeAssociateName3", function(request, response){
     subscriber.changeAssociateName(request, response);
   });

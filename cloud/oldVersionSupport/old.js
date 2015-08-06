@@ -1810,3 +1810,80 @@ exports.samplemessage = function(request, response){
     response.error(error.code + ": " + error.message);
   });
 }
+
+/*
+Function to send text messages
+  Input =>
+    classcode: String
+    classname: String
+    message: String
+  Output =>
+    <Valid class code>
+      messageId: String
+      createdAt: String // groupDetail entry
+    <Invalid class code>
+      Created_groups: Array 
+  Procedure =>
+    Save entry in groupdetail and send push to app user and send sms to message user
+*/
+exports.sendTextMessage = function(request, response){
+  var classcode = request.params.classcode;
+  var classname = request.params.classname;
+  var message = request.params.message;
+  var user = request.user;
+  var name = user.get("name");
+  var username = user.get("username");  
+  run.sendTextMessage({
+    "classcode": classcode,
+    "classname": classname,
+    "message": message,
+    "username": username,
+    "name": name
+  }).then(function(result){
+    response.success(result);
+  },
+  function(error){
+    response.error(error.code + ": " + error.message);
+  });
+}
+
+/*
+Function to send photo text messages
+  Input =>
+    classcode: String
+    classname: String
+    parsefile: File pointer
+    filename: String
+    message: String
+  Output =>
+    <Valid class code>
+      messageId: String
+      createdAt: String // groupdetail entry
+    <Invalid class code>
+      Created_groups: Array
+  Procedure =>
+    Save entry in groupdetail and send push to app user and send sms to message user
+*/
+exports.sendPhotoTextMessage = function(request, response){
+  var classcode = request.params.classcode;
+  var classname = request.params.classname;
+  var parsefile = request.params.parsefile;
+  var filename = request.params.filename;
+  var message = request.params.message;
+  var user = request.user;
+  var name = user.get("name");
+  var username = user.get("username");
+  run.sendPhotoTextMessage({
+    "classcode": classcode,
+    "classname": classname,
+    "parsefile": parsefile,
+    "filename": filename,
+    "message": message,
+    "name": name,
+    "username": username
+  }).then(function(result){
+    response.success(result);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
+  });
+}

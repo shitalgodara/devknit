@@ -1,6 +1,49 @@
 var _ = require('cloud/underscore-min.js');
 
 /*
+Function to subscribe from web for sms subscription
+  Input =>
+    classcode: String
+    subscriber: String
+    number: String // phone number
+  Output =>
+    flag : Bool // true in case of success otherwise error
+  Procedure =>
+    Simple save query on Messageneeders table
+*/
+exports.smsSubscribe = function(request, response){
+  var classcode = request.params.classcode;
+  var subscriber = request.params.subscriber;
+  subscriber = subscriber.trim();
+  var number = request.params.number;
+  number = "91" + number.substr(number.length - 10);
+  var query = new Parse.Query("Messageneeders");
+  query.equalTo("cod", classcode);
+  query.equalTo("number", number);
+  query.first().then(function(msgnd){
+    if(msgnd){
+      if(msgnd.get("subscriber") != subscriber){
+        msgnd.set("subscriber", subscriber);
+        return msgnd.save();
+      }
+      return Parse.Promise.as();
+    }
+    else{
+      var Messageneeders = Parse.Object.extend("Messageneeders");
+      var msgnd = new Messageneeders();
+      msgnd.set("cod", classcode);
+      msgnd.set("subscriber", subscriber);
+      msgnd.set("number", number);
+      return msgnd.save();
+    }
+  }).then(function(result){
+    response.success(true);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
+  });
+}
+
+/*
 Function to change assoicate name of joined class
   Input =>
     classCode: String

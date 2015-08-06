@@ -4,83 +4,6 @@ var _ = require('cloud/underscore-min.js');
 /*
 Function to send text messages
   Input =>
-    classcode: String
-    classname: String
-    message: String
-  Output =>
-    <Valid class code>
-      messageId: String
-      createdAt: String // groupDetail entry
-    <Invalid class code>
-      Created_groups: Array 
-  Procedure =>
-    Save entry in groupdetail and send push to app user and send sms to message user
-*/
-exports.sendTextMessage = function(request, response){
-  var classcode = request.params.classcode;
-  var classname = request.params.classname;
-  var message = request.params.message;
-  var user = request.user;
-  var name = user.get("name");
-  var username = user.get("username");  
-  run.sendTextMessage({
-    "classcode": classcode,
-    "classname": classname,
-    "message": message,
-    "username": username,
-    "name": name
-  }).then(function(result){
-    response.success(result);
-  },
-  function(error){
-    response.error(error.code + ": " + error.message);
-  });
-}
-
-/*
-Function to send photo text messages
-  Input =>
-    classcode: String
-    classname: String
-    parsefile: File pointer
-    filename: String
-    message: String
-  Output =>
-    <Valid class code>
-      messageId: String
-      createdAt: String // groupdetail entry
-    <Invalid class code>
-      Created_groups: Array
-  Procedure =>
-    Save entry in groupdetail and send push to app user and send sms to message user
-*/
-exports.sendPhotoTextMessage = function(request, response){
-  var classcode = request.params.classcode;
-  var classname = request.params.classname;
-  var parsefile = request.params.parsefile;
-  var filename = request.params.filename;
-  var message = request.params.message;
-  var user = request.user;
-  var name = user.get("name");
-  var username = user.get("username");
-  run.sendPhotoTextMessage({
-    "classcode": classcode,
-    "classname": classname,
-    "parsefile": parsefile,
-    "filename": filename,
-    "message": message,
-    "name": name,
-    "username": username
-  }).then(function(result){
-    response.success(result);
-  }, function(error){
-    response.error(error.code + ": " + error.message);
-  });
-}
-
-/*
-Function to send text messages
-  Input =>
     classcode: Array
     classname: Array
     message: String
@@ -337,49 +260,6 @@ exports.showLatestMessages = function(request, response){
 }
 
 /*
-Function to subscribe from web for sms subscription
-  Input =>
-    classcode: String
-    subscriber: String
-    number: String // phone number
-  Output =>
-    flag : Bool // true in case of success otherwise error
-  Procedure =>
-    Simple save query on Messageneeders table
-*/
-exports.smsSubscribe = function(request, response){
-  var classcode = request.params.classcode;
-  var subscriber = request.params.subscriber;
-  subscriber = subscriber.trim();
-  var number = request.params.number;
-  number = "91" + number.substr(number.length - 10);
-  var query = new Parse.Query("Messageneeders");
-  query.equalTo("cod", classcode);
-  query.equalTo("number", number);
-  query.first().then(function(msgnd){
-    if(msgnd){
-      if(msgnd.get("subscriber") != subscriber){
-        msgnd.set("subscriber", subscriber);
-        return msgnd.save();
-      }
-      return Parse.Promise.as();
-    }
-    else{
-      var Messageneeders = Parse.Object.extend("Messageneeders");
-      var msgnd = new Messageneeders();
-      msgnd.set("cod", classcode);
-      msgnd.set("subscriber", subscriber);
-      msgnd.set("number", number);
-      return msgnd.save();
-    }
-  }).then(function(result){
-    response.success(true);
-  }, function(error){
-    response.error(error.code + ": " + error.message);
-  });
-}
-
-/*
 Function for getting old message of all joined classes after a given time
   Input =>
     date: String
@@ -397,7 +277,7 @@ Function for getting old message of all joined classes after a given time
     * Simple query on GroupDetails 
     * if message > 0 and type = 'j' then query on MessageState too 
 */
-exports.showOldMessages2 = function(request, response){
+exports.showOldMessages = function(request, response){
   var user = request.user;
   var limit = request.params.limit;
   var date = request.params.date;
@@ -478,7 +358,7 @@ Function for getting latest message of all joined classes but with limit in case
     * Simple query on GroupDetails 
     * if message > 0 and type = 'j' then query on MessageState too 
 */
-exports.showLatestMessagesWithLimit2 = function(request, response){
+exports.showLatestMessagesWithLimit = function(request, response){
   var type = request.params.classtype;
   var limit = request.params.limit;
   var query = new Parse.Query("GroupDetails");
