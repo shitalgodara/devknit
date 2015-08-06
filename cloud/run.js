@@ -48,7 +48,7 @@ Function to send bulk sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-exports.bulkSMS = function(request, response){
+exports.bulkSMS = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
   numbers = numbers.join();

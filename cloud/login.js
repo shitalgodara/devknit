@@ -169,8 +169,7 @@ exports.appEnter = function(request, response){
             return run.createUser({
               "username": username,
               "name": name,
-              "role": role,
-              "sex": sex
+              "role": role
             });
           }
           else{

@@ -45,13 +45,10 @@
           var classname = codegroup.get("name");    
           var numbers = [number];
           var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + classname + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
-          return run.bulkSMS({
+          run.bulkSMS({
             "numbers": numbers,
             "msg": msg
           });
-        }
-        else{
-          return Parse.Promise.as();
         }
       });
     }
