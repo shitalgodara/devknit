@@ -33,6 +33,17 @@ exports.getUpdatesUserDetail = function(request, response){
 	});
 }
 
+/*
+Function to get user details
+	Input =>
+		details: Array
+	Output =>
+		JSON Object{
+			details
+		}
+	Procedure =>
+		Process simply retrieves of users information
+*/
 exports.getUserDetails = function(request, response){
 	var user = request.user;
 	var details = request.params.details;

@@ -411,11 +411,11 @@ Function to get google user info
 exports.getGoogleUserInfo = function(request, response){
   var Buffer = require('buffer').Buffer;
   var idToken = request.idToken;
-  var accessToken = request.accessToken;
+  var name = request.name;
   var parts = idToken.split('.');
   var bodyBuf = new Buffer(parts[1], 'base64');  
   var body = JSON.parse(bodyBuf.toString());
-  if (body.aud !== '838906570879-nujge366mj36s29elltobjnehh9e1a5j.apps.googleusercontent.com' || body.iss !== 'accounts.google.com'){
+  if((body.aud !== '838906570879-nujge366mj36s29elltobjnehh9e1a5j.apps.googleusercontent.com' && body.aud !== '838906570879-1ovtvi844jjc52aopgdm7jrgqvh2m1rn.apps.googleusercontent.com') || body.iss !== 'accounts.google.com'){
     var error = {
       "code": 1001,
       "message": "INVALID_ID_TOKEN" 
@@ -423,29 +423,15 @@ exports.getGoogleUserInfo = function(request, response){
     return Parse.Promise.error(error);
   }
   else{
-    return Parse.Cloud.httpRequest({
-      url: 'https://www.googleapis.com/oauth2/v3/userinfo',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      params: {
-        'access_token': accessToken
-      }
-    }).then(function(httpResponse){
-      var data = httpResponse.data;
-      var user = {
-        "username": data.sub,
-        "name": data.name,
-        "email": data.email
-      }
-      return Parse.Promise.as(user);
-    }, function(httpResponse){
-      var error = {
-        "code": httpResponse.data.code,
-        "message": httpResponse.data.error
-      };
-      return Parse.Promise.error(error);    
-    });
+    if(!name){
+      name = body.name;
+    }
+    var user = {
+      "username": body.sub,
+      "name": name,
+      "email": body.email
+    }
+    return Parse.Promise.as(user);
   } 
 }
 
@@ -464,7 +450,6 @@ exports.setInstallation = function(request){
   var user = request.user;
   var username = user.get("username");
   var installationId = request.installationId;
-  var deviceType = request.deviceType;
   var joined_groups = user.get("joined_groups");
   var classcodes = [];
   if(typeof joined_groups !='undefined'){
@@ -482,7 +467,6 @@ exports.setInstallation = function(request){
     }
     installation.set("username", username);
     installation.set("installationId", installationId);
-    installation.set("deviceType", deviceType);
     installation.set("channels", classcodes);
     return installation.save();
   });
@@ -651,7 +635,6 @@ exports.sendTextMessage = function(request){
       var msg = message;
       msg = classname + ": " + msg;
       var query = new Parse.Query("Messageneeders");
-      msg = msg.substr(0, 330);
       query.equalTo("cod", classcode);
       query.doesNotExist("status");
       return query.find().then(function(msgnds){

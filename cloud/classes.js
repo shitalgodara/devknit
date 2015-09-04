@@ -87,7 +87,7 @@ exports.createClass = function(request, response){
         senderPic: pid
       });
     });
-  };
+  }
   promise.then(function(codegroup){
     var output = {
       "Created_groups": created_groups,

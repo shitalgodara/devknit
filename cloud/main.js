@@ -259,11 +259,9 @@
     var date = new Date();
     var currentTime = date.getTime();
     var dateLowerBound = new Date(currentTime - 6 * intervalTime);
-    var dateUpperBound = new Date(currentTime - 5 * intervalTime);
     var newMembers = [];
     var query1 = new Parse.Query("GroupMembers");
     query1.greaterThanOrEqualTo("createdAt", dateLowerBound);
-    query1.lessThan("createdAt", dateUpperBound);
     query1.doesNotExist("status");
     query1.select("code");
     query1.each(function(groupmember){
@@ -277,7 +275,6 @@
       var query2 = new Parse.Query("Messageneeders");
       query2.doesNotExist("status");
       query2.greaterThanOrEqualTo("createdAt", dateLowerBound); 
-      query2.lessThan("createdAt", dateUpperBound);
       query2.select("cod");
       return query2.each(function(msgnd){
         var classcode = msgnd.get("cod");

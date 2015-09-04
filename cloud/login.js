@@ -57,7 +57,6 @@ Function to login the app after verifying the code
       idToken: String
     <Optional>
       installationId: String
-      deviceType: String
       model: String
       os: String
       lat: Number
@@ -134,11 +133,11 @@ exports.appEnter = function(request, response){
       return Parse.Promise.as();
     });
   }
-  else if(accessToken){
+  else if(accessToken || idToken){
     if(idToken){
       promise = run.getGoogleUserInfo({
         "idToken": idToken,
-        "accessToken": accessToken
+        "name": name
       });
     }
     else{
@@ -148,9 +147,9 @@ exports.appEnter = function(request, response){
     }
     promise = promise.then(function(user){
       var username = user.username;
-      name = user.name;
-      email = user.email;
       if(role){
+        name = user.name;
+        email = user.email;
         return run.createUser({
           "username": username,
           "name": name,
@@ -192,12 +191,10 @@ exports.appEnter = function(request, response){
     if(user){
       role = user.get("role");
       var installationId = request.params.installationId;
-      var deviceType = request.params.deviceType;
       if(installationId){
         return run.setInstallation({
           "user": user,
-          "installationId": installationId,
-          "deviceType": deviceType
+          "installationId": installationId
         }).then(function(){
           return Parse.Promise.as(user);
         });
