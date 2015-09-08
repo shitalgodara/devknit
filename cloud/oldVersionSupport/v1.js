@@ -1,4 +1,5 @@
 var run = require('cloud/run.js');
+var _ = require('cloud/underscore-min.js');
 
 /*
 Function for creating class
@@ -323,4 +324,208 @@ exports.changeAssociateName = function(request, response){
   }, function(error){
     response.error(error.code + ": " + error.message);
   });  
+}
+
+/*
+Function to send text messages
+  Input =>
+    classcode: Array
+    classname: Array
+    message: String
+  Output =>
+    <Valid class code>
+      messageId: Array
+      createdAt: Array // groupDetail entry
+     <Any invalid class code>
+       Created_Groups: Array
+  Procedure =>
+    Save entry in groupdetail and send push to app user and send sms to message user
+*/
+exports.sendMultiTextMessage = function(request, response){
+  var classcodes = request.params.classcode;
+  var classnames = request.params.classname;
+  var checkmembers = request.params.checkmember;
+  var message = request.params.message;
+  var user = request.user;
+  var created_groups = user.get("Created_groups");
+  var username = user.get("username");
+  var name = user.get("name");
+  var promise = Parse.Promise.as();
+  var messageIds = [];
+  var createdAts = [];
+  var flag = true;
+  for(var i = 0; i < classcodes.length; i++){
+    (function(i){
+      var classcode = classcodes[i];
+      var classname = classnames[i];
+      var checkmember = false;
+      if(checkmembers)
+        checkmember = checkmembers[i];
+      var index = _.findIndex(created_groups, function(created_group){
+        return created_group[0] == classcode;
+      });
+      if(index >= 0){
+        var send = true;
+        if(checkmember){
+          promise = promise.then(function(){
+            return run.getClassStrength({
+              "code": classcode
+            }).then(function(count){
+              if(count == 0){
+                send = false;
+              }
+              return Parse.Promise.as();
+            });
+          });
+        }
+        promise = promise.then(function(){
+          if(send){
+            return run.sendTextMessage({
+              "classcode": classcode,
+              "classname": classname,
+              "message": message,
+              "username": username,
+              "name": name
+            }).then(function(result){
+              messageIds.push(result.messageId);
+              createdAts.push(result.createdAt);
+              return Parse.Promise.as();
+            });
+          }
+          else{
+            var date = new Date();
+            messageIds.push("");
+            createdAts.push(date);
+            return Parse.Promise.as();
+          }
+        });
+      }
+      else{
+        flag = false;
+        promise = promise.then(function(){
+          var date = new Date();
+          messageIds.push("");
+          createdAts.push(date);
+          return Parse.Promise.as();
+        });
+      }
+    }(i));
+  }
+  promise.then(function(){
+    var output = {
+      "messageId": messageIds,
+      "createdAt": createdAts
+    };
+    if(flag == false){
+      output["Created_groups"] = created_groups;
+    }
+    response.success(output);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
+  });
+}
+
+/*
+Function to send photo text messages
+  Input =>
+    classcode: Array
+    classname: Array
+    parsefile: File pointer
+    filename: String
+    message: String
+  Output =>
+    <Valid class code>
+      messageId: Array
+      createdAt: Array // groupDetail entry
+    <Any invalid class code>
+      Created_Groups: Array
+  Procedure =>
+    Save entry in groupdetail and send push to app user and send sms to message user
+*/
+exports.sendMultiPhotoTextMessage = function(request, response){
+  var classcodes = request.params.classcode;
+  var classnames = request.params.classname;
+  var checkmembers = request.params.checkmember;
+  var parsefile = request.params.parsefile;
+  var filename = request.params.filename;
+  var message = request.params.message;
+  var user = request.user;
+  var name = user.get("name");
+  var username = user.get("username");
+  var created_groups = user.get("Created_groups");
+  var promise = Parse.Promise.as();
+  var messageIds = [];
+  var createdAts = [];
+  var flag = true;
+  for(var i = 0; i < classcodes.length; i++){
+    (function(i){
+      var classcode = classcodes[i];
+      var classname = classnames[i];
+      var checkmember = false;
+      if(checkmembers)
+        checkmember = checkmembers[i];
+      var index = _.findIndex(created_groups, function(created_group){
+        return created_group[0] == classcode;
+      });
+      if(index >= 0){
+        var send = true;
+        if(checkmember){
+          promise = promise.then(function(){
+            return run.getClassStrength({
+              "code": classcode
+            }).then(function(count){
+              if(count == 0){
+                send = false;
+              }
+              return Parse.Promise.as();
+            });
+          });
+        }
+        promise = promise.then(function(){
+          if(send){
+            return run.sendPhotoTextMessage({
+              "classcode": classcode,
+              "classname": classname,
+              "parsefile": parsefile,
+              "filename": filename,
+              "message": message,
+              "name": name,
+              "username": username
+            }).then(function(result){
+              messageIds.push(result.messageId);
+              createdAts.push(result.createdAt);
+              return Parse.Promise.as();
+            });
+          }
+          else{
+            var date = new Date();
+            messageIds.push("");
+            createdAts.push(date);
+            return Parse.Promise.as();
+          }
+        }); 
+      }
+      else{
+        flag = false;
+        promise = promise.then(function(){
+          var date = new Date();
+          messageIds.push("");
+          createdAts.push(date);
+          return Parse.Promise.as();
+        });
+      }
+    }(i));
+  }
+  promise.then(function(){
+    var output = {
+      "messageId": messageIds,
+      "createdAt": createdAts
+    };
+    if(flag == false){
+      output["Created_groups"] = created_groups;
+    }
+    response.success(output);
+  }, function(error){
+    response.error(error.code + ": " + error.message);
+  });
 }

@@ -111,7 +111,7 @@ exports.inviteUsers = function(request, response){
     var numbers = _.map(recipients, function(recipient){
       return recipient[1].replace(/\s+/g, '');    
     });
-    run.bulkSMS({
+    run.inviteSMS({
       "numbers": numbers,
       "msg": msg
     }).then(function(){

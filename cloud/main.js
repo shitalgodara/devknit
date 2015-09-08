@@ -5,7 +5,7 @@
 
   /* OLD VERSION */
   var old = require('cloud/oldVersionSupport/old.js');
-  var partial = require('cloud/oldVersionSupport/partial.js');
+  var v1 = require('cloud/oldVersionSupport/v1.js');
 
   /* LATEST VERSION */  
   var classes = require('cloud/classes.js');
@@ -43,10 +43,9 @@
         if(codegroup){
           var teacher = codegroup.get("Creator");
           var classname = codegroup.get("name");    
-          var numbers = [number];
-          var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s " + classname + " " + "classroom. You will start receiving messages as soon as your teacher start using it";
-          run.bulkSMS({
-            "numbers": numbers,
+          var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s '" + classname + "' " + "classroom. You will start receiving messages as soon as your teacher start using it";
+          run.singleSMS({
+            "number": number,
             "msg": msg
           });
         }
@@ -72,9 +71,8 @@
           msgnd.set("status", "LEAVE");
           msgnd.save().then(function(msgnd){
             var msg = "You have been successfully unsubscribed, now you will not receive any messages from your teacher"; 
-            var numbers = [number];
-            run.bulkSMS({
-              "numbers": numbers,
+            run.singleSMS({
+              "number": number,
               "msg": msg
             });
           });  
@@ -82,18 +80,16 @@
       });
     } 
     else if(b == "SEND"){
-      var msg = "You seems to have forgot to enter studentname, general format to subscribe via sms is 'classcode <space> studentname'";
-      var numbers = [number];
-      run.bulkSMS({
-        "numbers": numbers,
+      var msg = "You seems to have forgot to enter student name, general format to subscribe via sms is 'classcode <space> student name'";
+      run.singleSMS({
+        "number": number,
         "msg": msg
       });
     }
     else{
-      var msg = "You seems to have entered a wrong classcode, general format of code is 7 DIGIT CODE, you can ask teacher for code";
-      var numbers = [number];
-      run.bulkSMS({
-        "numbers": numbers,
+      var msg = "You seems to have entered a wrong classcode, general format of code is XXXXXXX, you can ask teacher for code";
+      run.singleSMS({
+        "number": number,
         "msg": msg
       });
     }
@@ -440,10 +436,6 @@
     old.leaveClass(request, response);
   });
 
-  Parse.Cloud.define("genCode", function(request, response){
-    old.genCode(request, response);
-  });
-
   Parse.Cloud.define("removeChannels", function(request, response){
     old.removeChannels(request, response);
   });
@@ -586,23 +578,31 @@
 
 /*----------------------------------------------- PARTIAL.JS -------------------------------------------------------*/
   Parse.Cloud.define("createClass2", function(request, response){
-    partial.createClass(request, response);
+    v1.createClass(request, response);
   });
 
   Parse.Cloud.define("deleteClass2", function(request, response){
-    partial.deleteClass(request, response);
+    v1.deleteClass(request, response);
   });
 
   Parse.Cloud.define("joinClass2", function(request, response){
-    partial.joinClass(request, response);
+    v1.joinClass(request, response);
   });
 
   Parse.Cloud.define("leaveClass2", function(request, response){
-    partial.leaveClass(request, response);
+    v1.leaveClass(request, response);
   });
 
   Parse.Cloud.define("changeAssociateName2", function(request, response){
-    partial.changeAssociateName(request, response);
+    v1.changeAssociateName(request, response);
+  });
+
+  Parse.Cloud.define("sendMultiTextMessage", function(request, response){
+    v1.sendMultiTextMessage(request, response);
+  });
+
+  Parse.Cloud.define("sendMultiPhotoTextMessage", function(request, response){
+    v1.sendMultiPhotoTextMessage(request, response);
   });
 
 /* NEW VERSION */
@@ -637,6 +637,10 @@
   });
   
 /*----------------------------------------------- LOGIN.JS ---------------------------------------------------------*/
+  Parse.Cloud.define("genCode", function(request, response){
+    login.genCode(request, response);
+  });
+
   Parse.Cloud.define("genCode2", function(request, response){
     login.genCode(request, response);
   });
@@ -650,11 +654,11 @@
   });
 
 /*----------------------------------------------- MESSAGE.JS -------------------------------------------------------*/
-  Parse.Cloud.define("sendMultiTextMessage", function(request, response){
+  Parse.Cloud.define("sendMultiTextMessage2", function(request, response){
     message.sendMultiTextMessage(request, response);
   });
 
-  Parse.Cloud.define("sendMultiPhotoTextMessage", function(request, response){
+  Parse.Cloud.define("sendMultiPhotoTextMessage2", function(request, response){
     message.sendMultiPhotoTextMessage(request, response);
   });
 

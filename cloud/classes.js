@@ -137,28 +137,17 @@ exports.deleteClass = function(request, response){
     }).then(function(codegroup){
       var name = user.get("name");
       var classname = codegroup.get("name");
-      var username = user.get("username");
       var message = "Your Teacher " + name + " has deleted his class " + classname;
-      var GroupDetails = Parse.Object.extend("GroupDetails");
-      var groupdetail = new GroupDetails();
-      return groupdetail.save({
-        Creator: name, 
-        name: classname,
-        title: message,
-        senderId: username,
-        code: classcode
-      }).then(function(groupdetail){
-        return Parse.Push.send({
-          channels: [classcode],
-          data: {
-            msg: message,
-            alert: message,
-            badge: "Increment",
-            groupName: classname,
-            type: "NORMAL",
-            action: "INBOX"
-          }
-        });
+      return Parse.Push.send({
+        channels: [classcode],
+        data: {
+          msg: message,
+          alert: message,
+          badge: "Increment",
+          groupName: classname,
+          type: "NORMAL",
+          action: "INBOX"
+        }
       });
     });
   }
@@ -301,9 +290,8 @@ exports.removeMember = function(request, response){
       else{
         msgnd.set("status", "REMOVED");
         return msgnd.save().then(function(msgnd){
-          var numbers = [number];
-          return run.bulkSMS({
-            "numbers": numbers,
+          return run.singleSMS({
+            "numbers": number,
             "msg": "You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher"
           });
         });

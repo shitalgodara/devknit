@@ -14,87 +14,123 @@ Function to send text messages
      <Any invalid class code>
        Created_Groups: Array
   Procedure =>
-    Save entry in groupdetail and send push to app user and send sms to message user
+    Save unique entry in groupdetail and send push to app user and send sms to message user
 */
 exports.sendMultiTextMessage = function(request, response){
   var classcodes = request.params.classcode;
   var classnames = request.params.classname;
   var checkmembers = request.params.checkmember;
+  var timestamp = request.params.timestamp;
   var message = request.params.message;
   var user = request.user;
   var created_groups = user.get("Created_groups");
   var username = user.get("username");
   var name = user.get("name");
-  var promise = Parse.Promise.as();
   var messageIds = [];
   var createdAts = [];
   var flag = true;
-  for(var i = 0; i < classcodes.length; i++){
-    (function(i){
-      var classcode = classcodes[i];
-      var classname = classnames[i];
-      var checkmember = false;
-      if(checkmembers)
-        checkmember = checkmembers[i];
-      var index = _.findIndex(created_groups, function(created_group){
-        return created_group[0] == classcode;
-      });
-      if(index >= 0){
-        var send = true;
-        if(checkmember){
-          promise = promise.then(function(){
-            return run.getClassStrength({
-              "code": classcode
-            }).then(function(count){
-              if(count == 0){
-                send = false;
-              }
-              return Parse.Promise.as();
-            });
-          });
+  var query = new Parse.Query("Messages");
+  query.equalTo("timestamp", timestamp);
+  query.find().then(function(messages){
+    var promise = Parse.Promise.as();
+    if(messages.length > 0){
+      _.each(messages, function(message){
+        messageIds.push(message.get("groupdetailId"));
+        createdAts.push(message.get("groupdetailCreatedAt"));
+        if(message.get("send") == false){
+          flag = false;
         }
-        promise = promise.then(function(){
-          if(send){
-            return run.sendTextMessage({
-              "classcode": classcode,
-              "classname": classname,
-              "message": message,
-              "username": username,
-              "name": name
-            }).then(function(result){
-              messageIds.push(result.messageId);
-              createdAts.push(result.createdAt);
-              return Parse.Promise.as();
+      });
+    }
+    else{
+      for(var i = 0; i < classcodes.length; i++){
+        (function(i){
+          var classcode = classcodes[i];
+          var classname = classnames[i];
+          var checkmember = false;
+          if(checkmembers)
+            checkmember = checkmembers[i];
+          var index = _.findIndex(created_groups, function(created_group){
+            return created_group[0] == classcode;
+          });
+          if(index >= 0){
+            var send = true;
+            if(checkmember){
+              promise = promise.then(function(){
+                return run.getClassStrength({
+                  "code": classcode
+                }).then(function(count){
+                  if(count == 0){
+                    send = false;
+                  }
+                  return Parse.Promise.as();
+                });
+              });
+            }
+            promise = promise.then(function(){
+              if(send){
+                return run.sendTextMessage({
+                  "classcode": classcode,
+                  "classname": classname,
+                  "message": message,
+                  "username": username,
+                  "name": name
+                }).then(function(result){
+                  messageIds.push(result.messageId);
+                  createdAts.push(result.createdAt);
+                  var Messages = Parse.Object.extend("Messages");
+                  var messages = new Messages();
+                  messages.set("timestamp", timestamp);
+                  messages.set("groupdetailId", result.messageId);
+                  messages.set("groupdetailCreatedAt", result.createdAt);
+                  messages.set("send", true);
+                  return messages.save();
+                });
+              }
+              else{
+                var date = new Date();
+                messageIds.push("");
+                createdAts.push(date);
+                var Messages = Parse.Object.extend("Messages");
+                var messages = new Messages();
+                messages.set("timestamp", timestamp);
+                messages.set("groupdetailId", "");
+                messages.set("groupdetailCreatedAt", date);
+                messages.set("send", false);
+                return messages.save();
+              }
             });
           }
           else{
-            var date = new Date();
-            messageIds.push("");
-            createdAts.push(date);
-            return Parse.Promise.as();
+            flag = false;
+            promise = promise.then(function(){
+              var date = new Date();
+              messageIds.push("");
+              createdAts.push(date);
+              var Messages = Parse.Object.extend("Messages");
+              var messages = new Messages();
+              messages.set("timestamp", timestamp);
+              messages.set("groupdetailId", "");
+              messages.set("groupdetailCreatedAt", date);
+              messages.set("send", false);
+              return messages.save();
+            });
           }
-        });
+        }(i));
       }
-      else{
-        flag = false;
-        promise = promise.then(function(){
-          var date = new Date();
-          messageIds.push("");
-          createdAts.push(date);
-          return Parse.Promise.as();
-        });
-      }
-    }(i));
-  }
-  promise.then(function(){
-    var output = {
-      "messageId": messageIds,
-      "createdAt": createdAts
-    };
-    if(flag == false){
-      output["Created_groups"] = created_groups;
     }
-    response.success(output);
+    return promise.then(function(){
+      var output = {
+        "messageId": messageIds,
+        "createdAt": createdAts
+      }
+      if(flag == false){
+        output["Created_groups"] = created_groups;
+      }
+      return Parse.Promise.as(output);
+    });
+  }).then(function(result){
+    response.success(result);
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
@@ -121,6 +157,7 @@ exports.sendMultiPhotoTextMessage = function(request, response){
   var classcodes = request.params.classcode;
   var classnames = request.params.classname;
   var checkmembers = request.params.checkmember;
+  var timestamp = request.params.timestamp;
   var parsefile = request.params.parsefile;
   var filename = request.params.filename;
   var message = request.params.message;
@@ -132,74 +169,110 @@ exports.sendMultiPhotoTextMessage = function(request, response){
   var messageIds = [];
   var createdAts = [];
   var flag = true;
-  for(var i = 0; i < classcodes.length; i++){
-    (function(i){
-      var classcode = classcodes[i];
-      var classname = classnames[i];
-      var checkmember = false;
-      if(checkmembers)
-        checkmember = checkmembers[i];
-      var index = _.findIndex(created_groups, function(created_group){
-        return created_group[0] == classcode;
-      });
-      if(index >= 0){
-        var send = true;
-        if(checkmember){
-          promise = promise.then(function(){
-            return run.getClassStrength({
-              "code": classcode
-            }).then(function(count){
-              if(count == 0){
-                send = false;
-              }
-              return Parse.Promise.as();
-            });
-          });
+  var query = new Parse.Query("Messages");
+  query.equalTo("timestamp", timestamp);
+  query.find().then(function(messages){
+    var promise = Parse.Promise.as();
+    if(messages.length > 0){
+      _.each(messages, function(message){
+        messageIds.push(message.get("groupdetailId"));
+        createdAts.push(message.get("groupdetailCreatedAt"));
+        if(message.get("send") == false){
+          flag = false;
         }
-        promise = promise.then(function(){
-          if(send){
-            return run.sendPhotoTextMessage({
-              "classcode": classcode,
-              "classname": classname,
-              "parsefile": parsefile,
-              "filename": filename,
-              "message": message,
-              "name": name,
-              "username": username
-            }).then(function(result){
-              messageIds.push(result.messageId);
-              createdAts.push(result.createdAt);
-              return Parse.Promise.as();
-            });
+      });
+    }
+    else{
+      for(var i = 0; i < classcodes.length; i++){
+        (function(i){
+          var classcode = classcodes[i];
+          var classname = classnames[i];
+          var checkmember = false;
+          if(checkmembers)
+            checkmember = checkmembers[i];
+          var index = _.findIndex(created_groups, function(created_group){
+            return created_group[0] == classcode;
+          });
+          if(index >= 0){
+            var send = true;
+            if(checkmember){
+              promise = promise.then(function(){
+                return run.getClassStrength({
+                  "code": classcode
+                }).then(function(count){
+                  if(count == 0){
+                    send = false;
+                  }
+                  return Parse.Promise.as();
+                });
+              });
+            }
+            promise = promise.then(function(){
+              if(send){
+                return run.sendPhotoTextMessage({
+                  "classcode": classcode,
+                  "classname": classname,
+                  "parsefile": parsefile,
+                  "filename": filename,
+                  "message": message,
+                  "name": name,
+                  "username": username
+                }).then(function(result){
+                  messageIds.push(result.messageId);
+                  createdAts.push(result.createdAt);
+                  var Messages = Parse.Object.extend("Messages");
+                  var messages = new Messages();
+                  messages.set("timestamp", timestamp);
+                  messages.set("groupdetailId", result.messageId);
+                  messages.set("groupdetailCreatedAt", result.createdAt);
+                  messages.set("send", true);
+                  return messages.save();
+                });
+              }
+              else{
+                var date = new Date();
+                messageIds.push("");
+                createdAts.push(date);
+                var Messages = Parse.Object.extend("Messages");
+                var messages = new Messages();
+                messages.set("timestamp", timestamp);
+                messages.set("groupdetailId", "");
+                messages.set("groupdetailCreatedAt", date);
+                messages.set("send", false);
+                return messages.save();              
+              }
+            }); 
           }
           else{
-            var date = new Date();
-            messageIds.push("");
-            createdAts.push(date);
-            return Parse.Promise.as();
+            flag = false;
+            promise = promise.then(function(){
+              var date = new Date();
+              messageIds.push("");
+              createdAts.push(date);
+              var Messages = Parse.Object.extend("Messages");
+              var messages = new Messages();
+              messages.set("timestamp", timestamp);
+              messages.set("groupdetailId", "");
+              messages.set("groupdetailCreatedAt", date);
+              messages.set("send", false);
+              return messages.save();
+            });
           }
-        }); 
+        }(i));
       }
-      else{
-        flag = false;
-        promise = promise.then(function(){
-          var date = new Date();
-          messageIds.push("");
-          createdAts.push(date);
-          return Parse.Promise.as();
-        });
-      }
-    }(i));
-  }
-  promise.then(function(){
-    var output = {
-      "messageId": messageIds,
-      "createdAt": createdAts
-    };
-    if(flag == false){
-      output["Created_groups"] = created_groups;
     }
-    response.success(output);
+    return promise.then(function(){
+      var output = {
+        "messageId": messageIds,
+        "createdAt": createdAts
+      };
+      if(flag == false){
+        output["Created_groups"] = created_groups;
+      }
+      return Parse.Promise.as(output);
+    });
+  }).then(function(result){
+    response.success(result);
   }, function(error){
     response.error(error.code + ": " + error.message);
   });

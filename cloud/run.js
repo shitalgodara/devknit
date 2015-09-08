@@ -1,6 +1,46 @@
 var _ = require('cloud/underscore-min.js');
 
 /*
+Function to send OTP
+  Input =>
+    msg: String
+    number: Array of number 
+  Output =>
+    httpResponse: Parse.Promise
+  Procedure =>
+    Sending a HTTPRequest to smsgupshup API
+*/
+exports.codeSMS = function(request){
+  var msg = request.msg;
+  var number = request.number;
+  return Parse.Cloud.httpRequest({
+    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    params: {
+      method: 'sendMessage',
+      send_to: number,
+      msg: msg,
+      msg_type: 'Text',
+      userid: '2000133095',
+      auth_scheme: 'plain',
+      password: 'wdq6tyUzP',
+      v: '1.1',
+      format: 'text'
+    }
+  }).then(function(httpResponse){
+    return Parse.Promise.as(httpResponse.text);
+  }, function(httpResponse){
+    var error = {
+      "code": httpResponse.data.code,
+      "message": httpResponse.data.error
+    };
+    return Parse.Promise.error(error);
+  });
+}
+
+/*
 Function to send single sms
   Input =>
     msg: String
@@ -14,18 +54,20 @@ exports.singleSMS = function(request){
   var msg = request.msg;
   var number = request.number;
   return Parse.Cloud.httpRequest({
-    url: 'http://174.143.34.193/MtSendSMS/SingleSMS.aspx',
+    url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
     headers: {
       'Content-Type': 'application/json'
     },
     params: {
-      'usr': 'knitapp',
-      'pass': 'knitapp',
-      'msisdn': number,
-      'msg': msg,
-      'sid': 'myKnit',
-      'mt': 9,
-      'encoding': 0
+      method: 'sendMessage',
+      send_to: number,
+      msg: msg,
+      msg_type: 'Text',
+      userid: '2000133095',
+      auth_scheme: 'plain',
+      password: 'wdq6tyUzP',
+      v: '1.1',
+      format: 'text'
     }
   }).then(function(httpResponse){
     return Parse.Promise.as(httpResponse.text);
@@ -39,7 +81,7 @@ exports.singleSMS = function(request){
 }
 
 /*
-Function to send bulk sms
+Function to send invite sms
   Input =>
     msg: String
     numbers: Array of numbers 
@@ -48,33 +90,60 @@ Function to send bulk sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-exports.bulkSMS = function(request){
+exports.inviteSMS = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
   numbers = numbers.join();
-  return Parse.Cloud.httpRequest({
-    url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
-    headers: {
-     'Content-Type': 'application/json'
-    },
-    params: {
-     'usr': 'knittrans',
-     'pass': 'knittrans',
-     'msisdn': numbers,
-     'msg': msg,
-     'sid': 'myKnit',
-     'mt': 9,
-     'encoding': 0
-    }
-  }).then(function(httpResponse){
-    return Parse.Promise.as(httpResponse.text);
-  }, function(httpResponse){
-    var error = {
-      "code": httpResponse.data.code,
-      "message": httpResponse.data.error
-    };
-    return Parse.Promise.error(error);
-  });
+  if(numbers.length > 0){
+    var groupdetailId = request.groupdetailId;
+    return Parse.Cloud.httpRequest({
+      url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      params: {
+        method: 'sendMessage',
+        send_to: numbers,
+        msg: msg,
+        msg_type: 'Text',
+        userid: '2000133095',
+        auth_scheme: 'plain',
+        password: 'wdq6tyUzP',
+        v: '1.1',
+        format: 'text'
+      }
+    }).then(function(httpResponse){      
+      var responses = httpResponse.text.split('\n');
+      var SMSReport = Parse.Object.extend("SMSReport");
+      var promise = Parse.Promise.as();
+      _.each(responses, function(response){
+        var status = response.split('|');
+        if(status[0].trim() == 'success'){
+          var smsReport = new SMSReport();
+          smsReport.set("msgId", status[2].trim());
+          smsReport.set("phoneNo", status[1].trim());
+          smsReport.set("msgType", "Text");
+          promise = promise.then(function(){
+            return smsReport.save();
+          });
+        }
+      });
+      return promise.then(function(){
+        return Parse.Promise.as(true);
+      }, function(error){
+        return Parse.Promise.error(error);
+      });
+    }, function(httpResponse){
+      var error = {
+        "code": httpResponse.data.code,
+        "message": httpResponse.data.error
+      };
+      return Parse.Promise.error(error);
+    });
+  }
+  else{
+    return Parse.Promise.as(true);
+  }
 }
 
 /*
@@ -87,45 +156,112 @@ Function to send bulk sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-bulkMultilingualSMS = function(request, response){
+bulkSMS = function(request){
   var msg = request.msg;
-  msg = msg.replace(/<>/g,"< >");
-  msg = msg.replace(/<(\S)/g,'< $1');
-  msg = msg.replace(/(\S)>/g,'$1 >');
   var numbers = request.numbers;
+  numbers = numbers.join();
   if(numbers.length > 0){
     var groupdetailId = request.groupdetailId;
-    numbers = numbers.join();
     return Parse.Cloud.httpRequest({
-      url: 'http://174.143.34.193/MtSendSMS/BulkSMS.aspx',
-      followRedirects: true,
+      url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
       headers: {
-       'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
       },
       params: {
-       'usr': 'knittrans',
-       'pass': 'knittrans',
-       'msisdn': numbers,
-       'msg': msg,
-       'sid': 'myKnit',
-       'mt': 9,
-       'encoding': 2
+        method: 'sendMessage',
+        send_to: numbers,
+        msg: msg,
+        msg_type: 'Text',
+        userid: '2000133095',
+        auth_scheme: 'plain',
+        password: 'wdq6tyUzP',
+        v: '1.1',
+        format: 'text'
       }
-    }).then(function(httpResponse){
-      var responses = httpResponse.text.split('|');
-      var msgIds = [];
-      for(var i in responses){
-        msgIds.push(responses[i].split(',')[0]);
-      }
+    }).then(function(httpResponse){      
+      var responses = httpResponse.text.split('\n');
       var SMSReport = Parse.Object.extend("SMSReport");
       var promise = Parse.Promise.as();
-      _.each(msgIds, function(msgId){
-        var smsReport = new SMSReport();
-        smsReport.set("msgId", msgId);
-        smsReport.set("groupdetailId", groupdetailId);
-        promise = promise.then(function(){
-          return smsReport.save();
-        }); 
+      _.each(responses, function(response){
+        var status = response.split('|');
+        console.log(status[0].trim());
+        if(status[0].trim() == 'success'){
+          var smsReport = new SMSReport();
+          smsReport.set("msgId", status[2].trim());
+          smsReport.set("phoneNo", status[1].trim());
+          smsReport.set("msgType", "Text");
+          smsReport.set("groupdetailId", groupdetailId);
+          promise = promise.then(function(){
+            return smsReport.save();
+          });
+        }
+      });
+      return promise.then(function(){
+        return Parse.Promise.as(true);
+      }, function(error){
+        return Parse.Promise.error(error);
+      });
+    }, function(httpResponse){
+      var error = {
+        "code": httpResponse.data.code,
+        "message": httpResponse.data.error
+      };
+      return Parse.Promise.error(error);
+    });
+  }
+  else{
+    return Parse.Promise.as(true);
+  }
+}
+
+/*
+Function to send bulk unicode sms
+  Input =>
+    msg: String
+    numbers: Array of numbers 
+  Output =>
+    httpResponse: Parse.Promise
+  Procedure =>
+    Sending a HTTPRequest to smsgupshup API
+*/
+bulkUnicodeSMS = function(request){
+  var msg = request.msg;
+  var numbers = request.numbers;
+  numbers = numbers.join();
+  if(numbers.length > 0){
+    var groupdetailId = request.groupdetailId;
+    return Parse.Cloud.httpRequest({
+      url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      params: {
+        method: 'sendMessage',
+        send_to: numbers,
+        msg: msg,
+        msg_type: 'Unicode_text',
+        userid: '2000133095',
+        auth_scheme: 'plain',
+        password: 'wdq6tyUzP',
+        v: '1.1',
+        format: 'text'
+      }
+    }).then(function(httpResponse){      
+      var responses = httpResponse.text.split('\n');
+      var SMSReport = Parse.Object.extend("SMSReport");
+      var promise = Parse.Promise.as();
+      _.each(responses, function(response){
+        var status = response.split('|');
+        if(status[0].trim() == 'success'){
+          var smsReport = new SMSReport();
+          smsReport.set("msgId", status[2].trim());
+          smsReport.set("phoneNo", status[1].trim());
+          smsReport.set("msgType", "Unicode_text");
+          smsReport.set("groupdetailId", groupdetailId);
+          promise = promise.then(function(){
+            return smsReport.save();
+          });
+        }
       });
       return promise.then(function(){
         return Parse.Promise.as(true);
@@ -641,11 +777,23 @@ exports.sendTextMessage = function(request){
         var numbers = _.map(msgnds, function(msgnd){
           return msgnd.get("number");
         });
-        return bulkMultilingualSMS({
-          "numbers": numbers,
-          "msg": msg,
-          "groupdetailId": groupdetailId
-        });  
+        console.log(/[\x00-\x7F]+$/.test(msg));
+        if(/^[\x00-\x7F]+$/.test(msg)){
+          console.log("wtf");
+          return bulkSMS({
+            "numbers": numbers,
+            "msg": msg,
+            "groupdetailId": groupdetailId
+          });  
+        }
+        else{
+          console.log("dsa");
+          return bulkUnicodeSMS({
+            "numbers": numbers,
+            "msg": msg,
+            "groupdetailId": groupdetailId
+          });
+        }
       }).then(function(){
         return Parse.Promise.as(output);
       });
@@ -730,11 +878,20 @@ exports.sendPhotoTextMessage = function(request){
           var numbers = _.map(msgnds, function(msgnd){
             return msgnd.get("number");
           });
-          return bulkMultilingualSMS({
-            "numbers": numbers,
-            "msg": msg,
-            "groupdetailId": groupdetailId
-          });  
+          if(/^[\x00-\x7F]+$/.test(msg)){
+            return bulkSMS({
+              "numbers": numbers,
+              "msg": msg,
+              "groupdetailId": groupdetailId
+            });  
+          }
+          else{
+            return bulkUnicodeSMS({
+              "numbers": numbers,
+              "msg": msg,
+              "groupdetailId": groupdetailId
+            });
+          }
         }).then(function(){
           return Parse.Promise.as(output);
         });

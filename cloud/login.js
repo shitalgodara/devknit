@@ -26,15 +26,20 @@ exports.genCode = function(request, response){
     code: code
   }).then(function(temp){
     var msg = code + " is your Knit verification Code";
-    return run.singleSMS({
+    return run.codeSMS({
       "msg": msg,
       "number": number
     });
   }).then(function(text){
-    response.success(true);
+    if(text.substr(0,3) == 'err')
+      return Parse.Promise.as(false);
+    else
+      return Parse.Promise.as(true);
+  }).then(function(text){
+    response.success(text);
   }, function(error){
     response.error(error.code + ": " + error.message);
-  }); 
+  });  
 }
 
 /*
