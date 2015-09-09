@@ -1109,7 +1109,11 @@ exports.mailInstructions = function(request, response){
     }
   ];
   var subject = "How to invite parent";
-  var text = "Hi " + name + ',\n\n' + "Welcome to KNIT" + '\n' + "To invite parents to your class you have to share your class code with them, you can send this paper to all students in your class. Write your class code in the box provided in the pdf below." + '\n\n' + "Regards" + '\n' + "KNIT Team";
+  var html = "<div dir='ltr'><span style='font-size:12.8px'>Hello";
+  if(name){
+    html = html + " " + name;
+  }
+  html = html + ",&nbsp;</span><div style='font-size:12.8px'><br></div><div style='font-size:12.8px'><span>Thank you for using Knit!<br><div><br></div><div>To invite parents to join your class, you must share your class code.&nbsp;<a href='https://knitapp.co.in/blog/2015/09/08/why-knit-emphasises-on-class-code/' target='_blank'>Read why class code is important &nbsp;</a><br></div><div><br></div></span><div>We have attached a document in this email that will come in handy when you're sharing your class code. Simply print it out and circulate it amongst your students.&nbsp;</div><span><div><br></div><div>We hope you continue being associated with Knit</div><div><br></div><div>Regards</div><div>Knit team</div></span></div></div>";
   var attachments = [
     {
       "type": "application/pdf",
@@ -1120,7 +1124,7 @@ exports.mailInstructions = function(request, response){
   run.mailAttachment({
     "recipients": recipients,
     "subject": subject,
-    "text": text,
+    "html": html,
     "attachments": attachments
   }).then(function(){
     response.success(true);

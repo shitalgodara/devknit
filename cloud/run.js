@@ -323,7 +323,7 @@ exports.mailTemplate = function(request){
         "to": request.recipients,
         "images": request.images
       },
-      "async": false
+      "async": true
     }
   }).then(function(httpResponse){
     return Parse.Promise.as();
@@ -363,7 +363,7 @@ exports.mailText = function(request){
       from_name: "Knit",
       to: request.recipients
     },
-    async: false
+    async: true
   }, {
     success: function(httpResponse){
       promise.resolve();
@@ -393,7 +393,7 @@ Function to mail attachment
       content: String // base64 encoded content of the attachment
     }
     subject: String // subject of email
-    text: String
+    html: String
   Output =>
     Empty
   Procedure =>
@@ -405,14 +405,14 @@ exports.mailAttachment = function(request){
   Mandrill.initialize('GrD1JI_5pNZ6MGUCNBYqUw');
   Mandrill.sendEmail({
     message: {
-      text: request.text,
+      html: request.html,
       subject: request.subject,
       from_email: "knit@trumplab.com",
       from_name: "Knit",
       to: request.recipients,
       attachments: request.attachments
     },
-    async: false
+    async: true
   }, {
     success: function(httpResponse){
       promise.resolve();
