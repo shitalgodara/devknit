@@ -14,6 +14,7 @@
   var message = require('cloud/message.js');
   var messagecount = require('cloud/messagecount.js');
   var rest = require('cloud/rest.js');
+  var schools = require('cloud/schools.js');
   var subscriber = require('cloud/subscriber.js');
   var user = require('cloud/user.js');
 
@@ -536,14 +537,6 @@
     old.findClass(request, response);
   });
 
-  Parse.Cloud.define("areaAutoComplete", function(request, response){
-    old.areaAutoComplete(request, response);
-  });
-
-  Parse.Cloud.define("schoolsNearby", function(request, response){
-    old.schoolsNearby(request, response);
-  });
-
   Parse.Cloud.define("toupdatetimebyclass", function(request, response){
     old.toupdatetimebyclass(request, response);
   });
@@ -689,6 +682,15 @@
 
   Parse.Cloud.define("updateLikeAndConfusionCount", function(request, response){
     messagecount.updateLikeAndConfusionCount(request, response);
+  });
+
+/*----------------------------------------------- SCHOOLS.JS -------------------------------------------------------*/
+  Parse.Cloud.define("areaAutoComplete", function(request, response){
+    schools.areaAutoComplete(request, response);
+  });
+
+  Parse.Cloud.define("schoolsNearby", function(request, response){
+    schools.schoolsNearby(request, response);
   });
 
 /*----------------------------------------------- SUBSCRIBERS.JS ---------------------------------------------------*/
