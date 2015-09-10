@@ -40,7 +40,7 @@
       var query = new Parse.Query("Codegroup");
       query.equalTo("code", code);
       query.first().then(function(codegroup){
-        if(codegroup){
+        if(typeof codegroup != 'undefined'){
           var teacher = codegroup.get("Creator");
           var classname = codegroup.get("name");    
           var msg = "Congratulations you have successfully subscribed to" + " " + teacher + "'s '" + classname + "' " + "classroom. You will start receiving messages as soon as your teacher start using it";
@@ -67,7 +67,7 @@
       query.equalTo("cod", cod);
       query.equalTo("number", number);
       query.first().then(function(msgnd){
-        if (msgnd){
+        if(typeof msgnd != 'undefined'){
           msgnd.set("status", "LEAVE");
           msgnd.save().then(function(msgnd){
             var msg = "You have been successfully unsubscribed, now you will not receive any messages from your teacher"; 
@@ -576,7 +576,7 @@
     old.sendPhotoTextMessage(request, response);
   });
 
-/*----------------------------------------------- PARTIAL.JS -------------------------------------------------------*/
+/*----------------------------------------------- V1.JS -------------------------------------------------------*/
   Parse.Cloud.define("createClass2", function(request, response){
     v1.createClass(request, response);
   });

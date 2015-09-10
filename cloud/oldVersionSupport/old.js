@@ -1,5 +1,6 @@
 var run = require('cloud/run.js');
 var _ = require('cloud/underscore-min.js');
+var helper = require('cloud/message-helper.js');
 
 /*
 Function to save installation id in cloud
@@ -27,15 +28,20 @@ exports.appInstallation = function(request, response){
   var query = new Parse.Query(Parse.Installation);
   query.equalTo("installationId", installationId);
   query.first().then(function(installation){
-    if(!installation){
-      var Installation = Parse.Object.extend("_Installation");
-      installation = new Installation();
+    if(installation == 'undefined'){
+      var error = {
+        "code": "1003",
+        "message": "Installation object not found"
+      };
+      return Parse.Promise.error(error);
     }
-    installation.set("username", username);
-    installation.set("installationId", installationId);
-    installation.set("deviceType", deviceType);
-    installation.set("channels", classcodes);
-    return installation.save();
+    else{
+      installation.set("username", username);
+      installation.set("installationId", installationId);
+      installation.set("deviceType", deviceType);
+      installation.set("channels", classcodes);
+      return installation.save();
+    }
   }).then(function(installation){
     response.success(installation.id);
   }, function(error){
@@ -258,7 +264,7 @@ exports.joinClass = function(request, response){
   var query = new Parse.Query("Codegroup");
   query.equalTo("code", classcode);
   query.first().then(function(result){
-    if (result){
+    if(typeof result != 'undefined'){
       var classname = result.get('name');
       var array = [classcode, classname, child];
       var user = request.user;
@@ -1013,7 +1019,7 @@ exports.verifyCod = function(request, response){
     query.equalTo("phoneNumber", number);
     query.greaterThan("createdAt", e);
     query.first().then(function(temp){
-      if(temp){
+      if(typeof temp != 'undefined'){
         var user = new Parse.User();
         var name = request.params.name;
         if(typeof name == 'undefined'){
@@ -1397,7 +1403,7 @@ exports.getSchoolId = function(request, response){
   var query = new Parse.Query("SCHOOLS");
   query.equalTo("school_name", schoolName);
   query.first().then(function(result){
-    if (result)
+    if (typeof result != 'undefined')
       return Parse.Promise.as(result.id);
     else{
       var SCHOOLS = Parse.Object.extend("SCHOOLS");
@@ -1490,7 +1496,7 @@ exports.schoolsNearby = function(request, response) {
           types: 'school',
           key: 'AIzaSyCZ5_QxsDDJMaiCUCHDZp2A-OA_AnTYm74',
           location: cord,
-          radius: '10000' 
+          rankby: 'distance',
         },
     }).then(function(httpResponse1){
       var result = [];
@@ -1669,14 +1675,13 @@ exports.messagecc = function(request, response){
   var name = request.user.get("name");
   msg = name + ": " + msg;
   var query = new Parse.Query("Messageneeders");
-  msg = msg.substr(0, 330);
   query.equalTo("cod", c);
   query.find().then(function(results){
     if(results){
       var numbers = _.map(results, function(result){
         return result.get('number');
       });
-      return smsText({
+      return run.bulkSMS({
         "numbers": numbers,
         "msg": msg
       }).then(function(text){
@@ -1715,7 +1720,7 @@ exports.samplemessage = function(request, response){
       var numbers = _.map(results, function(result){
         return result.get('number');
       });
-      return smsText({
+      return run.bulkSMS({
         "numbers": numbers,
         "msg": msg
       }).then(function(text){
@@ -1754,7 +1759,7 @@ exports.sendTextMessage = function(request, response){
   var user = request.user;
   var name = user.get("name");
   var username = user.get("username");  
-  run.sendTextMessage({
+  helper.sendTextMessage({
     "classcode": classcode,
     "classname": classname,
     "message": message,
@@ -1794,7 +1799,7 @@ exports.sendPhotoTextMessage = function(request, response){
   var user = request.user;
   var name = user.get("name");
   var username = user.get("username");
-  run.sendPhotoTextMessage({
+  helper.sendPhotoTextMessage({
     "classcode": classcode,
     "classname": classname,
     "parsefile": parsefile,

@@ -23,11 +23,12 @@ exports.codeSMS = function(request){
       send_to: number,
       msg: msg,
       msg_type: 'Text',
-      userid: '2000133095',
+      userid: '2000149020',
       auth_scheme: 'plain',
-      password: 'wdq6tyUzP',
+      password: '2000149020',
       v: '1.1',
-      format: 'text'
+      format: 'text',
+      mask: 'myKnit'
     }
   }).then(function(httpResponse){
     return Parse.Promise.as(httpResponse.text);
@@ -67,7 +68,8 @@ exports.singleSMS = function(request){
       auth_scheme: 'plain',
       password: 'wdq6tyUzP',
       v: '1.1',
-      format: 'text'
+      format: 'text',
+      mask: 'myKnit'
     }
   }).then(function(httpResponse){
     return Parse.Promise.as(httpResponse.text);
@@ -81,72 +83,6 @@ exports.singleSMS = function(request){
 }
 
 /*
-Function to send invite sms
-  Input =>
-    msg: String
-    numbers: Array of numbers 
-  Output =>
-    httpResponse: Parse.Promise
-  Procedure =>
-    Sending a HTTPRequest to smsgupshup API
-*/
-exports.inviteSMS = function(request){
-  var msg = request.msg;
-  var numbers = request.numbers;
-  numbers = numbers.join();
-  if(numbers.length > 0){
-    var groupdetailId = request.groupdetailId;
-    return Parse.Cloud.httpRequest({
-      url: 'http://enterprise.smsgupshup.com/GatewayAPI/rest',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      params: {
-        method: 'sendMessage',
-        send_to: numbers,
-        msg: msg,
-        msg_type: 'Text',
-        userid: '2000133095',
-        auth_scheme: 'plain',
-        password: 'wdq6tyUzP',
-        v: '1.1',
-        format: 'text'
-      }
-    }).then(function(httpResponse){      
-      var responses = httpResponse.text.split('\n');
-      var SMSReport = Parse.Object.extend("SMSReport");
-      var promise = Parse.Promise.as();
-      _.each(responses, function(response){
-        var status = response.split('|');
-        if(status[0].trim() == 'success'){
-          var smsReport = new SMSReport();
-          smsReport.set("msgId", status[2].trim());
-          smsReport.set("phoneNo", status[1].trim());
-          smsReport.set("msgType", "Text");
-          promise = promise.then(function(){
-            return smsReport.save();
-          });
-        }
-      });
-      return promise.then(function(){
-        return Parse.Promise.as(true);
-      }, function(error){
-        return Parse.Promise.error(error);
-      });
-    }, function(httpResponse){
-      var error = {
-        "code": httpResponse.data.code,
-        "message": httpResponse.data.error
-      };
-      return Parse.Promise.error(error);
-    });
-  }
-  else{
-    return Parse.Promise.as(true);
-  }
-}
-
-/*
 Function to send bulk sms
   Input =>
     msg: String
@@ -156,7 +92,7 @@ Function to send bulk sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-bulkSMS = function(request){
+exports.bulkSMS = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
   numbers = numbers.join();
@@ -176,7 +112,8 @@ bulkSMS = function(request){
         auth_scheme: 'plain',
         password: 'wdq6tyUzP',
         v: '1.1',
-        format: 'text'
+        format: 'text',
+        mask: 'myKnit'
       }
     }).then(function(httpResponse){      
       var responses = httpResponse.text.split('\n');
@@ -184,7 +121,6 @@ bulkSMS = function(request){
       var promise = Parse.Promise.as();
       _.each(responses, function(response){
         var status = response.split('|');
-        console.log(status[0].trim());
         if(status[0].trim() == 'success'){
           var smsReport = new SMSReport();
           smsReport.set("msgId", status[2].trim());
@@ -224,7 +160,7 @@ Function to send bulk unicode sms
   Procedure =>
     Sending a HTTPRequest to smsgupshup API
 */
-bulkUnicodeSMS = function(request){
+exports.bulkUnicodeSMS = function(request){
   var msg = request.msg;
   var numbers = request.numbers;
   numbers = numbers.join();
@@ -244,7 +180,8 @@ bulkUnicodeSMS = function(request){
         auth_scheme: 'plain',
         password: 'wdq6tyUzP',
         v: '1.1',
-        format: 'text'
+        format: 'text',
+        mask: 'myKnit'
       }
     }).then(function(httpResponse){      
       var responses = httpResponse.text.split('\n');
@@ -597,9 +534,12 @@ exports.setInstallation = function(request){
   var query = new Parse.Query(Parse.Installation);
   query.equalTo("installationId", installationId);
   return query.first().then(function(installation){
-    if(!installation){
-      var Installation = Parse.Object.extend("_Installation");
-      installation = new Installation();
+    if(typeof installation != 'undefined'){
+      var error = {
+        "code": "1003",
+        "message": "Installation object not found"
+      };
+      return Parse.Promise.error(error);
     }
     installation.set("username", username);
     installation.set("installationId", installationId);
@@ -692,216 +632,5 @@ exports.setSession = function(request){
     session.set("role", role);
     session.set("isRevocable", true);
     return session.save();
-  });
-}
-
-/*
-Function to get count of members subscribed to that class via app and sms
-  Input =>
-    code: String
-  Output =>
-    count: Number // Number of users subscribed to a class via app and sms 
-  Procedure =>
-    A simple query on GroupMembers and MessageNeeders
-*/ 
-exports.getClassStrength = function(request){
-  var code = request.code;
-  var query = new Parse.Query("GroupMembers");
-  query.equalTo("code", code);
-  query.doesNotExist("status");
-  return query.count().then(function(count1){
-    var query = new Parse.Query("Messageneeders");
-    query.equalTo("cod", code);
-    query.doesNotExist("status");
-    return query.count().then(function(count2){
-      return Parse.Promise.as(count1 + count2);
-    });
-  }, function(error){
-    return Parse.Promise.error(error.code + ": " + error.message);
-  });
-}
-
-/*
-Function to send text message to single class
-  Input =>
-    classcode: String
-    classname: String
-    name: String
-    username: String
-    message: String
-  Output =>
-    JSON Object{
-      messageId: String
-      createdAt: String
-    }
-  Procedure =>
-    Save entry in groupdetail and send push to app user and send sms to message user
-*/
-exports.sendTextMessage = function(request){  
-  var name = request.name;
-  var username = request.username;
-  var classcode = request.classcode;
-  var classname = request.classname;
-  var message = request.message;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
-  var groupdetail = new GroupDetails();
-  return groupdetail.save({
-    Creator: name,
-    name: classname,
-    title: message,
-    senderId: username,
-    code: classcode
-  }).then(function(groupdetail){
-    return Parse.Push.send({
-      channels: [classcode],
-      data: {
-        msg: message,
-        alert: message,
-        badge: "Increment",
-        groupName: classname,
-        type: "NORMAL",
-        action: "INBOX"
-      }
-    }).then(function(){
-      var groupdetailId = groupdetail.id;
-      var output = {
-        messageId: groupdetailId,
-        createdAt: groupdetail.createdAt
-      };
-      var msg = message;
-      msg = classname + ": " + msg;
-      var query = new Parse.Query("Messageneeders");
-      query.equalTo("cod", classcode);
-      query.doesNotExist("status");
-      return query.find().then(function(msgnds){
-        var numbers = _.map(msgnds, function(msgnd){
-          return msgnd.get("number");
-        });
-        console.log(/[\x00-\x7F]+$/.test(msg));
-        if(/^[\x00-\x7F]+$/.test(msg)){
-          console.log("wtf");
-          return bulkSMS({
-            "numbers": numbers,
-            "msg": msg,
-            "groupdetailId": groupdetailId
-          });  
-        }
-        else{
-          console.log("dsa");
-          return bulkUnicodeSMS({
-            "numbers": numbers,
-            "msg": msg,
-            "groupdetailId": groupdetailId
-          });
-        }
-      }).then(function(){
-        return Parse.Promise.as(output);
-      });
-    });
-  });
-}
-
-/*
-Function to send photo text message to single class
-  Input =>
-    classcode: String
-    classname: String
-    name: String
-    username: String
-    message: String
-    parsefile: String
-    filename: String
-  Output =>
-    JSON Object{
-      messageId: String
-      createdAt: String
-    }
-  Procedure =>
-    Save entry in groupdetail and send push to app user and send sms to message user
-*/
-exports.sendPhotoTextMessage = function(request){
-  var name = request.name;
-  var username = request.username;
-  var classcode = request.classcode;
-  var classname = request.classname;
-  var parsefile = request.parsefile;
-  var filename = request.filename;
-  var message = request.message;
-  var msg;
-  var GroupDetails = Parse.Object.extend("GroupDetails");
-  var groupdetail = new GroupDetails();
-  var url;
-  return groupdetail.save({
-    Creator: name,
-    name: classname,
-    title: message,
-    senderId: username,
-    code: classcode,
-    attachment: parsefile,
-    attachment_name: filename
-  }).then(function(groupdetail){
-    if (message == "") 
-      msg = "You have received an Image";
-    else
-      msg = message;
-    url = groupdetail.get('attachment').url();
-    return Parse.Push.send({
-      channels: [classcode],
-      data: {
-        msg: msg,
-        alert: msg,
-        badge: "Increment",
-        groupName: classname,
-        type: "NORMAL",
-        action: "INBOX"
-      }
-    }).then(function(){
-      var groupdetailId = groupdetail.id;
-      var output = {
-        messageId: groupdetailId,
-        createdAt: groupdetail.createdAt
-      };
-      msg = classname + ": " + msg;
-      msg = msg + ", Your Teacher " + name + " has sent you an attachment, we can't send you pics over mobile, so download our android-app http://goo.gl/Ptzhoa";
-      msg = msg + " you can view image at ";
-      return Parse.Cloud.httpRequest({
-        url: 'http://tinyurl.com/api-create.php',
-        params: {
-          url : url
-        }
-      }).then(function(httpResponse){
-        msg = msg + httpResponse.text;
-        var query = new Parse.Query("Messageneeders");
-        query.equalTo("cod", classcode);
-        query.doesNotExist("status");
-        return query.find().then(function(msgnds){
-          var numbers = _.map(msgnds, function(msgnd){
-            return msgnd.get("number");
-          });
-          if(/^[\x00-\x7F]+$/.test(msg)){
-            return bulkSMS({
-              "numbers": numbers,
-              "msg": msg,
-              "groupdetailId": groupdetailId
-            });  
-          }
-          else{
-            return bulkUnicodeSMS({
-              "numbers": numbers,
-              "msg": msg,
-              "groupdetailId": groupdetailId
-            });
-          }
-        }).then(function(){
-          return Parse.Promise.as(output);
-        });
-      }, function(httpResponse){
-        var error = {
-          "code": httpResponse.data.code,
-          "message": httpResponse.data.error
-        };
-        return Parse.Promise.error(error);
-      });
-    });
   });
 }

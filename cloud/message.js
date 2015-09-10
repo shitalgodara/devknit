@@ -1,5 +1,6 @@
 var run = require('cloud/run.js');
 var _ = require('cloud/underscore-min.js');
+var helper = require('cloud/message-helper.js');
 
 /*
 Function to send text messages
@@ -20,117 +21,92 @@ exports.sendMultiTextMessage = function(request, response){
   var classcodes = request.params.classcode;
   var classnames = request.params.classname;
   var checkmembers = request.params.checkmember;
-  var timestamp = request.params.timestamp;
   var message = request.params.message;
+  var timestamp = request.params.timestamp;
   var user = request.user;
-  var created_groups = user.get("Created_groups");
   var username = user.get("username");
   var name = user.get("name");
+  var created_groups = user.get("Created_groups");
   var messageIds = [];
   var createdAts = [];
   var flag = true;
-  var query = new Parse.Query("Messages");
-  query.equalTo("timestamp", timestamp);
-  query.find().then(function(messages){
-    var promise = Parse.Promise.as();
-    if(messages.length > 0){
-      _.each(messages, function(message){
-        messageIds.push(message.get("groupdetailId"));
-        createdAts.push(message.get("groupdetailCreatedAt"));
-        if(message.get("send") == false){
-          flag = false;
-        }
-      });
-    }
-    else{
-      for(var i = 0; i < classcodes.length; i++){
-        (function(i){
-          var classcode = classcodes[i];
-          var classname = classnames[i];
-          var checkmember = false;
-          if(checkmembers)
-            checkmember = checkmembers[i];
-          var index = _.findIndex(created_groups, function(created_group){
-            return created_group[0] == classcode;
-          });
-          if(index >= 0){
-            var send = true;
-            if(checkmember){
-              promise = promise.then(function(){
-                return run.getClassStrength({
-                  "code": classcode
-                }).then(function(count){
-                  if(count == 0){
-                    send = false;
-                  }
-                  return Parse.Promise.as();
-                });
-              });
-            }
-            promise = promise.then(function(){
-              if(send){
-                return run.sendTextMessage({
-                  "classcode": classcode,
-                  "classname": classname,
-                  "message": message,
-                  "username": username,
-                  "name": name
-                }).then(function(result){
-                  messageIds.push(result.messageId);
-                  createdAts.push(result.createdAt);
-                  var Messages = Parse.Object.extend("Messages");
-                  var messages = new Messages();
-                  messages.set("timestamp", timestamp);
-                  messages.set("groupdetailId", result.messageId);
-                  messages.set("groupdetailCreatedAt", result.createdAt);
-                  messages.set("send", true);
-                  return messages.save();
-                });
-              }
-              else{
-                var date = new Date();
-                messageIds.push("");
-                createdAts.push(date);
-                var Messages = Parse.Object.extend("Messages");
-                var messages = new Messages();
-                messages.set("timestamp", timestamp);
-                messages.set("groupdetailId", "");
-                messages.set("groupdetailCreatedAt", date);
-                messages.set("send", false);
-                return messages.save();
-              }
-            });
-          }
-          else{
-            flag = false;
-            promise = promise.then(function(){
-              var date = new Date();
-              messageIds.push("");
-              createdAts.push(date);
-              var Messages = Parse.Object.extend("Messages");
-              var messages = new Messages();
-              messages.set("timestamp", timestamp);
-              messages.set("groupdetailId", "");
-              messages.set("groupdetailCreatedAt", date);
-              messages.set("send", false);
-              return messages.save();
-            });
-          }
-        }(i));
-      }
-    }
-    return promise.then(function(){
-      var output = {
-        "messageId": messageIds,
-        "createdAt": createdAts
-      }
-      if(flag == false){
-        output["Created_groups"] = created_groups;
-      }
-      return Parse.Promise.as(output);
-    });
+  var statuses = [];
+  var promise = helper.getSendStatus2({
+    "user": user,
+    "message": message,
+    "classcodes": classcodes,
+    "checkmembers": checkmembers,
+    "timestamp": timestamp
   }).then(function(result){
-    response.success(result);
+    flag = result.flag;
+    statuses = result.statuses;
+    return Parse.Promise.as(0);
+  });
+  _.each(classcodes, function(classcode){
+    promise = promise.then(function(i){
+      var classcode = classcodes[i];
+      var classname = classnames[i];
+      var status = statuses[i];
+      if(status == 1){
+        return helper.sendTextMessage({
+          "classcode": classcode,
+          "classname": classname,
+          "message": message,
+          "username": username,
+          "name": name
+        }).then(function(result){
+          messageIds.push(result.messageId);
+          createdAts.push(result.createdAt);
+          var Messages = Parse.Object.extend("Messages");
+          var message = new Messages();
+          message.set("timestamp", timestamp);
+          message.set("groupdetailId", result.messageId);
+          message.set("groupdetailCreatedAt", result.createdAt);
+          message.set("send", flag);
+          return message.save();
+        }).then(function(message){
+          return Parse.Promise.as(i+1);
+        });
+      }
+      else if(status == 2){
+        var query = new Parse.Query("Messages");
+        query.equalTo("timestamp", timestamp);
+        query.limit(1);
+        query.skip(i);
+        return query.first().then(function(message){
+          messageIds.push(message.get("groupdetailId"));
+          createdAts.push(message.get("groupdetailCreatedAt"));
+          if(message.get("send") == false){
+            flag = false;
+          }
+          return Parse.Promise.as(i+1);
+        });
+      }
+      else{
+        var date = new Date();
+        messageIds.push("");
+        createdAts.push(date);
+        var Messages = Parse.Object.extend("Messages");
+        var message = new Messages();
+        message.set("timestamp", timestamp);
+        message.set("groupdetailId", "");
+        message.set("groupdetailCreatedAt", date);
+        message.set("send", flag);
+        return message.save().then(function(message){
+          return Parse.Promise.as(i+1);
+        });
+      }
+    });
+  });
+  promise.then(function(){
+    var output = {
+      "messageId": messageIds,
+      "createdAt": createdAts
+    };
+    if(flag == false){
+      output["Created_groups"] = created_groups;
+    }
+    response.success(output);
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
@@ -157,126 +133,102 @@ exports.sendMultiPhotoTextMessage = function(request, response){
   var classcodes = request.params.classcode;
   var classnames = request.params.classname;
   var checkmembers = request.params.checkmember;
-  var timestamp = request.params.timestamp;
+  var message = request.params.message;
   var parsefile = request.params.parsefile;
   var filename = request.params.filename;
-  var message = request.params.message;
+  var timestamp = request.params.timestamp;
   var user = request.user;
-  var name = user.get("name");
   var username = user.get("username");
+  var name = user.get("name");
   var created_groups = user.get("Created_groups");
-  var promise = Parse.Promise.as();
   var messageIds = [];
   var createdAts = [];
   var flag = true;
-  var query = new Parse.Query("Messages");
-  query.equalTo("timestamp", timestamp);
-  query.find().then(function(messages){
-    var promise = Parse.Promise.as();
-    if(messages.length > 0){
-      _.each(messages, function(message){
-        messageIds.push(message.get("groupdetailId"));
-        createdAts.push(message.get("groupdetailCreatedAt"));
-        if(message.get("send") == false){
-          flag = false;
-        }
-      });
-    }
-    else{
-      for(var i = 0; i < classcodes.length; i++){
-        (function(i){
-          var classcode = classcodes[i];
-          var classname = classnames[i];
-          var checkmember = false;
-          if(checkmembers)
-            checkmember = checkmembers[i];
-          var index = _.findIndex(created_groups, function(created_group){
-            return created_group[0] == classcode;
-          });
-          if(index >= 0){
-            var send = true;
-            if(checkmember){
-              promise = promise.then(function(){
-                return run.getClassStrength({
-                  "code": classcode
-                }).then(function(count){
-                  if(count == 0){
-                    send = false;
-                  }
-                  return Parse.Promise.as();
-                });
-              });
-            }
-            promise = promise.then(function(){
-              if(send){
-                return run.sendPhotoTextMessage({
-                  "classcode": classcode,
-                  "classname": classname,
-                  "parsefile": parsefile,
-                  "filename": filename,
-                  "message": message,
-                  "name": name,
-                  "username": username
-                }).then(function(result){
-                  messageIds.push(result.messageId);
-                  createdAts.push(result.createdAt);
-                  var Messages = Parse.Object.extend("Messages");
-                  var messages = new Messages();
-                  messages.set("timestamp", timestamp);
-                  messages.set("groupdetailId", result.messageId);
-                  messages.set("groupdetailCreatedAt", result.createdAt);
-                  messages.set("send", true);
-                  return messages.save();
-                });
-              }
-              else{
-                var date = new Date();
-                messageIds.push("");
-                createdAts.push(date);
-                var Messages = Parse.Object.extend("Messages");
-                var messages = new Messages();
-                messages.set("timestamp", timestamp);
-                messages.set("groupdetailId", "");
-                messages.set("groupdetailCreatedAt", date);
-                messages.set("send", false);
-                return messages.save();              
-              }
-            }); 
-          }
-          else{
-            flag = false;
-            promise = promise.then(function(){
-              var date = new Date();
-              messageIds.push("");
-              createdAts.push(date);
-              var Messages = Parse.Object.extend("Messages");
-              var messages = new Messages();
-              messages.set("timestamp", timestamp);
-              messages.set("groupdetailId", "");
-              messages.set("groupdetailCreatedAt", date);
-              messages.set("send", false);
-              return messages.save();
-            });
-          }
-        }(i));
-      }
-    }
-    return promise.then(function(){
-      var output = {
-        "messageId": messageIds,
-        "createdAt": createdAts
-      };
-      if(flag == false){
-        output["Created_groups"] = created_groups;
-      }
-      return Parse.Promise.as(output);
-    });
+  var statuses = [];
+  var promise = helper.getSendStatus2({
+    "user": user,
+    "message": message,
+    "classcodes": classcodes,
+    "checkmembers": checkmembers,
+    "timestamp": timestamp
   }).then(function(result){
-    response.success(result);
+    flag = result.flag;
+    statuses = result.statuses;
+    return Parse.Promise.as(0);
+  });
+  _.each(classcodes, function(classcode){
+    promise = promise.then(function(i){
+      console.log(i + "I" + statuses[i]);
+      var classcode = classcodes[i];
+      var classname = classnames[i];
+      var status = statuses[i];
+      if(status == 1){
+        return helper.sendPhotoTextMessage({
+          "classcode": classcode,
+          "classname": classname,
+          "parsefile": parsefile,
+          "filename": filename,
+          "message": message,
+          "username": username,
+          "name": name
+        }).then(function(result){
+          messageIds.push(result.messageId);
+          createdAts.push(result.createdAt);
+          var Messages = Parse.Object.extend("Messages");
+          var message = new Messages();
+          message.set("timestamp", timestamp);
+          message.set("groupdetailId", result.messageId);
+          message.set("groupdetailCreatedAt", result.createdAt);
+          message.set("send", flag);
+          return message.save();
+        }).then(function(message){
+          return Parse.Promise.as(i+1);
+        });
+      }
+      else if(status == 2){
+        var query = new Parse.Query("Messages");
+        query.equalTo("timestamp", timestamp);
+        query.limit(1);
+        query.skip(i);
+        return query.first().then(function(message){
+          messageIds.push(message.get("groupdetailId"));
+          createdAts.push(message.get("groupdetailCreatedAt"));
+          if(message.get("send") == false){
+            flag = false;
+          }
+          return Parse.Promise.as(i+1);
+        });
+      }
+      else{
+        var date = new Date();
+        messageIds.push("");
+        createdAts.push(date);
+        var Messages = Parse.Object.extend("Messages");
+        var message = new Messages();
+        message.set("timestamp", timestamp);
+        message.set("groupdetailId", "");
+        message.set("groupdetailCreatedAt", date);
+        message.set("send", flag);
+        return message.save().then(function(message){
+          return Parse.Promise.as(i+1);
+        });
+      }
+    });
+  });
+  promise.then(function(){
+    var output = {
+      "messageId": messageIds,
+      "createdAt": createdAts
+    };
+    if(flag == false){
+      output["Created_groups"] = created_groups;
+    }
+    response.success(output);
   }, function(error){
     response.error(error.code + ": " + error.message);
   });
 }
+
 
 /*
 Function to show class messages within a limit in webbrowser

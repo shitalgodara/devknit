@@ -291,7 +291,7 @@ exports.removeMember = function(request, response){
         msgnd.set("status", "REMOVED");
         return msgnd.save().then(function(msgnd){
           return run.singleSMS({
-            "numbers": number,
+            "number": number,
             "msg": "You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher"
           });
         });
@@ -401,7 +401,7 @@ exports.joinClass = function(request, response){
   query.equalTo("code", classcode);
   query.equalTo("classExist", true);  
   query.first().then(function(codegroup){
-    if(codegroup){
+    if(typeof codegroup != 'undefined'){
       var joined_groups = user.get("joined_groups");
       var index = -1;
       if(typeof joined_groups != 'undefined'){

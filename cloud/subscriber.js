@@ -21,7 +21,7 @@ exports.smsSubscribe = function(request, response){
   query.equalTo("cod", classcode);
   query.equalTo("number", number);
   query.first().then(function(msgnd){
-    if(msgnd){
+    if(typeof msgnd != 'undefined'){
       if(msgnd.get("subscriber") != subscriber){
         msgnd.set("subscriber", subscriber);
         return msgnd.save();
