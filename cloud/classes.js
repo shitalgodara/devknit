@@ -230,10 +230,10 @@ exports.removeMember = function(request, response){
       var query = new Parse.Query("GroupMembers");
       query.equalTo("code", classcode);
       query.equalTo("emailId", username);
+      query.doesNotExist("status");
       return query.first();
     }).then(function(groupmember){
-      var status = groupmember.get("status");  
-      if(typeof status == 'undefined'){
+      if(typeof groupmember != 'undefined'){
         groupmember.set("status", "REMOVED");
         return groupmember.save().then(function(groupmember){
           var query = new Parse.Query(Parse.User);
@@ -281,13 +281,11 @@ exports.removeMember = function(request, response){
     var query = new Parse.Query("Messageneeders");
     query.equalTo("cod", classcode);
     query.equalTo("number", number);
+    query.doesNotExist("status");
     promise = promise.then(function(){
       return query.first();
     }).then(function(msgnd){
-      if(msgnd.get("status") == "REMOVED"){
-        return Parse.Promise.as();
-      }
-      else{
+      if(typeof msgnd != 'undefined'){
         msgnd.set("status", "REMOVED");
         return msgnd.save().then(function(msgnd){
           return run.singleSMS({
@@ -295,6 +293,9 @@ exports.removeMember = function(request, response){
             "msg": "You have been removed from your teachers " +  classname + " class, now you will not recieve any message from your Teacher"
           });
         });
+      }
+      else{
+        return Parse.Promise.as();
       }
     });
   }
