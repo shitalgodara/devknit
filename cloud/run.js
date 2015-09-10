@@ -1,4 +1,5 @@
 var _ = require('cloud/underscore-min.js');
+var key = require('cloud/key.js');
 
 /*
 Function to send OTP
@@ -585,8 +586,8 @@ exports.createSession = function(request){
     url: "https://api.parse.com/1/upgradeToRevocableSession",
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
-      'X-Parse-Application-Id': 'tTqAhR73SE4NWFhulYX4IjQSDH2TkuTblujAbvOK',
-      'X-Parse-REST-API-Key': 'Rlfgv99tWRrpJDr484IkewPiQA7k2DRBQCzWjcC1', 
+      'X-Parse-Application-Id': key.getApplicationId(),
+      'X-Parse-REST-API-Key': key.getRestApiKey(), 
       'X-Parse-Session-Token': request.sessionToken
     }
   }).then(function(httpResponse){
