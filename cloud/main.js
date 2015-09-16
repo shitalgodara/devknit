@@ -1,36 +1,26 @@
 /*----------------------------------------------- FILE INCLUDES ----------------------------------------------------*/
   /* HELPER FILE */
-  var _ = require('cloud/underscore-min.js');
-  var run = require('cloud/run.js');
+  var _ = require('cloud/include/underscore.js');
+  var run = require('cloud/build/run.js');
 
   /* OLD VERSION */
-  var old = require('cloud/oldVersionSupport/old.js');
-  var v1 = require('cloud/oldVersionSupport/v1.js');
+  var v0 = require('cloud/old/v0.js');
+  var v1 = require('cloud/old/v1.js');
 
   /* LATEST VERSION */  
-  var classes = require('cloud/classes.js');
-  var external = require('cloud/external.js');
-  var login = require('cloud/login.js');
-  var message = require('cloud/message.js');
-  var messagecount = require('cloud/messagecount.js');
-  var rest = require('cloud/rest.js');
-  var schools = require('cloud/schools.js');
-  var subscriber = require('cloud/subscriber.js');
-  var user = require('cloud/user.js');
+  var classes = require('cloud/latest/classes.js');
+  var invite = require('cloud/latest/invite.js');
+  var login = require('cloud/latest/login.js');
+  var message = require('cloud/latest/message.js');
+  var messagecount = require('cloud/latest/messagecount.js');
+  var schools = require('cloud/latest/schools.js');
+  var subscriber = require('cloud/latest/subscriber.js');
+  var support = require('cloud/latest/support.js');
+  var user = require('cloud/latest/user.js');
 
-  /* TEMPORARY FILES */
-  var temp = require('cloud/temp.js');
-
-  /* ANALYTICS FILES */
-  var analytics = require('cloud/temp/analytics.js');
-  var followup = require('cloud/temp/followup.js');
-  var developer = require('cloud/Analytics&All/developer.js');
-  var classlist = require('cloud/Analytics&All/classlist.js');
-  var CatUser = require('cloud/Analytics&All/CatUser.js');
-  var generalSender = require('cloud/Analytics&All/generalSender.js');
-  var web = require('cloud/Websupport/web.js');
-  var location = require('cloud/Analytics&All/location.js');
-
+  /* EXTRA FILES */
+  var temp = require('cloud/extra/temp.js');
+  var web = require('cloud/extra/web.js');
 
 /*----------------------------------------------- WEBHOOKS ---------------------------------------------------------*/
   Parse.Cloud.afterSave("Messageneeders", function(request){
@@ -326,164 +316,164 @@
   });
 
 /* OLD VERSION */
-/*----------------------------------------------- OLD.JS -----------------------------------------------------------*/
+/*----------------------------------------------- V0.JS ------------------------------------------------------------*/
   Parse.Cloud.define("appInstallation", function(request, response){
-    old.appInstallation(request, response);
+    v0.appInstallation(request, response);
   });
 
   Parse.Cloud.define("changeAssociateName", function(request, response){
-    old.changeAssociateName(request, response);
+    v0.changeAssociateName(request, response);
   });
 
   Parse.Cloud.define("createClass", function(request, response){
-    old.createClass(request, response);
+    v0.createClass(request, response);
   });
 
   Parse.Cloud.define("joinClass", function(request, response){
-    old.joinClass(request, response);
+    v0.joinClass(request, response);
   });
 
   Parse.Cloud.define("deleteClass", function(request, response){
-    old.deleteClass(request, response);
+    v0.deleteClass(request, response);
   });
 
   Parse.Cloud.define("leaveClass", function(request, response){
-    old.leaveClass(request, response);
+    v0.leaveClass(request, response);
   });
 
   Parse.Cloud.define("removeChannels", function(request, response){
-    old.removeChannels(request, response);
+    v0.removeChannels(request, response);
   });
       
   Parse.Cloud.define("addChannels", function(request, response){
-    old.addChannels(request, response);
+    v0.addChannels(request, response);
   });
 
   Parse.Cloud.define("suggestClass", function(request, response){
-    old.suggestClass(request, response);
+    v0.suggestClass(request, response);
   });
 
   Parse.Cloud.define("suggestClasses", function(request, response){
-    old.suggestClasses(request, response);
+    v0.suggestClasses(request, response);
   });
 
   Parse.Cloud.define("likeCountIncrement", function(request, response){
-    old.likeCountIncrement(request, response);
+    v0.likeCountIncrement(request, response);
   });
       
   Parse.Cloud.define("likeCountDecrement", function(request, response){
-    old.likeCountDecrement(request, response);
+    v0.likeCountDecrement(request, response);
   });
       
   Parse.Cloud.define("confusedCountIncrement", function(request, response){
-    old.confusedCountIncrement(request, response);
+    v0.confusedCountIncrement(request, response);
   });
       
   Parse.Cloud.define("confusedCountDecrement", function(request, response){
-    old.confusedCountDecrement(request, response);
+    v0.confusedCountDecrement(request, response);
   });
       
   Parse.Cloud.define("seenCountIncrement", function(request, response){
-    old.seenCountIncrement(request, response);
+    v0.seenCountIncrement(request, response);
   });
       
   Parse.Cloud.define("updateMessageState", function(request, response){
-    old.updateMessageState(request, response);
+    v0.updateMessageState(request, response);
   });
       
   Parse.Cloud.define("getLikeConfusedCount", function(request, response){
-    old.getLikeConfusedCount(request, response);
+    v0.getLikeConfusedCount(request, response);
   });
       
   Parse.Cloud.define("getOutboxMessages", function(request, response){
-    old.getOutboxMessages(request, response);
+    v0.getOutboxMessages(request, response);
   });
      
   Parse.Cloud.define("inviteTeacher", function(request, response){
-    old.inviteTeacher(request, response);
+    v0.inviteTeacher(request, response);
   });
 
   Parse.Cloud.define("verifyCode", function(request, response){
-    old.verifyCode(request, response);
+    v0.verifyCode(request, response);
   });
 
   Parse.Cloud.define("verifyCod", function(request, response){
-    old.verifyCod(request, response);
+    v0.verifyCod(request, response);
   });
 
   Parse.Cloud.define("appLogout", function(request, response){
-    old.appLogout(request, response);
+    v0.appLogout(request, response);
   });
 
   Parse.Cloud.define("mailInstructions", function(request, response){
-    old.mailInstructions(request, response);
+    v0.mailInstructions(request, response);
   });
 
   Parse.Cloud.define("updateCount", function(request, response){
-    old.updateCount(request, response);
+    v0.updateCount(request, response);
   });
 
   Parse.Cloud.define("updateCounts", function(request, response){
-    old.updateCounts(request, response);
+    v0.updateCounts(request, response);
   });
 
   Parse.Cloud.define("showLatestMessagesWithLimit", function(request, response){
-    old.showLatestMessagesWithLimit(request, response);
+    v0.showLatestMessagesWithLimit(request, response);
   });
 
   Parse.Cloud.define("showOldMessages", function(request, response){
-    old.showOldMessages(request, response);
+    v0.showOldMessages(request, response);
   });
 
   Parse.Cloud.define("schoollist", function(request, response){
-    old.schoollist(request, response);
+    v0.schoollist(request, response);
   });
      
   Parse.Cloud.define("getSchoolId", function(request, response){
-    old.getSchoolId(request, response);
+    v0.getSchoolId(request, response);
   }); 
 
   Parse.Cloud.define("getSchoolName", function(request, response){
-    old.getSchoolName(request, response);
+    v0.getSchoolName(request, response);
   });
 
   Parse.Cloud.define("findClass", function(request, response){
-    old.findClass(request, response);
+    v0.findClass(request, response);
   });
 
   Parse.Cloud.define("toupdatetimebyclass", function(request, response){
-    old.toupdatetimebyclass(request, response);
+    v0.toupdatetimebyclass(request, response);
   });
       
   Parse.Cloud.define("toupdatetime", function(request, response){
-    old.toupdatetime(request, response);
+    v0.toupdatetime(request, response);
   });
 
   Parse.Cloud.define("showclassstrength", function(request, response){
-    old.showclassstrength(request, response);
+    v0.showclassstrength(request, response);
   });
 
   Parse.Cloud.define("showSubscribers", function(request, response){
-    old.showSubscribers(request, response);
+    v0.showSubscribers(request, response);
   });
 
   Parse.Cloud.define("messagecc", function(request, response){
-    old.messagecc(request, response);
+    v0.messagecc(request, response);
   });
 
   Parse.Cloud.define("samplemessage", function(request, response){
-    old.samplemessage(request, response);
+    v0.samplemessage(request, response);
   });
 
   Parse.Cloud.define("sendTextMessage", function(request, response){
-    old.sendTextMessage(request, response);
+    v0.sendTextMessage(request, response);
   });
       
   Parse.Cloud.define("sendPhotoTextMessage", function(request, response){
-    old.sendPhotoTextMessage(request, response);
+    v0.sendPhotoTextMessage(request, response);
   });
 
-/*----------------------------------------------- V1.JS -------------------------------------------------------*/
+/*----------------------------------------------- V1.JS ------------------------------------------------------------*/
   Parse.Cloud.define("createClass2", function(request, response){
     v1.createClass(request, response);
   });
@@ -538,11 +528,15 @@
     classes.giveClassesDetails(request, response);
   });
 
-/*----------------------------------------------- EXTERNAL.JS ----------------------------------------------------------*/
-  Parse.Cloud.define("mailPdf", function(request, response){
-    external.mailPdf(request, response);
+/*----------------------------------------------- INVITE.JS --------------------------------------------------------*/
+  Parse.Cloud.define("inviteUsers", function(request, response){
+    invite.inviteUsers(request, response);
   });
-  
+
+  Parse.Cloud.define("mailPdf", function(request, response){
+    invite.mailPdf(request, response);
+  });
+
 /*----------------------------------------------- LOGIN.JS ---------------------------------------------------------*/
   Parse.Cloud.define("genCode", function(request, response){
     login.genCode(request, response);
@@ -607,11 +601,7 @@
     schools.schoolsNearby(request, response);
   });
 
-/*----------------------------------------------- SUBSCRIBERS.JS ---------------------------------------------------*/
-  Parse.Cloud.define("smsSubscribe", function(request, response){
-    subscriber.smsSubscribe(request, response);
-  });
-
+/*----------------------------------------------- SUBSCRIBER.JS ----------------------------------------------------*/
   Parse.Cloud.define("changeAssociateName3", function(request, response){
     subscriber.changeAssociateName(request, response);
   });
@@ -620,28 +610,19 @@
     subscriber.showAllSubscribers(request, response);
   });
 
-/*----------------------------------------------- REST.JS ----------------------------------------------------------*/
+  Parse.Cloud.define("smsSubscribe", function(request, response){
+    subscriber.smsSubscribe(request, response);
+  });
+
+/*----------------------------------------------- SUPPORT.JS -------------------------------------------------------*/
   Parse.Cloud.define("faq", function(request, response){
-    rest.faq(request, response);
+    support.faq(request, response);
   });
       
   Parse.Cloud.define("feedback", function(request, response){
-    rest.feedback(request, response);
+    support.feedback(request, response);
   });
 
-  Parse.Cloud.define("inviteUsers", function(request, response){
-    rest.inviteUsers(request, response);
-  });
-
-/*----------------------------------------------- TEMP.JS ----------------------------------------------------------*/
-  Parse.Cloud.define("cloudpic", function(request, response){
-    temp.cloudpic(request, response);
-  });
-
-  Parse.Cloud.define("getMailIds", function(request, response){
-    temp.getMailIds(request, response);
-  });
-    
 /*----------------------------------------------- USER.JS ----------------------------------------------------------*/
   Parse.Cloud.define("getUpdatesUserDetail", function(request, response){
     user.getUpdatesUserDetail(request, response);
@@ -659,116 +640,14 @@
     user.updateProfileName(request, response);
   }); 
 
-/*----------------------------------------------- ANALYTICS.JS -----------------------------------------------------*/
-  Parse.Cloud.define("newSignUps", function(request, response){
-    analytics.newSignUps(request, response);
+/* EXTRA FILES */
+/*----------------------------------------------- TEMP.JS ----------------------------------------------------------*/
+  Parse.Cloud.define("cloudpic", function(request, response){
+    temp.cloudpic(request, response);
   });
 
-  Parse.Cloud.define("newMessageSent", function(request, response){
-    analytics.newMessageSent(request, response);
-  });
-
-  Parse.Cloud.define("activeMessenger", function(request, response){
-    analytics.activeMessenger(request, response);
-  });
-
-/*----------------------------------------------- FOLLOWUP.JS ------------------------------------------------------*/
-  Parse.Cloud.define("yesterdayNewSignUpDetails", function(request, response){
-    followup.yesterdayNewSignUpDetails(request, response);
-  });
-
-  Parse.Cloud.define("getTodaysFollowUpDetails", function(request, response){
-    followup.getTodaysFollowUpDetails(request, response);
-  });
-
-  Parse.Cloud.define("updateFollowUpDetails", function(request, response){
-    followup.updateFollowUpDetails(request, response);
-  });
-
-  Parse.Cloud.define("expectedSignups", function(request, response){
-    followup.expectedSignups(request, response);
-  });
-
-  Parse.Cloud.define("statusOfAllUsers", function(request, response){
-    followup.statusOfAllUsers(request, response);
-  });
-
-  Parse.Cloud.define("KnitDiagram", function(request, response){
-    followup.KnitDiagram(request, response);
-  });
-
-  Parse.Cloud.define("getEmailId", function(request, response){
-    followup.KnitDiagram(request, response);
-  });
-
-/*----------------------------------------------- DEVELOPER.JS -----------------------------------------------------*/
-  /*
-    Parse.Cloud.define("deleteKioClassFromUserJoinedGroups", function(request, response){
-      developer.deleteKioClassFromUserJoinedGroups(request, response);
-    });
-  */
-
-/*----------------------------------------------- CLASSLIST.JS -----------------------------------------------------*/
-  Parse.Cloud.define("giveCLassesInCodegroup", function(request, response){
-    classlist.giveCLassesInCodegroup(request, response);
-  });
-
-  Parse.Cloud.define("giveCLassesInGroupDetails", function(request, response){
-    classlist.giveCLassesInGroupDetails(request, response);
-  });
-
-  Parse.Cloud.define("giveCLassesInUser", function(request, response){
-    classlist.giveCLassesInUser(request, response);
-  });
-
-  Parse.Cloud.define("giveCLassesInGroupmembers", function(request, response){
-    classlist.giveCLassesInGroupmembers(request, response);
-  });
-
-  Parse.Cloud.define("giveCLassesInMessageneeders", function(request, response){
-    classlist.giveCLassesInMessageneeders(request, response);
-  });
-
-/*----------------------------------------------- CATUSER.JS -------------------------------------------------------*/
-  Parse.Cloud.define("allUsers", function(request, response) {
-    CatUser.allUsers(request, response);
-  });
-
-  Parse.Cloud.define("usersActiveInLastnMonths", function(request, response) {
-    CatUser.usersActiveInLastnMonths(request, response);
-  });
-
-  Parse.Cloud.define("ClassesActiveInLastnMonths", function(request, response) {
-    CatUser.ClassesActiveInLastnMonths(request, response);
-  });
-
-  Parse.Cloud.define("usersWhoJoinedActiveClassOnSms", function(request, response) {
-    CatUser.usersWhoJoinedActiveClassOnSms(request, response);
-  });
-
-  Parse.Cloud.define("usersWhoJoinedActiveClassOnApp", function(request, response) {
-    CatUser.usersWhoJoinedActiveClassOnApp(request, response);
-  });
-
-  Parse.Cloud.define("usernames00000", function(request, response) {
-    CatUser.usernames00000(request, response);
-  });
-
-  Parse.Cloud.define("getNamesAndEmails", function(request, response) {
-    CatUser.getNamesAndEmails(request, response);
-  });
-
-/*----------------------------------------------- GENERALSENDER.JS -------------------------------------------------*/
-  Parse.Cloud.define("SendNotifications", function(request, response) {
-    generalSender.SendNotifications(request, response);
-  });
-  
-  Parse.Cloud.define("SendSms", function(request, response) {
-    generalSender.SendSms(request, response);
-  });
-
-  Parse.Cloud.define("SendEmails", function(request, response) {
-    generalSender.SendEmails(request, response);
+  Parse.Cloud.define("getMailIds", function(request, response){
+    temp.getMailIds(request, response);
   });
   
 /*----------------------------------------------- WEB.JS -----------------------------------------------------------*/
@@ -786,9 +665,4 @@
   
   Parse.Cloud.define("showallclassesmessages", function(request, response){
     web.showallclassesmessages(request, response);
-  });
-
-/*----------------------------------------------- LOCATION.JS ------------------------------------------------------*/
-  Parse.Cloud.define("getGeoPointsForPlotting",function(request,response){
-    location.getGeoPointsForPlotting(request, response);
   });
