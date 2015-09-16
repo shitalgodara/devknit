@@ -535,7 +535,7 @@ exports.setInstallation = function(request){
   var query = new Parse.Query(Parse.Installation);
   query.equalTo("installationId", installationId);
   return query.first().then(function(installation){
-    if(typeof installation != 'undefined'){
+    if(typeof installation == 'undefined'){
       var error = {
         "code": "1003",
         "message": "Installation object not found"

@@ -164,11 +164,11 @@ exports.getSendStatus2 = function(request){
   var created_groups = user.get("Created_groups");
   var username = user.get("username");
   var statuses = [];
-  var query = new Parse.Query("Messages");
+  var query = new Parse.Query("MessageDetails");
   var resend = false;
   query.equalTo("timestamp", timestamp);
-  return query.first().then(function(message){
-    if(typeof message != 'undefined'){
+  return query.first().then(function(msgdetail){
+    if(typeof msgdetail != 'undefined'){
       resend = true;
     }
     var flag = true;

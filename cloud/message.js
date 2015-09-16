@@ -57,26 +57,26 @@ exports.sendMultiTextMessage = function(request, response){
         }).then(function(result){
           messageIds.push(result.messageId);
           createdAts.push(result.createdAt);
-          var Messages = Parse.Object.extend("Messages");
-          var message = new Messages();
-          message.set("timestamp", timestamp);
-          message.set("groupdetailId", result.messageId);
-          message.set("groupdetailCreatedAt", result.createdAt);
-          message.set("send", flag);
-          return message.save();
-        }).then(function(message){
+          var MessageDetails = Parse.Object.extend("MessageDetails");
+          var msgdetail = new MessageDetails();
+          msgdetail.set("timestamp", timestamp);
+          msgdetail.set("groupdetailId", result.messageId);
+          msgdetail.set("groupdetailCreatedAt", result.createdAt);
+          msgdetail.set("send", flag);
+          return msgdetail.save();
+        }).then(function(msgdetail){
           return Parse.Promise.as(i+1);
         });
       }
       else if(status == 2){
-        var query = new Parse.Query("Messages");
+        var query = new Parse.Query("MessageDetails");
         query.equalTo("timestamp", timestamp);
         query.limit(1);
         query.skip(i);
-        return query.first().then(function(message){
-          messageIds.push(message.get("groupdetailId"));
-          createdAts.push(message.get("groupdetailCreatedAt"));
-          if(message.get("send") == false){
+        return query.first().then(function(msgdetail){
+          messageIds.push(msgdetail.get("groupdetailId"));
+          createdAts.push(msgdetail.get("groupdetailCreatedAt"));
+          if(msgdetail.get("send") == false){
             flag = false;
           }
           return Parse.Promise.as(i+1);
@@ -86,13 +86,13 @@ exports.sendMultiTextMessage = function(request, response){
         var date = new Date();
         messageIds.push("");
         createdAts.push(date);
-        var Messages = Parse.Object.extend("Messages");
-        var message = new Messages();
-        message.set("timestamp", timestamp);
-        message.set("groupdetailId", "");
-        message.set("groupdetailCreatedAt", date);
-        message.set("send", flag);
-        return message.save().then(function(message){
+        var MessageDetails = Parse.Object.extend("MessageDetails");
+        var msgdetail = new MessageDetails();
+        msgdetail.set("timestamp", timestamp);
+        msgdetail.set("groupdetailId", "");
+        msgdetail.set("groupdetailCreatedAt", date);
+        msgdetail.set("send", flag);
+        return msgdetail.save().then(function(msgdetail){
           return Parse.Promise.as(i+1);
         });
       }
@@ -174,26 +174,26 @@ exports.sendMultiPhotoTextMessage = function(request, response){
         }).then(function(result){
           messageIds.push(result.messageId);
           createdAts.push(result.createdAt);
-          var Messages = Parse.Object.extend("Messages");
-          var message = new Messages();
-          message.set("timestamp", timestamp);
-          message.set("groupdetailId", result.messageId);
-          message.set("groupdetailCreatedAt", result.createdAt);
-          message.set("send", flag);
-          return message.save();
-        }).then(function(message){
+          var MessageDetails = Parse.Object.extend("MessageDetails");
+          var msgdetail = new MessageDetails();
+          msgdetail.set("timestamp", timestamp);
+          msgdetail.set("groupdetailId", result.messageId);
+          msgdetail.set("groupdetailCreatedAt", result.createdAt);
+          msgdetail.set("send", flag);
+          return msgdetail.save();
+        }).then(function(msgdetail){
           return Parse.Promise.as(i+1);
         });
       }
       else if(status == 2){
-        var query = new Parse.Query("Messages");
+        var query = new Parse.Query("MessageDetails");
         query.equalTo("timestamp", timestamp);
         query.limit(1);
         query.skip(i);
-        return query.first().then(function(message){
-          messageIds.push(message.get("groupdetailId"));
-          createdAts.push(message.get("groupdetailCreatedAt"));
-          if(message.get("send") == false){
+        return query.first().then(function(msgdetail){
+          messageIds.push(msgdetail.get("groupdetailId"));
+          createdAts.push(msgdetail.get("groupdetailCreatedAt"));
+          if(msgdetail.get("send") == false){
             flag = false;
           }
           return Parse.Promise.as(i+1);
@@ -203,13 +203,13 @@ exports.sendMultiPhotoTextMessage = function(request, response){
         var date = new Date();
         messageIds.push("");
         createdAts.push(date);
-        var Messages = Parse.Object.extend("Messages");
-        var message = new Messages();
-        message.set("timestamp", timestamp);
-        message.set("groupdetailId", "");
-        message.set("groupdetailCreatedAt", date);
-        message.set("send", flag);
-        return message.save().then(function(message){
+        var MessageDetails = Parse.Object.extend("MessageDetails");
+        var msgdetail = new MessageDetails();
+        msgdetail.set("timestamp", timestamp);
+        msgdetail.set("groupdetailId", "");
+        msgdetail.set("groupdetailCreatedAt", date);
+        msgdetail.set("send", flag);
+        return msgdetail.save().then(function(msgdetail){
           return Parse.Promise.as(i+1);
         });
       }
