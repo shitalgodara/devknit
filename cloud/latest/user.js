@@ -60,7 +60,7 @@ Function to edit profile picture of user
 	Output =>
 		flag: Bool // true in case of success
 	Procedure =>
-		Simple save details of user object
+		Simple save profile pic of user object
 */
 exports.updateProfilePic = function(request, response){
 	var user = request.user;
@@ -79,11 +79,30 @@ Function to edit profile name of user
 	Output =>
 		flag: Bool // true in case of success
 	Procedure =>
-		Simple save details of user object
+		Simple save name of user object
 */
 exports.updateProfileName = function(request, response){
 	var user = request.user;
 	user.set("name", request.params.name);
+	user.save().then(function(user){
+		response.success(true);
+	}, function(error){
+		response.error(error.code + ": " + error.message);
+	});
+}
+
+/* 
+Function to update school place id of teacher
+	Input =>
+		place_id: String
+	Output =>
+		flag: Bool // true in case of success
+	Procedure =>
+		Simple save place_id of user object
+*/
+exports.updateSchoolId = function(request, response){
+	var user = request.user;
+	user.set("place_id", request.params.place_id);
 	user.save().then(function(user){
 		response.success(true);
 	}, function(error){

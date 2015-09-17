@@ -387,6 +387,9 @@
     user.updateProfileName(request, response);
   }); 
 
+  Parse.Cloud.define("updateSchoolId", function(request, response){
+    user.updateSchoolId(request, response);
+  });
 
 /************************************************ EXTRA FILES *******************************************************/
 /*----------------------------------------------- TEMP.JS ----------------------------------------------------------*/
